@@ -7,8 +7,7 @@ import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/card";
 import { Button } from "@nextui-org/button";
 import { conductores, vehiculos, empresas } from "@/data/index";
 import { useMemo, useState, useCallback, useEffect } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { formatToCOP, formatDate } from "@/helpers";
+import { formatToCOP, formatDateRange } from "@/helpers";
 import {
   Pernote,
   Recargo,
@@ -17,9 +16,12 @@ import {
   ConductorOption,
   VehiculoOption,
 } from "@/types/index";
+import useLiquidacion from "@/hooks/useLiquidacion";
 // Definición de tipos
 
 export default function Formulario() {
+  const { agregarLiquidacion } = useLiquidacion();
+
   const [conductorSelected, setConductorSelected] =
     useState<SingleValue<ConductorOption>>(null);
   const [vehiculosSelected, setVehiculosSelected] = useState<VehiculoOption[]>(
@@ -30,7 +32,7 @@ export default function Formulario() {
   const [detallesVehiculos, setDetallesVehiculos] = useState<DetalleVehiculo[]>(
     []
   );
-  const [liquidacion, setLiquidacion] = useState<Liquidacion>();
+  const [liquidacion, setLiquidacion] = useState<Liquidacion | null>(null);
   const [isCheckedAjuste, setIsCheckedAjuste] = useState(false);
   const [diasLaborados, setDiasLaborados] = useState(0);
 
@@ -214,60 +216,121 @@ export default function Formulario() {
   const bonificacionVillanueva = useMemo(() => {
     if (isCheckedAjuste) {
       const conductor = conductores.find(
-        (c) => c.id === liquidacion?.conductor?.value
+        (c) => c.id === liquidacion?.conductor?.id
       );
+      console.log(conductor);
       return conductor
-        ? ((2101498 - conductor.salarioBase) / 30) * diasLaborados
+        ? diasLaborados >= 17 ? 2101498 - conductor.salarioBase : ((2101498 - conductor.salarioBase) / 30) * diasLaborados
         : 0;
     }
     return 0;
   }, [isCheckedAjuste, liquidacion, diasLaborados]);
 
-  const { auxilioTransporte, salarioBaseConductor, sueldoTotal, totalPernotes, totalBonificaciones, totalRecargos } =
-    useMemo(() => {
-      const total = detallesVehiculos.reduce(
-        (acc, item) => {
-          const bonos = item.bonos.reduce(
-            (total, bono) => total + bono.quantity * bono.value,
-            0
-          );
-          const pernotes = item.pernotes.reduce(
-            (total, pernote) => total + pernote.cantidad * 100906,
-            0
-          );
-          const recargos = item.recargos.reduce(
-            (total, recargo) => total + recargo.valor,
-            0
-          );
+  const {
+    auxilioTransporte,
+    salarioBaseConductor,
+    sueldoTotal,
+    totalPernotes,
+    totalBonificaciones,
+    totalRecargos,
+  } = useMemo(() => {
+    const total = detallesVehiculos.reduce(
+      (acc, item) => {
+        const bonos = item.bonos.reduce(
+          (total, bono) => total + bono.quantity * bono.value,
+          0
+        );
+        const pernotes = item.pernotes.reduce(
+          (total, pernote) => total + pernote.cantidad * 100906, // Puedes ajustar el valor de pernote si es una constante
+          0
+        );
+        const recargos = item.recargos.reduce(
+          (total, recargo) => total + recargo.valor,
+          0
+        );
 
+        return {
+          totalBonos: acc.totalBonos + bonos,
+          totalPernotes: acc.totalPernotes + pernotes,
+          totalRecargos: acc.totalRecargos + recargos,
+          totalSubtotales: acc.totalSubtotales + bonos + pernotes + recargos,
+        };
+      },
+      {
+        totalBonos: 0,
+        totalPernotes: 0,
+        totalRecargos: 0,
+        totalSubtotales: 0,
+      }
+    );
 
-          return {
-            totalBonos: acc.totalBonos + bonos,
-            totalPernotes: acc.totalPernotes + pernotes,
-            totalRecargos: acc.totalRecargos + recargos,
-            totalSubtotales: acc.totalSubtotales + bonos + pernotes + recargos,
-          };
-        },
-        {
-          totalBonos: 0,
-          totalPernotes: 0,
-          totalRecargos: 0,
-          totalSubtotales: 0,
-        }
-      );
+    // Obtén el salario base del conductor seleccionado
+    const salarioBaseConductor =
+      conductores.find(
+        (conductorState) => conductorState.id === conductorSelected?.value
+      )?.salarioBase || 0;
 
-      const salarioBaseConductor =  conductores.find((conductorState) => conductorState.id === conductorSelected?.value)?.salarioBase || 0
-      const auxilioTransporte = 162000
+    const auxilioTransporte = 162000; // Asigna el auxilio de transporte
 
-      return {
+    return {
+      auxilioTransporte,
+      salarioBaseConductor,
+      totalBonificaciones: total.totalBonos,
+      totalPernotes: total.totalPernotes,
+      totalRecargos: total.totalRecargos,
+      sueldoTotal:
+        total.totalSubtotales +
+        bonificacionVillanueva + // Incluye la bonificación si aplica
+        salarioBaseConductor +
         auxilioTransporte,
-        salarioBaseConductor,
-        totalBonificaciones: total.totalBonos,
-        totalPernotes: total.totalPernotes,
-        totalRecargos: total.totalRecargos,
-        sueldoTotal: total.totalSubtotales + bonificacionVillanueva + salarioBaseConductor + auxilioTransporte,
-      };
-    }, [detallesVehiculos, bonificacionVillanueva]);
+    };
+  }, [
+    detallesVehiculos,
+    bonificacionVillanueva,
+    conductorSelected,
+    conductores,
+  ]);
+
+  // Actualización de la liquidación en el useEffect
+  // Actualización de la liquidación en el useEffect
+  useEffect(() => {
+    // Verificar que `conductorSelected` sea válido y que liquidacion no sea null
+    if (
+      !conductorSelected ||
+      detallesVehiculos.length === 0
+    )
+      return;
+
+      console.log(detallesVehiculos)
+
+    // Crea el objeto `Liquidacion` compatible con el tipo que definiste
+    const nuevaLiquidacion: Liquidacion = {
+      periodo: dateSelected,
+      conductor:
+        conductores.find(
+          (conductor) => conductor.id === conductorSelected?.value
+        ) || null, // Busca el conductor completo basado en la selección
+      auxilioTransporte,
+      sueldoTotal,
+      totalPernotes,
+      totalBonificaciones,
+      totalRecargos,
+      diasLaborados,
+      ajusteSalarial: bonificacionVillanueva,
+      vehiculos: detallesVehiculos.map((detalle) => detalle.vehiculo)
+    };
+
+    setLiquidacion(nuevaLiquidacion);
+  }, [
+    auxilioTransporte,
+    sueldoTotal,
+    totalPernotes,
+    totalBonificaciones,
+    totalRecargos,
+    conductorSelected,
+    detallesVehiculos,
+    conductores,
+  ]);
 
   const customStyles = {
     control: (provided: any) => ({
@@ -307,29 +370,25 @@ export default function Formulario() {
     }),
   };
 
-  useEffect(() => {
-    const nuevaLiquidacion: Liquidacion = {
-      id: uuidv4(),
-      conductor: conductorSelected,
-      detallesVehiculos: detallesVehiculos.map((detalle) => ({
-        vehiculo: detalle.vehiculo,
-        bonos: detalle.bonos,
-        pernotes: detalle.pernotes,
-        recargos: detalle.recargos,
-      })),
-    };
-
-    setLiquidacion(nuevaLiquidacion);
-  }, [conductorSelected, detallesVehiculos]);
-
+  // Función para agregar la liquidación
   const addLiquidacion = () => {
-    console.log({
-      bonificacionVillanueva,
-      sueldoTotal,
-      totalBonificaciones,
-      totalPernotes,
-      totalRecargos,
-    });
+    // Verifica que liquidacion no sea null antes de registrarla
+    if (liquidacion) {
+      try {
+        agregarLiquidacion(liquidacion);
+
+        // Reiniciar liquidacion a null
+        setLiquidacion(null);
+        setConductorSelected(null)
+        setVehiculosSelected([])
+        setDetallesVehiculos([])
+        setDateSelected(null)
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      console.error("Liquidación no válida.");
+    }
   };
 
   return (
@@ -337,7 +396,7 @@ export default function Formulario() {
       <form className="w-full flex flex-col space-y-8">
         {/* Conductor y Placa */}
         <div className="space-y-4 flex flex-col">
-          <h2 className="font-semibold mb-3">Conductor y vehiculo</h2>
+          <h2 className="font-bold text-2xl text-green-700">Formulario</h2>
           <SelectReact
             options={conductoresOptions}
             value={conductorSelected}
@@ -360,6 +419,7 @@ export default function Formulario() {
           <DateRangePicker
             onChange={setDateSelected}
             label="Periodo a liquidar"
+            value={dateSelected}
           />
 
           {detallesVehiculos &&
@@ -389,7 +449,7 @@ export default function Formulario() {
                   ))}
                   <h3 className="font-semibold mb-2">Pernotes</h3>
                   {detalleVehiculo.pernotes.map((pernote, pernoteIndex) => (
-                    <div key={pernoteIndex} className="grid grid-cols-5 gap-4">
+                    <div key={pernoteIndex} className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-center">
                       <SelectReact
                         options={empresasOptions}
                         value={
@@ -408,13 +468,13 @@ export default function Formulario() {
                         placeholder="Selecciona una empresa"
                         isSearchable
                         styles={customStyles}
-                        className="col-span-3"
+                        className="lg:col-span-3"
                       />
                       <Input
                         type="number"
                         label="Cantidad"
                         placeholder="0"
-                        className="col-span-1"
+                        className="lg:col-span-1"
                         value={pernote.cantidad.toString()}
                         onChange={(e) =>
                           handlePernoteChange(
@@ -432,8 +492,8 @@ export default function Formulario() {
                             pernoteIndex
                           )
                         }
-                        className="m-auto bg-red-300 text-white max-sm:col-span-5 max-sm:w-full"
-                      >
+                        className="m-auto bg-red-300 text-white w-full lg:col-span-1 lg:w-auto"
+                         >
                         X
                       </Button>
                     </div>
@@ -442,13 +502,13 @@ export default function Formulario() {
                     onClick={() =>
                       handleAddPernote(detalleVehiculo.vehiculo.value)
                     }
-                    className="bg-green-100"
+                    className="bg-green-300"
                   >
                     Añadir pernote
                   </Button>
                   <h3 className="font-semibold mb-2">Recargos</h3>
                   {detalleVehiculo.recargos.map((recargo, recargoIndex) => (
-                    <div key={recargoIndex} className="grid grid-cols-5 gap-4">
+                    <div key={recargoIndex} className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-center">
                       <SelectReact
                         options={empresasOptions}
                         value={
@@ -467,7 +527,7 @@ export default function Formulario() {
                         placeholder="Selecciona una empresa"
                         isSearchable
                         styles={customStyles}
-                        className="col-span-3"
+                        className="lg:col-span-3"
                       />
                       <Input
                         type="number"
@@ -491,7 +551,7 @@ export default function Formulario() {
                             recargoIndex
                           )
                         }
-                        className="m-auto bg-red-300 text-white max-sm:col-span-5 max-sm:w-full"
+                        className="m-auto bg-red-300 text-white w-full lg:col-span-1 lg:w-auto"
                       >
                         X
                       </Button>
@@ -501,7 +561,7 @@ export default function Formulario() {
                     onClick={() =>
                       handleAddRecargo(detalleVehiculo.vehiculo.value)
                     }
-                    className="bg-green-100"
+                    className="bg-green-300"
                   >
                     Añadir recargo
                   </Button>
@@ -511,20 +571,20 @@ export default function Formulario() {
         </div>
       </form>
       <div className="w-full">
-        {liquidacion?.detallesVehiculos && dateSelected && vehiculos && (
+        {liquidacion && detallesVehiculos && dateSelected && vehiculos && (
           <>
             <ConductorInfo
               conductor={conductores.find(
-                (c) => c.id === liquidacion.conductor?.value
+                (c) => c.id === liquidacion.conductor?.id
               )}
               dateSelected={dateSelected}
             />
-            {liquidacion.detallesVehiculos.map((detalle, index) => (
+            {detallesVehiculos.map((detalle, index) => (
               <CardLiquidacion key={index} detalleVehiculo={detalle} />
             ))}
           </>
         )}
-        {liquidacion?.detallesVehiculos && dateSelected && vehiculos && (
+        {detallesVehiculos.length > 0 && dateSelected && vehiculos && (
           <Card>
             <CardHeader>
               <p className="text-xl font-semibold">Resumen</p>
@@ -555,15 +615,15 @@ export default function Formulario() {
               )}
               <div>
                 <p>Salario base:</p>
-                <p>
-                  {formatToCOP(salarioBaseConductor)}
-                </p>
+                <p>{formatToCOP(salarioBaseConductor)}</p>
               </div>
               <div>
                 <p>Auxilio transporte:</p>
-                <p>
-                  {formatToCOP(auxilioTransporte)}
-                </p>
+                <p>{formatToCOP(auxilioTransporte)}</p>
+              </div>
+              <div>
+                <p>Total bonificacaciones:</p>
+                <p>{formatToCOP(totalBonificaciones + totalPernotes + totalRecargos)}</p>
               </div>
               <div>
                 <p>Salario total:</p>
@@ -587,6 +647,7 @@ export default function Formulario() {
 }
 
 const ConductorInfo = ({ conductor, dateSelected }) => {
+  console.log(conductor, dateSelected)
   if (!conductor) return null;
   return (
     <div className="mb-5">
@@ -600,17 +661,12 @@ const ConductorInfo = ({ conductor, dateSelected }) => {
   );
 };
 
-const formatDateRange = (datePart) => {
-  if (!datePart) return "Fecha no disponible";
-  return formatDate(datePart.day ?? 0, datePart.month ?? 0, datePart.year ?? 0);
-};
-
 const ListSection = ({ title, items, formatFn }) => (
   <div className="space-y-2">
     <h3 className="text-xl font-semibold">{title}</h3>
     <div>
       {items.map((item, index) => (
-        <div key={index} className="grid grid-cols-5">
+        <div key={index} className="md:grid md:grid-cols-5">
           {formatFn(item)}
         </div>
       ))}
@@ -655,7 +711,7 @@ const CardLiquidacion = ({ detalleVehiculo }) => {
         </div>
       </CardHeader>
       <Divider />
-      <CardBody className="gap-5">
+      <CardBody className="gap-5 text-sm">
         <ListSection
           title="Bonificaciones"
           items={detalleVehiculo.bonos}
@@ -664,8 +720,8 @@ const CardLiquidacion = ({ detalleVehiculo }) => {
               <p className="col-span-3">
                 {bono.name} ({formatToCOP(bono.value)}) :
               </p>
-              <p className="text-right text-primary-500">{bono.quantity}</p>
-              <p className="text-right text-green-500">
+              <p className="md:text-right text-primary-500">{bono.quantity}</p>
+              <p className="md:text-right text-green-500 mb-5 md:mb-0">
                 {formatToCOP(bono.quantity * bono.value)}
               </p>
             </>
@@ -681,10 +737,10 @@ const CardLiquidacion = ({ detalleVehiculo }) => {
             return (
               <>
                 <p className="col-span-3 text-md">{empresa?.Nombre}</p>
-                <p className="text-right text-primary-500">
+                <p className="md:text-right text-primary-500">
                   {pernote.cantidad}
                 </p>
-                <p className="text-right text-green-500">
+                <p className="md:text-right text-green-500">
                   {formatToCOP(pernote.cantidad * 100906)}
                 </p>
               </>
@@ -710,7 +766,7 @@ const CardLiquidacion = ({ detalleVehiculo }) => {
         />
       </CardBody>
       <Divider />
-      <CardFooter className="w-full space-y-5 flex flex-col">
+      <CardFooter className="w-full space-y-2 flex flex-col">
         <SummaryRow
           label="Total bonificaciones"
           value={formatToCOP(totalBonos)}

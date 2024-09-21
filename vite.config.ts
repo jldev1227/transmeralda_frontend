@@ -9,4 +9,5 @@ export default defineConfig({
     host: '0.0.0.0', // Esto permite que Vite acepte conexiones desde cualquier IP.
     port: 5173, // O el puerto que prefieras
   },
+  base: '/', // Ruta base para la aplicación (déjalo como "/" si estará en la raíz)
 })

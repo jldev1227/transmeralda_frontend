@@ -1,15 +1,46 @@
 import { Route, Routes } from "react-router-dom";
+import { ApolloProvider } from "@apollo/client";
+import client from "../apolloClient";
 
-import IndexPage from "@/pages/index";
+import Login from "@/pages/login";
 import { LiquidacionProvider } from "./context/LiquidacionContext";
+import { AuthProvider } from "./context/AuthContext";
+import AuthLayout from "./layouts/authLayout";
+import ProtectedRoutes from "./layouts/ProtectedLayout"; // Asume que tienes un layout para rutas protegidas
+import Liquidador from "./pages/liquidador";
+import Dashboard from "./pages/dashboard";
+import DefaultLayout from "./layouts/default";
 
 function App() {
   return (
-    <LiquidacionProvider>
-      <Routes>
-        <Route element={<IndexPage />} path="/" />
-      </Routes>
-    </LiquidacionProvider>
+    <ApolloProvider client={client}>
+      <AuthProvider>
+        <Routes>
+          {/* Rutas públicas (sin LiquidacionProvider) */}
+          <Route element={<AuthLayout />}>
+            <Route path="/login" element={<Login />} />
+          </Route>
+
+          <Route element={<ProtectedRoutes />}>
+            {/* Envuelve todas las rutas protegidas en DefaultLayout */}
+            <Route element={<DefaultLayout />}>
+              {/* Ruta para Dashboard */}
+              <Route path="dashboard" element={<Dashboard />} />
+
+              {/* Ruta para Liquidaciones con LiquidacionProvider */}
+              <Route
+                path="/liquidaciones"
+                element={
+                  <LiquidacionProvider>
+                    <Liquidador />
+                  </LiquidacionProvider>
+                }
+              />
+            </Route>
+          </Route>
+        </Routes>
+      </AuthProvider>
+    </ApolloProvider>
   );
 }
 
