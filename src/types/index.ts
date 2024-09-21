@@ -1,6 +1,5 @@
 import { DateValue, RangeValue } from "@nextui-org/react";
 import { SVGProps } from "react";
-import { SingleValue } from "react-select";
 
 export type IconSvgProps = SVGProps<SVGSVGElement> & {
   size?: number;
@@ -46,6 +45,23 @@ export type ConductorOption = {
 export type VehiculoOption = {
   value: string;
   label: string;
+}
+
+export type DateSelected = {
+  start: {
+    era: string;
+    year: number;
+    month: number;
+    day: number;
+    calendar: { identifier: string };
+  };
+  end: {
+    era: string;
+    year: number;
+    month: number;
+    day: number;
+    calendar: { identifier: string };
+  };
 }
 
 export interface LoginCredentials {

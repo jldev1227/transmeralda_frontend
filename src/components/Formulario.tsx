@@ -1,6 +1,6 @@
 import { Input } from "@nextui-org/input";
 import { DateRangePicker, DateValue, RangeValue } from "@nextui-org/react";
-import SelectReact, { SingleValue } from "react-select";
+import SelectReact, { MultiValue, SingleValue } from "react-select";
 import { Divider } from "@nextui-org/divider";
 import { Checkbox } from "@nextui-org/checkbox";
 import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/card";
@@ -15,6 +15,8 @@ import {
   Liquidacion,
   ConductorOption,
   VehiculoOption,
+  Conductor,
+  DateSelected,
 } from "@/types/index";
 import useLiquidacion from "@/hooks/useLiquidacion";
 // Definición de tipos
@@ -24,9 +26,8 @@ export default function Formulario() {
 
   const [conductorSelected, setConductorSelected] =
     useState<SingleValue<ConductorOption>>(null);
-  const [vehiculosSelected, setVehiculosSelected] = useState<VehiculoOption[]>(
-    []
-  );
+    const [vehiculosSelected, setVehiculosSelected] = useState<MultiValue<VehiculoOption>>([]);
+
   const [dateSelected, setDateSelected] =
     useState<RangeValue<DateValue> | null>(null);
   const [detallesVehiculos, setDetallesVehiculos] = useState<DetalleVehiculo[]>(
@@ -66,13 +67,24 @@ export default function Formulario() {
 
   // Manejadores de eventos
   const handleVehiculoSelect = useCallback(
-    (selected: VehiculoOption[]) => {
-      setVehiculosSelected(selected);
+    (selected: MultiValue<VehiculoOption>) => {
+      // Convierte `MultiValue<VehiculoOption>` a `VehiculoOption[]`
+      const selectedVehiculos = selected.map(option => ({
+        value: option.value,
+        label: option.label,
+      }));
+  
+      setVehiculosSelected(selectedVehiculos);
+  
+      // Crea un mapa de detallesVehiculos para búsqueda más rápida
+      const detallesMap = new Map(
+        detallesVehiculos.map((detalle) => [detalle.vehiculo.value, detalle])
+      );
+  
+      // Actualiza detallesVehiculos basado en la selección
       setDetallesVehiculos(
-        selected.map((vehiculo) => {
-          const detalleExistente = detallesVehiculos.find(
-            (detalle) => detalle.vehiculo.value === vehiculo.value
-          );
+        selectedVehiculos.map((vehiculo) => {
+          const detalleExistente = detallesMap.get(vehiculo.value);
           return (
             detalleExistente || {
               vehiculo,
@@ -88,7 +100,7 @@ export default function Formulario() {
         })
       );
     },
-    [detallesVehiculos]
+    [detallesVehiculos, setDetallesVehiculos]
   );
 
   const handleBonoChange = useCallback(
@@ -576,7 +588,7 @@ export default function Formulario() {
             <ConductorInfo
               conductor={conductores.find(
                 (c) => c.id === liquidacion.conductor?.id
-              )}
+              ) || null}
               dateSelected={dateSelected}
             />
             {detallesVehiculos.map((detalle, index) => (
@@ -646,7 +658,14 @@ export default function Formulario() {
   );
 }
 
-const ConductorInfo = ({ conductor, dateSelected }) => {
+
+
+interface ConductorInfoProps {
+  conductor: Conductor | null;
+  dateSelected: DateSelected | null;
+}
+
+const ConductorInfo = ({ conductor, dateSelected } : ConductorInfoProps) => {
   console.log(conductor, dateSelected)
   if (!conductor) return null;
   return (
@@ -661,20 +680,30 @@ const ConductorInfo = ({ conductor, dateSelected }) => {
   );
 };
 
-const ListSection = ({ title, items, formatFn }) => (
+interface ListSectionProps<T> {
+  title: string;
+  items: T[];
+  formatFn: (item: T, index: number) => React.ReactNode;
+}
+
+const ListSection = <T,>({ title, items, formatFn }: ListSectionProps<T>) => (
   <div className="space-y-2">
     <h3 className="text-xl font-semibold">{title}</h3>
     <div>
       {items.map((item, index) => (
         <div key={index} className="md:grid md:grid-cols-5">
-          {formatFn(item)}
+          {formatFn(item, index)}
         </div>
       ))}
     </div>
   </div>
 );
 
-const CardLiquidacion = ({ detalleVehiculo }) => {
+interface CardLiquidacionProps {
+  detalleVehiculo: DetalleVehiculo;
+}
+
+const CardLiquidacion = ({ detalleVehiculo } : CardLiquidacionProps) => {
   const totalBonos = useMemo(
     () =>
       detalleVehiculo.bonos.reduce(
@@ -785,7 +814,12 @@ const CardLiquidacion = ({ detalleVehiculo }) => {
   );
 };
 
-const SummaryRow = ({ label, value }) => (
+interface SummaryRowProps {
+  label: string;
+  value: string;
+}
+
+const SummaryRow = ({ label, value } : SummaryRowProps) => (
   <div className="w-full flex justify-between">
     <p className="font-semibold">{label}: </p>
     <p className="text-yellow-500">{value}</p>

@@ -13,20 +13,16 @@ export default function ModalLiquidacion() {
 
   const handleModal = () => {
     dispatch({
-        type: 'SET_MODAL'
-    })
-  }
+      type: "SET_MODAL",
+    });
+  };
 
-  const { liquidacion } = state
+  const { liquidacion } = state;
 
   return (
-    <Modal
-      isOpen={state.modal}
-      placement="bottom"
-      onOpenChange={handleModal}
-    >
+    <Modal isOpen={state.modal} placement="bottom" onOpenChange={handleModal}>
       <ModalContent>
-        {(onClose : void) => (
+        {(onClose: () => void) => (
           <>
             <ModalHeader className="flex flex-col gap-1">
               Liquidación #{liquidacion?.id}

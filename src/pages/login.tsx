@@ -8,7 +8,6 @@ export default function Login() {
 
   const [correo, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [alerta, setAlerta] = useState({});
 
   const { state, dispatch, authUsuario } = useAuth();
 
@@ -16,11 +15,11 @@ export default function Login() {
     e.preventDefault();
 
     if ([correo, password].includes("")) {
-      dispatch({ type: "SET_ERROR", payload: {message: 'Todos los campos son obligatorios', state: 'error'} });
+      dispatch({ type: "SET_ERROR", payload: {message: 'Todos los campos son obligatorios', success: false} });
       return;
     }
 
-    setAlerta({});
+    dispatch({ type: "CLEAR_ERROR"});
 
     await authUsuario(correo, password)
   };

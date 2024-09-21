@@ -1,14 +1,13 @@
-import { AlertState, Usuario } from "@/src/types/globalTypes";
-import { AuthState } from "../types/authTypes";
+import { AlertState, Usuario } from "../types/index";
 
 // Definimos los tipos de acciones que puede manejar el reducer
 export type UsuarioActions =
-  | { type: 'SET_USUARIO'; payload: AuthState['usuario'] }
+  | { type: 'SET_USUARIO'; payload: Usuario}
   | { type: 'SET_ERROR'; payload: AlertState }
   | { type: 'CLEAR_USUARIO' }
   | { type: 'CLEAR_ERROR' }
-  | { type: 'UPDATE_USUARIO'; payload: AuthState }
-  | { type: 'AUTENTICAR_USUARIO'; payload: { usuario: AuthState } };
+  | { type: 'UPDATE_USUARIO'; payload: Usuario }
+  | { type: 'AUTENTICAR_USUARIO'; payload: { usuario: Usuario } };
 
 // Definimos el estado inicial del usuario
 export type UsuarioState = {
