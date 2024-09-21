@@ -108,12 +108,12 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
             <Text>{formatToCOP(item.conductor?.salarioBase ?? 0)}</Text>
           </View>
         </View>
-        <View style={styles.cardBody}>
+        <View>
           <Text>
             Make beautiful websites regardless of your design experience.
           </Text>
         </View>
-        <View style={styles.cardFooter}>
+        <View>
           {/* Aquí puedes añadir contenido para el pie de la tarjeta si lo necesitas */}
         </View>
       </View>
