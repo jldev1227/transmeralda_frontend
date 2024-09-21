@@ -1,3 +1,5 @@
+import { DateSelected } from "@/types";
+
 export const formatToCOP = (value: number | undefined | null) => {
   if (value === undefined || value === null) {
     return 'N/A'; // O cualquier otro valor predeterminado
@@ -34,7 +36,9 @@ export function formatDate(day: number | null, month: number | null, year: numbe
   return date.toLocaleDateString('es-ES', options).toUpperCase();
 }
 
-export const formatDateRange = (datePart) => {
+export const formatDateRange = (datePart: DateSelected['end' | 'start'] | undefined) => {
   if (!datePart) return "Fecha no disponible";
-  return formatDate(datePart.day ?? 0, datePart.month ?? 0, datePart.year ?? 0);
+
+  const { day = 0, month = 0, year = 0 } = datePart;
+  return formatDate(day, month, year);
 };
