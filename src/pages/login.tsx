@@ -26,13 +26,13 @@ export default function Login() {
 
     // Redirigir si el usuario ya está autenticado
     if (state.isAuthenticated) {
-      return <Navigate to="/dashboard" />;
+      return <Navigate to="/liquidaciones" />;
     }
 
   return (
     <>
-      <h1 className="text-center text-green-700 font-black text-6xl capitalize">
-        Inicia sesión y administra{" "}
+      <h1 className="text-center text-green-700 font-black text-3xl md:text-6xl capitalize">
+        Inicia sesión{" "}
         <span className="text-slate-600">Transmeralda SAS</span>
       </h1>
 

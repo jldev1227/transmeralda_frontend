@@ -32,6 +32,7 @@ export function LiquidacionReducer(
         liquidaciones: action.payload,
       };
     case 'AGREGAR_LIQUIDACION':
+      console.log('action:', action.payload)
       return {
         ...state,
         liquidaciones: [...state.liquidaciones, action.payload]

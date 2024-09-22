@@ -4,37 +4,45 @@ export const OBTENER_LIQUIDACIONES = gql`
  query Liquidaciones {
     liquidaciones {
         id
-        auxilioTransporte
-        sueldoTotal
-        totalPernotes
-        totalBonificaciones
-        totalRecargos
-        diasLaborados
-        ajusteSalarial
         conductor {
             id
             nombre
             apellido
+            cc
+            salarioBase
         }
-        periodo {
-            start {
-                era
-                year
-                month
-                day
-                calendar {
-                    identifier
-                }
-            }
-            end {
-                era
-                year
-                month
-                day
-                calendar {
-                    identifier
-                }
-            }
+        sueldoTotal
+        ajusteSalarial
+        diasLaborados
+        totalRecargos
+        totalBonificaciones
+        totalPernotes
+        auxilioTransporte
+        periodoStart
+        periodoEnd
+        bonificaciones {
+            id
+            name
+            value
+            quantity 
+            vehiculoId
+        }
+        pernotes {
+            id
+            empresa
+            cantidad
+            valor
+            vehiculoId
+        }
+        recargos {
+            id
+            empresa
+            valor
+            vehiculoId
+        }
+        vehiculos {
+            id
+            placa
         }
     }
 }
@@ -42,59 +50,77 @@ export const OBTENER_LIQUIDACIONES = gql`
 `;
 
 export const CREAR_LIQUIDACION = gql`
-    mutation CrearLiquidacion(
-        $conductorId: ID!
-        $periodoStart: FechaInput!
-        $periodoEnd: FechaInput!
-        $auxilioTransporte: Float!
-        $sueldoTotal: Float!
-        $totalPernotes: Float!
-        $totalBonificaciones: Float!
-        $totalRecargos: Float!
-        $diasLaborados: Int!
-        $ajusteSalarial: Float!
-        $vehiculos: [VehiculoInput!]!
+ mutation CrearLiquidacion(
+    $conductorId: ID!
+    $periodoStart: FechaInput!
+    $periodoEnd: FechaInput!
+    $auxilioTransporte: Float!
+    $sueldoTotal: Float!
+    $totalPernotes: Float!
+    $totalBonificaciones: Float!
+    $totalRecargos: Float!
+    $diasLaborados: Int!
+    $ajusteSalarial: Float!
+    $vehiculos: [ID!]!
+    $bonificaciones: [BonificacionInput!]! 
+    $pernotes: [PernoteInput!]!
+    $recargos: [RecargoInput!]!
+) {
+    crearLiquidacion(
+        conductorId: $conductorId
+        periodoStart: $periodoStart
+        periodoEnd: $periodoEnd
+        auxilioTransporte: $auxilioTransporte
+        sueldoTotal: $sueldoTotal
+        totalPernotes: $totalPernotes
+        totalBonificaciones: $totalBonificaciones
+        totalRecargos: $totalRecargos
+        diasLaborados: $diasLaborados
+        ajusteSalarial: $ajusteSalarial
+        vehiculos: $vehiculos
+        bonificaciones: $bonificaciones
+        pernotes: $pernotes
+        recargos: $recargos
     ) {
-        crearLiquidacion(
-            conductorId: $conductorId
-            periodoStart: $periodoStart
-            periodoEnd: $periodoEnd
-            auxilioTransporte: $auxilioTransporte
-            sueldoTotal: $sueldoTotal
-            totalPernotes: $totalPernotes
-            totalBonificaciones: $totalBonificaciones
-            totalRecargos: $totalRecargos
-            diasLaborados: $diasLaborados
-            ajusteSalarial: $ajusteSalarial
-            vehiculos: $vehiculos
-        ) {
+        id
+        conductor {
             id
-            auxilioTransporte
-            sueldoTotal
-            totalPernotes
-            totalBonificaciones
-            totalRecargos
-            diasLaborados
-            ajusteSalarial
-            periodo {
-                start {
-                    year
-                    month
-                    day
-                }
-                end {
-                    year
-                    month
-                    day
-                }
-            }
-            conductor {
-                id
-                nombre
-                apellido
-                cc
-                salarioBase
-            }
+            nombre
+            apellido
+            cc
+            salarioBase
+        }
+        sueldoTotal
+        ajusteSalarial
+        diasLaborados
+        totalRecargos
+        totalBonificaciones
+        totalPernotes
+        auxilioTransporte
+        periodoStart
+        periodoEnd
+        bonificaciones {
+            id
+            name
+            value
+            quantity 
+            vehiculoId
+        }
+        pernotes {
+            id
+            empresa
+            cantidad
+            valor
+        }
+        recargos {
+            id
+            empresa
+            valor
+        }
+        vehiculos {
+            id
+            placa
         }
     }
-`
+}
+`;

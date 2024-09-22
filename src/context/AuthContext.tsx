@@ -13,6 +13,7 @@ import {
 } from "../reducers/usuario-reducer";
 import { AUTENTICAR_USUARIO, OBTENER_USUARIO } from "../graphql/usuario";
 import { ApolloError, useLazyQuery, useMutation } from "@apollo/client";
+import { useNavigate } from "react-router-dom";
 
 // Definir el tipo del contexto
 interface AuthContextType {
@@ -37,6 +38,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     errorPolicy: "all", // Asegura que los errores de GraphQL se manejen
   });
   const [obtenerUsuario, { data, error }] = useLazyQuery(OBTENER_USUARIO);
+
+  const navigation = useNavigate()
 
   const authUsuario = async (correo: string, password: string) => {
     try {
@@ -122,6 +125,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const token = await localStorage.getItem("authToken");
       if (token) {
         obtenerUsuario();
+      }else{
+        navigation('/')
       }
     };
 

@@ -24,6 +24,7 @@ type LiquidacionContextType = {
   obtenerLiquidaciones: () => void;
   loadingLiquidaciones: boolean;
   agregarLiquidacion: (liquidacion: Liquidacion) => Promise<void>;
+  setLiquidacion: (liquidacion: Liquidacion) => Promise<void>
 };
 
 export const LiquidacionContext = createContext<LiquidacionContextType | null>(
@@ -48,6 +49,7 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
   // Función para obtener liquidaciones y hacer dispatch, optimizado con useCallback para evitar recrear la función en cada renderizado.
   const obtenerLiquidaciones = useCallback(() => {
     if (!loadingLiquidaciones && data) {
+      console.log(data)
       dispatch({
         type: "SET_LIQUIDACIONES",
         payload: data.liquidaciones,
@@ -58,25 +60,21 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
   // Función para agregar una liquidación, optimizado con useCallback.
   const agregarLiquidacion = useCallback(
     async (liquidacion: Liquidacion) => {
+
       try {
         // Ejecutar la mutación con los datos de la liquidación
-        const { data: response } = await crearLiquidacion({
-          variables: { liquidacion }, // Asegúrate que las variables coincidan con la mutación
+        const { data } = await crearLiquidacion({
+          variables: liquidacion, // Asegúrate que las variables coincidan con la mutación
         });
 
-        if (response?.crearLiquidacion) {
-          const nuevaLiquidacion = response.crearLiquidacion;
+        if (data?.crearLiquidacion) {
+          const nuevaLiquidacion = data?.crearLiquidacion;
 
           // Despachar acción para agregar la nueva liquidación al estado
           dispatch({
             type: "AGREGAR_LIQUIDACION",
             payload: nuevaLiquidacion,
           });
-
-          console.log(
-            "Liquidación creada y agregada al estado:",
-            nuevaLiquidacion
-          );
         }
       } catch (err) {
         if (err instanceof ApolloError) {
@@ -94,11 +92,21 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
     },
     [crearLiquidacion, dispatch]
   );
+  
+  const setLiquidacion = async (liquidacion: Liquidacion): Promise<void> => {
+    return new Promise((resolve) => {
+      dispatch({
+        type: 'SET_LIQUIDACION',
+        payload: liquidacion,
+      });
+      resolve(); // Resuelve la promesa inmediatamente después de ejecutar dispatch
+    });
+  };
+  
 
   // Efecto para obtener las liquidaciones cuando los datos están listos
   useEffect(() => {
     if (data) {
-      console.log(data)
       obtenerLiquidaciones();
     }
   }, [data, obtenerLiquidaciones]);
@@ -115,6 +123,7 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
         obtenerLiquidaciones,
         loadingLiquidaciones,
         agregarLiquidacion,
+        setLiquidacion
       }}
     >
       {children}
