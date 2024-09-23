@@ -1,25 +1,41 @@
-import {
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-} from "@nextui-org/dropdown";
-import { Link } from "@nextui-org/link";
+import useUsuario from "@/hooks/useAuth";
 import {
   Navbar,
   NavbarBrand,
   NavbarContent,
   NavbarItem,
-} from "@nextui-org/navbar";
+  NavbarMenuToggle,
+  NavbarMenu,
+  NavbarMenuItem,
+  Link,
+} from "@nextui-org/react";
+import { Button } from '@nextui-org/button'
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
 
 export default function DefaultLayout() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { state } = useUsuario();
+
+  const menuItems = [
+    {
+      name: "Liquidaciones",
+      href: "/liquidaciones",
+    },
+  ];
+
   return (
     <div className="relative flex flex-col h-screen">
-      <Navbar>
-        <NavbarBrand>
-          <p className="font-bold text-inherit">ACME</p>
-        </NavbarBrand>
+      <Navbar onMenuOpenChange={setIsMenuOpen}>
+        <NavbarContent>
+          <NavbarMenuToggle
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+            className="sm:hidden"
+          />
+          <NavbarBrand>
+            <p className="font-bold text-inherit">Transmeralda</p>
+          </NavbarBrand>
+        </NavbarContent>
 
         <NavbarContent className="hidden sm:flex gap-4" justify="center">
           <NavbarItem>
@@ -27,44 +43,29 @@ export default function DefaultLayout() {
               Liquidaciones
             </Link>
           </NavbarItem>
-          <NavbarItem isActive>
-            <Link href="#" aria-current="page" color="secondary">
-              Customers
-            </Link>
-          </NavbarItem>
-          <NavbarItem>
-            <Link color="foreground" href="#">
-              Integrations
-            </Link>
+        </NavbarContent>
+        <NavbarContent justify="end">
+          <NavbarItem className="hidden lg:flex">
+            <Link href="#">Hola! {state.usuario?.nombre}</Link>
           </NavbarItem>
         </NavbarContent>
-
-        <NavbarContent as="div" justify="end">
-          <Dropdown placement="bottom-end">
-            <DropdownTrigger>
-              <button className="px-4 py-2 bg-blue-500 text-white rounded">
-                Profile
-              </button>
-            </DropdownTrigger>
-            <DropdownMenu aria-label="Profile Actions" variant="flat">
-              <DropdownItem key="profile" className="h-14 gap-2">
-                <p className="font-semibold">Signed in as</p>
-                <p className="font-semibold">zoey@example.com</p>
-              </DropdownItem>
-              <DropdownItem key="settings">My Settings</DropdownItem>
-              <DropdownItem key="team_settings">Team Settings</DropdownItem>
-              <DropdownItem key="analytics">Analytics</DropdownItem>
-              <DropdownItem key="system">System</DropdownItem>
-              <DropdownItem key="configurations">Configurations</DropdownItem>
-              <DropdownItem key="help_and_feedback">
-                Help & Feedback
-              </DropdownItem>
-              <DropdownItem key="logout" color="danger">
-                Log Out
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-        </NavbarContent>
+        <NavbarMenu className="pb-8">
+          {menuItems.map((item, index) => (
+            <NavbarMenuItem key={`${item}-${index}`}>
+              <Link
+                color="foreground"
+                className="w-full"
+                href={item.href}
+                size="lg"
+              >
+                {item.name}
+              </Link>
+            </NavbarMenuItem>
+          ))}
+          <Button className="bg-red-500 text-white mt-auto">
+            Cerrar sesión
+          </Button>
+        </NavbarMenu>
       </Navbar>
 
       <main className="container mx-auto px-6 flex-grow pt-16">

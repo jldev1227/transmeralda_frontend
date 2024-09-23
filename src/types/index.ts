@@ -1,91 +1,104 @@
-import { DateValue, RangeValue } from "@nextui-org/react";
+import { DateValue } from "@nextui-org/react";
 import { SVGProps } from "react";
 
+// Definición de tipos para SVG
 export type IconSvgProps = SVGProps<SVGSVGElement> & {
   size?: number;
 };
 
-export type Pernote = { empresa: string; cantidad: number };
-export type Recargo = { empresa: string; valor: number };
-export type Bono = { name: string; quantity: number; value: number };
+// Tipos para Bonificaciones, Pernotes y Recargos
+export type Bono = {id?: string, name: string; quantity: number; value: number, vehiculoId?: string | null,   __typename?: string; };
+export type Pernote = {id?: string, empresa: string; cantidad: number; valor: number, vehiculoId?: string | null,   __typename?: string; }; // Agregado `valor` para pernote
+export type Recargo = {id?: string, empresa: string; valor: number, vehiculoId?: string | null,   __typename?: string; };
+
+// Vehículo y Conductor
+export type VehiculoOption = {
+  value: string;
+  label: string;
+};
+
+export type ConductorOption = {
+  value: string;
+  label: string;
+};
+
+export type Conductor = {
+  id: string;
+  nombre: string;
+  apellido: string;
+  cc: string;
+  correo: string;
+  salarioBase: number;
+};
+
+export type Vehiculo = {
+  id: string;
+  placa: string;
+  __typename?: string;
+};
+
+// Detalles del vehículo, incluyendo Bonificaciones, Pernotes y Recargos
 export type DetalleVehiculo = {
   vehiculo: VehiculoOption;
   bonos: Bono[];
   pernotes: Pernote[];
   recargos: Recargo[];
 };
-export type Conductor = {
-  id: string,
-  nombre: string,
-  apellido: string,
-  cc: string,
-  correo: string,
-  salarioBase: number
-}
 
-export type Liquidacion = {
-  id?: string;
-  periodo: RangeValue<DateValue> | null
-  conductor: Conductor | null;
+// Tipo base para propiedades comunes entre Liquidacion y LiquidacionInput
+type BaseLiquidacion = {
+  conductorId?: Conductor['id'] | null;
   auxilioTransporte: number;
   sueldoTotal: number;
   totalPernotes: number;
   totalBonificaciones: number;
   totalRecargos: number;
-  diasLaborados: number,
-  ajusteSalarial: number,
-  vehiculos: VehiculoOption[] | null; // Añadimos el vehículo si es necesario
+  diasLaborados: number;
+  ajusteSalarial: number;
+  bonificaciones?: Bono[];              // Bonificaciones opcionales
+  pernotes?: Pernote[];                 // Pernotes opcionales
+  recargos?: Recargo[];                 // Recargos opcionales
 };
 
-export type ConductorOption = {
-  value: string;
-  label: string;
-}
+// LiquidacionInput: utiliza `DateValue | null` para las fechas
+export type LiquidacionInput = BaseLiquidacion & {
+  id?: string;
+  periodoStart: DateValue | null;  // Asegúrate de que esta propiedad esté incluida
+  periodoEnd: DateValue | null;    // Asegúrate de que esta propiedad esté incluida
+  vehiculos: string[]
+};
 
-export type VehiculoOption = {
-  value: string;
-  label: string;
-}
+// Liquidacion: utiliza `string` para las fechas
+export type Liquidacion = BaseLiquidacion & {
+  id?: string;
+  conductor: Conductor;
+  periodoStart: string;  // Tipo string para las liquidaciones ya guardadas
+  periodoEnd: string;    // Tipo string para las liquidaciones ya guardadas
+  vehiculos: Vehiculo[]; // Array de valores de vehículos (IDs)
+};
 
-export type DateSelected = {
-  start: {
-    era: string;
-    year: number;
-    month: number;
-    day: number;
-    calendar: { identifier: string };
-  };
-  end: {
-    era: string;
-    year: number;
-    month: number;
-    day: number;
-    calendar: { identifier: string };
-  };
-}
-
+// Usuario y credenciales de login
 export interface LoginCredentials {
-    correo: string;
-    password: string;
+  correo: string;
+  password: string;
 }
 
 export type Usuario = {
-  id: number;                  // UUID o ObjectId, dependiendo del backend
-  nombre: string;                // Nombre completo del usuario
-  apellido: string;                // Nombre completo del usuario
-  correo: string;              // Dirección de correo electrónico
-  password: string;     // Contraseña almacenada de forma segura (hashed)
-  telefono: number;              // Teléfono
-  rol: String;              // Teléfono
-  confirmado: boolean;    // URL de la imagen de perfil (opcional)
-  imagenUrl?: string;    // URL de la imagen de perfil (opcional)
-  token?: string;              // Token de autenticación (opcional)
-  createdAt: String
-  updatedAt: String
-}
+  id: number;
+  nombre: string;
+  apellido: string;
+  correo: string;
+  password: string; // Hashed password
+  telefono: number;
+  rol: string;
+  confirmado: boolean;
+  imagenUrl?: string; // Opcional
+  token?: string; // Opcional
+  createdAt: string;
+  updatedAt: string;
+};
 
-// src/types/alertTypes.ts
-
+// Estado de alerta (mensaje de éxito o error)
 export interface AlertState {
   success: boolean;
   message: string;

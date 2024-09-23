@@ -7,33 +7,37 @@ import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/card";
 import { Button } from "@nextui-org/button";
 import { conductores, vehiculos, empresas } from "@/data/index";
 import { useMemo, useState, useCallback, useEffect } from "react";
-import { formatToCOP, formatDateRange } from "@/helpers";
+import { formatToCOP, formatDate } from "@/helpers";
 import {
   Pernote,
   Recargo,
   DetalleVehiculo,
-  Liquidacion,
+  LiquidacionInput,
   ConductorOption,
   VehiculoOption,
   Conductor,
-  DateSelected,
+  Vehiculo,
 } from "@/types/index";
 import useLiquidacion from "@/hooks/useLiquidacion";
-// Definición de tipos
+import { parseDate } from "@internationalized/date";
+import PdfMaker from "./pdfMaker";
 
+// Componente Formulario
 export default function Formulario() {
-  const { agregarLiquidacion } = useLiquidacion();
+  const { state, dispatch, submitLiquidacion } = useLiquidacion();
+  const { liquidacion: stateLiquidacion } = state; // Obtenemos la liquidación del estado global
 
   const [conductorSelected, setConductorSelected] =
     useState<SingleValue<ConductorOption>>(null);
-    const [vehiculosSelected, setVehiculosSelected] = useState<MultiValue<VehiculoOption>>([]);
-
+  const [vehiculosSelected, setVehiculosSelected] = useState<
+    MultiValue<VehiculoOption>
+  >([]);
   const [dateSelected, setDateSelected] =
     useState<RangeValue<DateValue> | null>(null);
   const [detallesVehiculos, setDetallesVehiculos] = useState<DetalleVehiculo[]>(
     []
   );
-  const [liquidacion, setLiquidacion] = useState<Liquidacion | null>(null);
+  const [liquidacion, setLiquidacion] = useState<LiquidacionInput | null>(null);
   const [isCheckedAjuste, setIsCheckedAjuste] = useState(false);
   const [diasLaborados, setDiasLaborados] = useState(0);
 
@@ -65,26 +69,94 @@ export default function Formulario() {
     []
   );
 
+  useEffect(() => {
+    if (stateLiquidacion) {
+      // Actualizar conductor seleccionado
+      const selectedConductor = conductoresOptions.find(
+        (option) => option.value === stateLiquidacion.conductor.id
+      );
+
+      setConductorSelected(selectedConductor || null);
+      setDetallesVehiculos(
+        stateLiquidacion?.vehiculos?.map((vehiculo: Vehiculo) => {
+          const bonosDelVehiculo = stateLiquidacion.bonificaciones?.filter(
+            (bono) => bono.vehiculoId === vehiculo.id
+          ) || [];
+      
+          const pernotesDelVehiculo = stateLiquidacion.pernotes?.filter(
+            (pernote) => pernote.vehiculoId === vehiculo.id
+          ) || [];
+      
+          const recargosDelVehiculo = stateLiquidacion.recargos?.filter(
+            (recargo) => recargo.vehiculoId === vehiculo.id
+          ) || [];
+      
+          const detalles: DetalleVehiculo = {
+            vehiculo: {
+              value: vehiculo.id,
+              label: vehiculo.placa,
+            },
+            bonos:
+              bonosDelVehiculo.length > 0
+                ? bonosDelVehiculo
+                : [
+                    { name: "Bono de alimentación", quantity: 0, value: 22960 },
+                    { name: "Bono día trabajado", quantity: 0, value: 13000 },
+                    { name: "Bono día trabajado doble", quantity: 0, value: 25000 },
+                  ],
+            pernotes: pernotesDelVehiculo,
+            recargos: recargosDelVehiculo,
+          };
+      
+          return detalles;
+        }) || []
+      );
+
+      const selectedVehiculos = vehiculosOptions.filter((option) =>
+        stateLiquidacion.vehiculos.some(
+          (vehiculo) => vehiculo.id === option.value
+        )
+      );
+
+      setVehiculosSelected(selectedVehiculos);
+
+      setDateSelected({
+        start: parseDate(stateLiquidacion.periodoStart),
+        end: parseDate(stateLiquidacion.periodoEnd),
+      });
+
+      // Actualizar otros campos (por ejemplo: ajuste salarial)
+      setIsCheckedAjuste(stateLiquidacion.ajusteSalarial > 0);
+      setDiasLaborados(stateLiquidacion.diasLaborados);
+    }
+  }, [stateLiquidacion, conductoresOptions, vehiculosOptions]);
+
+  // Manejador de fechas
+  const handleDateChange = (newDate: RangeValue<DateValue> | null) => {
+    setDateSelected(newDate);
+  };
+
   // Manejadores de eventos
   const handleVehiculoSelect = useCallback(
     (selected: MultiValue<VehiculoOption>) => {
       // Convierte `MultiValue<VehiculoOption>` a `VehiculoOption[]`
-      const selectedVehiculos = selected.map(option => ({
+
+      const selectedVehiculos = selected.map((option) => ({
         value: option.value,
         label: option.label,
       }));
-  
+
       setVehiculosSelected(selectedVehiculos);
-  
+
       // Crea un mapa de detallesVehiculos para búsqueda más rápida
       const detallesMap = new Map(
         detallesVehiculos.map((detalle) => [detalle.vehiculo.value, detalle])
       );
-  
+
       // Actualiza detallesVehiculos basado en la selección
       setDetallesVehiculos(
-        selectedVehiculos.map((vehiculo) => {
-          const detalleExistente = detallesMap.get(vehiculo.value);
+        selectedVehiculos?.map((vehiculo : DetalleVehiculo['vehiculo']) => {
+          const detalleExistente = detallesMap?.get(vehiculo?.value);
           return (
             detalleExistente || {
               vehiculo,
@@ -100,7 +172,13 @@ export default function Formulario() {
         })
       );
     },
-    [detallesVehiculos, setDetallesVehiculos]
+    [
+      detallesVehiculos,
+      conductorSelected,
+      dateSelected,
+      vehiculosSelected,
+      setDetallesVehiculos,
+    ]
   );
 
   const handleBonoChange = useCallback(
@@ -134,7 +212,9 @@ export default function Formulario() {
             ? {
                 ...detalle,
                 pernotes: detalle.pernotes.map((pernote, i) =>
-                  i === index ? { ...pernote, [field]: value } : pernote
+                  i === index
+                    ? { ...pernote, [field]: value, valor: 100906 }
+                    : pernote
                 ),
               }
             : detalle
@@ -168,8 +248,8 @@ export default function Formulario() {
   );
 
   const handleAddPernote = useCallback((vehiculoId: string) => {
-    setDetallesVehiculos((prevDetalles) =>
-      prevDetalles.map((detalle) =>
+    setDetallesVehiculos((prevDetalles : any) =>
+      prevDetalles.map((detalle : any) =>
         detalle.vehiculo.value === vehiculoId
           ? {
               ...detalle,
@@ -181,8 +261,8 @@ export default function Formulario() {
   }, []);
 
   const handleAddRecargo = useCallback((vehiculoId: string) => {
-    setDetallesVehiculos((prevDetalles) =>
-      prevDetalles.map((detalle) =>
+    setDetallesVehiculos((prevDetalles : any) =>
+      prevDetalles.map((detalle : any) =>
         detalle.vehiculo.value === vehiculoId
           ? {
               ...detalle,
@@ -225,14 +305,25 @@ export default function Formulario() {
     []
   );
 
+  const limpiarStates = () => {
+    setLiquidacion(null);
+    setConductorSelected(null);
+    setVehiculosSelected([]);
+    setDetallesVehiculos([]);
+    setDateSelected(null);
+    setIsCheckedAjuste(false)
+    setDiasLaborados(0)
+  };
+
   const bonificacionVillanueva = useMemo(() => {
     if (isCheckedAjuste) {
       const conductor = conductores.find(
-        (c) => c.id === liquidacion?.conductor?.id
+        (c) => c.id === conductorSelected?.value
       );
-      console.log(conductor);
       return conductor
-        ? diasLaborados >= 17 ? 2101498 - conductor.salarioBase : ((2101498 - conductor.salarioBase) / 30) * diasLaborados
+        ? diasLaborados >= 17
+          ? 2101498 - conductor.salarioBase
+          : ((2101498 - conductor.salarioBase) / 30) * diasLaborados
         : 0;
     }
     return 0;
@@ -299,29 +390,49 @@ export default function Formulario() {
   }, [
     detallesVehiculos,
     bonificacionVillanueva,
+    dateSelected,
     conductorSelected,
+    vehiculosSelected,
     conductores,
   ]);
 
   // Actualización de la liquidación en el useEffect
-  // Actualización de la liquidación en el useEffect
   useEffect(() => {
-    // Verificar que `conductorSelected` sea válido y que liquidacion no sea null
+    // Verificar que `conductorSelected` y `vehiculosSelected` sean válidos
     if (
       !conductorSelected ||
-      detallesVehiculos.length === 0
+      detallesVehiculos.length === 0 ||
+      vehiculosSelected.length === 0 ||
+      !dateSelected
     )
       return;
 
-      console.log(detallesVehiculos)
-
     // Crea el objeto `Liquidacion` compatible con el tipo que definiste
-    const nuevaLiquidacion: Liquidacion = {
-      periodo: dateSelected,
-      conductor:
+    const nuevaLiquidacion: LiquidacionInput = {
+      periodoStart: dateSelected?.start || null,
+      periodoEnd: dateSelected?.end || null,
+      bonificaciones: detallesVehiculos.flatMap((detalle) =>
+        detalle.bonos.map((bono) => ({
+          ...bono,
+          vehiculoId: detalle.vehiculo.value, // Agrega el vehiculoId a cada bono
+        }))
+      ),
+      pernotes: detallesVehiculos.flatMap((detalle) =>
+        detalle.pernotes.map((pernote) => ({
+          ...pernote,
+          vehiculoId: detalle.vehiculo.value, // Agrega el vehiculoId a cada pernote
+        }))
+      ),
+      recargos: detallesVehiculos.flatMap((detalle) =>
+        detalle.recargos.map((recargo) => ({
+          ...recargo,
+          vehiculoId: detalle.vehiculo.value, // Agrega el vehiculoId a cada recargo
+        }))
+      ),
+      conductorId:
         conductores.find(
           (conductor) => conductor.id === conductorSelected?.value
-        ) || null, // Busca el conductor completo basado en la selección
+        )?.id || null, // Busca el conductor completo basado en la selección
       auxilioTransporte,
       sueldoTotal,
       totalPernotes,
@@ -329,7 +440,7 @@ export default function Formulario() {
       totalRecargos,
       diasLaborados,
       ajusteSalarial: bonificacionVillanueva,
-      vehiculos: detallesVehiculos.map((detalle) => detalle.vehiculo)
+      vehiculos: detallesVehiculos.map((detalle) => detalle.vehiculo.value),
     };
 
     setLiquidacion(nuevaLiquidacion);
@@ -338,8 +449,10 @@ export default function Formulario() {
     sueldoTotal,
     totalPernotes,
     totalBonificaciones,
+    dateSelected,
+    vehiculosSelected, // Ahora también dependemos de cambios en `vehiculosSelected`
     totalRecargos,
-    conductorSelected,
+    conductorSelected, // Dependemos de cambios en `conductorSelected`
     detallesVehiculos,
     conductores,
   ]);
@@ -383,20 +496,48 @@ export default function Formulario() {
   };
 
   // Función para agregar la liquidación
-  const addLiquidacion = () => {
+  const handleSubmit = async () => {
     // Verifica que liquidacion no sea null antes de registrarla
     if (liquidacion) {
       try {
-        agregarLiquidacion(liquidacion);
+        const bonificacionesFiltradas = liquidacion?.bonificaciones?.map(
+          ({ __typename, ...rest }) => rest
+        );
 
-        // Reiniciar liquidacion a null
-        setLiquidacion(null);
-        setConductorSelected(null)
-        setVehiculosSelected([])
-        setDetallesVehiculos([])
-        setDateSelected(null)
+        const pernotesFiltrados = liquidacion?.pernotes?.map(
+          ({ __typename, ...rest }) => rest
+        );
+        const recargosFiltrados = liquidacion?.recargos?.map(
+          ({ __typename, ...rest }) => rest
+        );
+
+        // Construye el objeto final de liquidación asegurando que todos los campos requeridos están presentes
+        const liquidacionFinal = {
+          id: stateLiquidacion?.id || undefined, // Verifica si hay un ID en stateLiquidacion
+          periodoStart: liquidacion.periodoStart,
+          periodoEnd: liquidacion.periodoEnd,
+          conductorId: liquidacion.conductorId || null,
+          auxilioTransporte: liquidacion.auxilioTransporte,
+          sueldoTotal: liquidacion.sueldoTotal,
+          totalPernotes: liquidacion.totalPernotes,
+          totalBonificaciones: liquidacion.totalBonificaciones,
+          totalRecargos: liquidacion.totalRecargos,
+          diasLaborados: liquidacion.diasLaborados,
+          ajusteSalarial: liquidacion.ajusteSalarial,
+          vehiculos: liquidacion.vehiculos,
+          bonificaciones: bonificacionesFiltradas,
+          pernotes: pernotesFiltrados,
+          recargos: recargosFiltrados,
+        };
+
+        // Envía la liquidación para agregar o editar
+        await submitLiquidacion(liquidacionFinal);
+
+        // Si todo va bien, limpia los estados
+        limpiarStates();
       } catch (error) {
-        console.log(error);
+        console.error("Error al registrar la liquidación:", error);
+        // No limpiar los estados si hubo un error
       }
     } else {
       console.error("Liquidación no válida.");
@@ -404,277 +545,420 @@ export default function Formulario() {
   };
 
   return (
-    <div className="grid md:grid-cols-2 gap-10">
-      <form className="w-full flex flex-col space-y-8">
-        {/* Conductor y Placa */}
-        <div className="space-y-4 flex flex-col">
-          <h2 className="font-bold text-2xl text-green-700">Formulario</h2>
-          <SelectReact
-            options={conductoresOptions}
-            value={conductorSelected}
-            onChange={setConductorSelected}
-            placeholder="Seleccione un conductor"
-            isSearchable
-            styles={customStyles}
-          />
-          <SelectReact
-            options={vehiculosOptions}
-            value={vehiculosSelected}
-            onChange={(selectedOptions) =>
-              handleVehiculoSelect(selectedOptions)
-            }
-            placeholder="Seleccione una o más placas"
-            isMulti
-            isSearchable
-            styles={customStyles}
-          />
-          <DateRangePicker
-            onChange={setDateSelected}
-            label="Periodo a liquidar"
-            value={dateSelected}
-          />
+    <>
+      <div
+        className={`grid ${state.allowEdit || state.allowEdit == null ? "lg:grid-cols-2" : "lg:grid-cols-1"} gap-10`}
+      >
+        {(stateLiquidacion || stateLiquidacion === null) &&
+          (state.allowEdit || state.allowEdit === null) && (
+            <form className="w-full flex flex-col space-y-8">
+              <div className={"space-y-4 flex flex-col"}>
+                <h2 className="font-bold text-2xl text-green-700">
+                  {stateLiquidacion?.id ? "Editando" : "Creando"}
+                </h2>
+                <SelectReact
+                  options={conductoresOptions}
+                  value={conductorSelected}
+                  onChange={setConductorSelected}
+                  placeholder="Seleccione un conductor"
+                  isSearchable
+                  styles={customStyles}
+                />
+                <SelectReact
+                  options={vehiculosOptions}
+                  value={vehiculosSelected}
+                  onChange={(selectedOptions) =>
+                    handleVehiculoSelect(selectedOptions)
+                  }
+                  placeholder="Seleccione una o más placas"
+                  isMulti
+                  isSearchable
+                  styles={customStyles}
+                />
+                <DateRangePicker
+                  onChange={handleDateChange}
+                  label="Periodo a liquidar"
+                  lang="es-ES"
+                  value={dateSelected}
+                />
 
-          {detallesVehiculos &&
-            dateSelected &&
-            detallesVehiculos.map((detalleVehiculo, index) => (
-              <div key={index}>
-                <div className="space-y-4 flex flex-col">
-                  <h2 className="text-xl font-semibold mb-3">
-                    Vehículo: {detalleVehiculo.vehiculo.label}
-                  </h2>
-                  <h3 className="font-semibold mb-2">Bonos</h3>
-                  {detalleVehiculo.bonos.map((bono) => (
-                    <Input
-                      key={bono.name}
-                      type="number"
-                      label={`${bono.name} ($${bono.value.toLocaleString()})`}
-                      placeholder={`Ingresa la cantidad de ${bono.name.toLowerCase()}`}
-                      value={bono.quantity.toString()}
-                      onChange={(e) =>
-                        handleBonoChange(
-                          detalleVehiculo.vehiculo.value,
-                          bono.name,
-                          +e.target.value
-                        )
-                      }
-                    />
-                  ))}
-                  <h3 className="font-semibold mb-2">Pernotes</h3>
-                  {detalleVehiculo.pernotes.map((pernote, pernoteIndex) => (
-                    <div key={pernoteIndex} className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-center">
-                      <SelectReact
-                        options={empresasOptions}
-                        value={
-                          empresasOptions.find(
-                            (option) => option.value === pernote.empresa
-                          ) || null
-                        }
-                        onChange={(selectedOption) =>
-                          handlePernoteChange(
-                            detalleVehiculo.vehiculo.value,
-                            pernoteIndex,
-                            "empresa",
-                            selectedOption?.value || ""
+                {conductorSelected &&
+                  vehiculosSelected &&
+                  dateSelected &&
+                  detallesVehiculos?.map((detalleVehiculo, index) => (
+                    <div key={index}>
+                      <div className="space-y-4 flex flex-col">
+                        <h2 className="text-xl font-semibold mb-3">
+                          Vehículo: {detalleVehiculo.vehiculo.label}
+                        </h2>
+                        <h3 className="font-semibold mb-2">Bonos</h3>
+                        {detalleVehiculo.bonos.map((bono) => (
+                          <Input
+                            key={bono.name}
+                            type="number"
+                            label={`${bono.name} ($${bono.value.toLocaleString()})`}
+                            placeholder={`Ingresa la cantidad de ${bono.name.toLowerCase()}`}
+                            value={bono.quantity.toString()}
+                            onChange={(e) =>
+                              handleBonoChange(
+                                detalleVehiculo.vehiculo.value,
+                                bono.name,
+                                +e.target.value
+                              )
+                            }
+                          />
+                        ))}
+                        <h3 className="font-semibold mb-2">Pernotes</h3>
+                        {detalleVehiculo.pernotes?.map(
+                          (pernote, pernoteIndex) => (
+                            <div
+                              key={pernoteIndex}
+                              className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-center"
+                            >
+                              <SelectReact
+                                options={empresasOptions}
+                                value={
+                                  empresasOptions.find(
+                                    (option) => option.value === pernote.empresa
+                                  ) || null
+                                }
+                                onChange={(selectedOption) =>
+                                  handlePernoteChange(
+                                    detalleVehiculo.vehiculo.value,
+                                    pernoteIndex,
+                                    "empresa",
+                                    selectedOption?.value || ""
+                                  )
+                                }
+                                placeholder="Selecciona una empresa"
+                                isSearchable
+                                styles={customStyles}
+                                className="lg:col-span-3"
+                              />
+                              <Input
+                                type="number"
+                                label="Cantidad"
+                                placeholder="0"
+                                className="lg:col-span-1"
+                                value={pernote.cantidad.toString()}
+                                onChange={(e) =>
+                                  handlePernoteChange(
+                                    detalleVehiculo.vehiculo.value,
+                                    pernoteIndex,
+                                    "cantidad",
+                                    +e.target.value
+                                  )
+                                }
+                              />
+                              <Button
+                                onClick={() =>
+                                  handleRemovePernote(
+                                    detalleVehiculo.vehiculo.value,
+                                    pernoteIndex
+                                  )
+                                }
+                                className="m-auto bg-red-600 text-white w-full lg:col-span-1 lg:w-auto"
+                              >
+                                X
+                              </Button>
+                            </div>
                           )
-                        }
-                        placeholder="Selecciona una empresa"
-                        isSearchable
-                        styles={customStyles}
-                        className="lg:col-span-3"
-                      />
-                      <Input
-                        type="number"
-                        label="Cantidad"
-                        placeholder="0"
-                        className="lg:col-span-1"
-                        value={pernote.cantidad.toString()}
-                        onChange={(e) =>
-                          handlePernoteChange(
-                            detalleVehiculo.vehiculo.value,
-                            pernoteIndex,
-                            "cantidad",
-                            +e.target.value
+                        )}
+                        <Button
+                          onClick={() =>
+                            handleAddPernote(detalleVehiculo.vehiculo.value)
+                          }
+                          className="bg-primary-700 text-white"
+                        >
+                          Añadir pernote
+                        </Button>
+                        <h3 className="font-semibold mb-2">Recargos</h3>
+                        {detalleVehiculo.recargos?.map(
+                          (recargo, recargoIndex) => (
+                            <div
+                              key={recargoIndex}
+                              className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-center"
+                            >
+                              <SelectReact
+                                options={empresasOptions}
+                                value={
+                                  empresasOptions.find(
+                                    (option) => option.value === recargo.empresa
+                                  ) || null
+                                }
+                                onChange={(selectedOption) =>
+                                  handleRecargoChange(
+                                    detalleVehiculo.vehiculo.value,
+                                    recargoIndex,
+                                    "empresa",
+                                    selectedOption?.value || ""
+                                  )
+                                }
+                                placeholder="Selecciona una empresa"
+                                isSearchable
+                                styles={customStyles}
+                                className="lg:col-span-3"
+                              />
+                              <Input
+                                type="number"
+                                label="Valor"
+                                placeholder="$0"
+                                className="col-span-1"
+                                value={recargo.valor.toString()}
+                                onChange={(e) =>
+                                  handleRecargoChange(
+                                    detalleVehiculo.vehiculo.value,
+                                    recargoIndex,
+                                    "valor",
+                                    +e.target.value
+                                  )
+                                }
+                              />
+                              <Button
+                                onClick={() =>
+                                  handleRemoveRecargo(
+                                    detalleVehiculo.vehiculo.value,
+                                    recargoIndex
+                                  )
+                                }
+                                className="m-auto bg-red-600 text-white w-full lg:col-span-1 lg:w-auto"
+                              >
+                                X
+                              </Button>
+                            </div>
                           )
-                        }
-                      />
-                      <Button
-                        onClick={() =>
-                          handleRemovePernote(
-                            detalleVehiculo.vehiculo.value,
-                            pernoteIndex
-                          )
-                        }
-                        className="m-auto bg-red-300 text-white w-full lg:col-span-1 lg:w-auto"
-                         >
-                        X
-                      </Button>
+                        )}
+                        <Button
+                          onClick={() =>
+                            handleAddRecargo(detalleVehiculo.vehiculo.value)
+                          }
+                          className="bg-primary-700 text-white"
+                        >
+                          Añadir recargo
+                        </Button>
+                      </div>
                     </div>
                   ))}
-                  <Button
-                    onClick={() =>
-                      handleAddPernote(detalleVehiculo.vehiculo.value)
-                    }
-                    className="bg-green-300"
-                  >
-                    Añadir pernote
-                  </Button>
-                  <h3 className="font-semibold mb-2">Recargos</h3>
-                  {detalleVehiculo.recargos.map((recargo, recargoIndex) => (
-                    <div key={recargoIndex} className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-center">
-                      <SelectReact
-                        options={empresasOptions}
-                        value={
-                          empresasOptions.find(
-                            (option) => option.value === recargo.empresa
-                          ) || null
-                        }
-                        onChange={(selectedOption) =>
-                          handleRecargoChange(
-                            detalleVehiculo.vehiculo.value,
-                            recargoIndex,
-                            "empresa",
-                            selectedOption?.value || ""
-                          )
-                        }
-                        placeholder="Selecciona una empresa"
-                        isSearchable
-                        styles={customStyles}
-                        className="lg:col-span-3"
-                      />
-                      <Input
-                        type="number"
-                        label="Valor"
-                        placeholder="$0"
-                        className="col-span-1"
-                        value={recargo.valor.toString()}
-                        onChange={(e) =>
-                          handleRecargoChange(
-                            detalleVehiculo.vehiculo.value,
-                            recargoIndex,
-                            "valor",
-                            +e.target.value
-                          )
-                        }
-                      />
-                      <Button
-                        onClick={() =>
-                          handleRemoveRecargo(
-                            detalleVehiculo.vehiculo.value,
-                            recargoIndex
-                          )
-                        }
-                        className="m-auto bg-red-300 text-white w-full lg:col-span-1 lg:w-auto"
-                      >
-                        X
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    onClick={() =>
-                      handleAddRecargo(detalleVehiculo.vehiculo.value)
-                    }
-                    className="bg-green-300"
-                  >
-                    Añadir recargo
-                  </Button>
-                </div>
               </div>
-            ))}
-        </div>
-      </form>
-      <div className="w-full">
-        {liquidacion && detallesVehiculos && dateSelected && vehiculos && (
-          <>
-            <ConductorInfo
-              conductor={conductores.find(
-                (c) => c.id === liquidacion.conductor?.id
-              ) || null}
-              dateSelected={dateSelected}
-            />
-            {detallesVehiculos.map((detalle, index) => (
-              <CardLiquidacion key={index} detalleVehiculo={detalle} />
-            ))}
-          </>
-        )}
-        {detallesVehiculos.length > 0 && dateSelected && vehiculos && (
-          <Card>
-            <CardHeader>
-              <p className="text-xl font-semibold">Resumen</p>
-            </CardHeader>
-            <Divider />
-            <CardBody className="space-y-4">
-              <Checkbox
-                isSelected={isCheckedAjuste}
-                onChange={(e) => setIsCheckedAjuste(e.target.checked)}
-              >
-                Bonificación Villanueva
-              </Checkbox>
-              {isCheckedAjuste && (
-                <>
-                  <Input
-                    value={diasLaborados.toString()}
-                    onChange={(e) => setDiasLaborados(+e.target.value)}
-                    type="number"
-                    label="Cantidad días laborados"
-                    placeholder="Ingresa la cantidad de días laborados"
-                    className="max-w-xs"
-                  />
-                  <div>
-                    <p>Bonificación villanueva</p>
-                    <p>{formatToCOP(bonificacionVillanueva)}</p>
+            </form>
+          )}
+        <div
+          className={`grid ${state.allowEdit || state.allowEdit == null ? "w-full" : "lg:w-1/2 lg:mx-auto"} gap-10`}
+        >
+          {detallesVehiculos && dateSelected && vehiculos && (
+            <>
+              <ConductorInfo
+                conductor={
+                  conductores.find((c) => c.id === conductorSelected?.value) ||
+                  null
+                }
+                dateSelected={dateSelected}
+              />
+              {detallesVehiculos.map((detalle, index) => (
+                <CardLiquidacion key={index} detalleVehiculo={detalle} />
+              ))}
+            </>
+          )}
+          {detallesVehiculos.length > 0 && dateSelected && vehiculos && (
+            <Card>
+              <CardHeader>
+                <p className="text-xl font-semibold">Resumen</p>
+              </CardHeader>
+              <Divider />
+              <CardBody className="space-y-4">
+                <Checkbox
+                  isDisabled={
+                    state.allowEdit || state.allowEdit == null ? false : true
+                  }
+                  isSelected={isCheckedAjuste}
+                  onChange={(e) => setIsCheckedAjuste(e.target.checked)}
+                >
+                  Bonificación Villanueva
+                </Checkbox>
+                {isCheckedAjuste && (
+                  <>
+                    <Input
+                      isDisabled={
+                        state.allowEdit || state.allowEdit == null
+                          ? false
+                          : true
+                      }
+                      value={diasLaborados.toString()}
+                      onChange={(e) => setDiasLaborados(+e.target.value)}
+                      type="number"
+                      label="Cantidad días laborados"
+                      placeholder="Ingresa la cantidad de días laborados"
+                      className="max-w-xs"
+                    />
+                    <div>
+                      <p>Bonificación villanueva</p>
+                      <p className="text-xl text-orange-400">
+                        {formatToCOP(bonificacionVillanueva)}
+                      </p>
+                    </div>
+                  </>
+                )}
+                <div>
+                  <p>Salario base:</p>
+                  <p className="text-xl text-primary-400">
+                    {formatToCOP(salarioBaseConductor)}
+                  </p>
+                </div>
+                <div>
+                  <p>Auxilio transporte:</p>
+                  <p className="text-xl text-yellow-500">
+                    {formatToCOP(auxilioTransporte)}
+                  </p>
+                </div>
+                <div>
+                  <p>Total bonificacaciones:</p>
+                  <p className="text-xl text-secondary-500">
+                    {formatToCOP(
+                      totalBonificaciones + totalPernotes + totalRecargos
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <p>Salario total:</p>
+                  <p className="text-2xl text-green-500">
+                    {formatToCOP(sueldoTotal)}
+                  </p>
+                </div>
+                {!state.allowEdit && state?.liquidacion?.id && (
+                  <div className="grid md:grid-cols-3 gap-5">
+                    <div className="col-span-2">
+                      <PdfMaker item={state.liquidacion}>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="size-6"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+                          />
+                        </svg>
+                        <p className="ml-2">Desprendible de nomina</p>
+                      </PdfMaker>
+                    </div>
+                    <Button
+                      className="col-span-2 md:col-span-1 bg-red-600 text-white"
+                      onPress={() => {
+                        // Cancelar y limpiar los estados
+                        dispatch({
+                          type: "SET_LIQUIDACION",
+                          payload: {
+                            allowEdit: null,
+                            liquidacion: null,
+                          },
+                        });
+
+                        limpiarStates();
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="size-5 text-white"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M6 18 18 6M6 6l12 12"
+                        />
+                      </svg>
+                      <p>
+                        {" "}
+                        Cancelar{" "}
+                        {stateLiquidacion?.id && state.allowEdit
+                          ? "edición"
+                          : stateLiquidacion?.id && !state.allowEdit
+                            ? "consulta"
+                            : "creación"}
+                      </p>
+                    </Button>
                   </div>
+                )}
+              </CardBody>
+              {(state.allowEdit || state.allowEdit === null) && (
+                <>
+                  <Divider />
+                  <CardFooter className="grid grid-cols-5 gap-5">
+                    <Button
+                      onPress={handleSubmit}
+                      className="col-span-3 bg-green-700 text-white"
+                    >
+                      {stateLiquidacion?.id
+                        ? "Editar liquidación"
+                        : "Agregar liquidación"}
+                    </Button>
+                    <Button
+                      className="col-span-2 bg-red-600 text-white"
+                      onPress={() => {
+                        // Cancelar y limpiar los estados
+                        dispatch({
+                          type: "SET_LIQUIDACION",
+                          payload: {
+                            allowEdit: null,
+                            liquidacion: null,
+                          },
+                        });
+
+                        limpiarStates();
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="size-5 text-white"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M6 18 18 6M6 6l12 12"
+                        />
+                      </svg>
+                      Cancelar{" "}
+                      {stateLiquidacion?.id && state.allowEdit
+                        ? "edición"
+                        : stateLiquidacion?.id && !state.allowEdit
+                          ? "consulta"
+                          : "creación"}
+                    </Button>
+                  </CardFooter>
                 </>
               )}
-              <div>
-                <p>Salario base:</p>
-                <p>{formatToCOP(salarioBaseConductor)}</p>
-              </div>
-              <div>
-                <p>Auxilio transporte:</p>
-                <p>{formatToCOP(auxilioTransporte)}</p>
-              </div>
-              <div>
-                <p>Total bonificacaciones:</p>
-                <p>{formatToCOP(totalBonificaciones + totalPernotes + totalRecargos)}</p>
-              </div>
-              <div>
-                <p>Salario total:</p>
-                <p>{formatToCOP(sueldoTotal)}</p>
-              </div>
-            </CardBody>
-            <Divider />
-            <CardFooter>
-              <Button
-                onPress={addLiquidacion}
-                className="w-full bg-green-700 text-white"
-              >
-                Agregar liquidación
-              </Button>
-            </CardFooter>
-          </Card>
-        )}
+            </Card>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
-
-
 interface ConductorInfoProps {
   conductor: Conductor | null;
-  dateSelected: DateSelected | null;
+  dateSelected: any | null;
 }
 
-const ConductorInfo = ({ conductor, dateSelected } : ConductorInfoProps) => {
-  console.log(conductor, dateSelected)
+const ConductorInfo = ({ conductor, dateSelected }: ConductorInfoProps) => {
   if (!conductor) return null;
   return (
     <div className="mb-5">
       <h1 className="text-center text-2xl font-bold">{`${conductor.nombre} ${conductor.apellido}`}</h1>
       <p className="text-center">C.C. {conductor.cc}</p>
       <h2 className="text-center">
-        {formatDateRange(dateSelected?.start)} -{" "}
-        {formatDateRange(dateSelected?.end)}
+        {formatDate(dateSelected?.start)} - {formatDate(dateSelected?.end)}
       </h2>
     </div>
   );
@@ -691,9 +975,7 @@ const ListSection = <T,>({ title, items, formatFn }: ListSectionProps<T>) => (
     <h3 className="text-xl font-semibold">{title}</h3>
     <div>
       {items.map((item, index) => (
-        <div key={index} className="md:grid md:grid-cols-5">
-          {formatFn(item, index)}
-        </div>
+        <div key={index}>{formatFn(item, index)}</div>
       ))}
     </div>
   </div>
@@ -703,7 +985,7 @@ interface CardLiquidacionProps {
   detalleVehiculo: DetalleVehiculo;
 }
 
-const CardLiquidacion = ({ detalleVehiculo } : CardLiquidacionProps) => {
+const CardLiquidacion = ({ detalleVehiculo }: CardLiquidacionProps) => {
   const totalBonos = useMemo(
     () =>
       detalleVehiculo.bonos.reduce(
@@ -745,15 +1027,15 @@ const CardLiquidacion = ({ detalleVehiculo } : CardLiquidacionProps) => {
           title="Bonificaciones"
           items={detalleVehiculo.bonos}
           formatFn={(bono) => (
-            <>
-              <p className="col-span-3">
+            <div className="sm:grid sm:grid-cols-4">
+              <p className="col-span-2">
                 {bono.name} ({formatToCOP(bono.value)}) :
               </p>
-              <p className="md:text-right text-primary-500">{bono.quantity}</p>
-              <p className="md:text-right text-green-500 mb-5 md:mb-0">
+              <p className="sm:text-right text-primary-500">{bono.quantity}</p>
+              <p className="sm:text-right text-green-500 mb-2 sm:mb-0">
                 {formatToCOP(bono.quantity * bono.value)}
               </p>
-            </>
+            </div>
           )}
         />
         <ListSection
@@ -764,15 +1046,15 @@ const CardLiquidacion = ({ detalleVehiculo } : CardLiquidacionProps) => {
               (empresa) => empresa.NIT === pernote.empresa
             );
             return (
-              <>
-                <p className="col-span-3 text-md">{empresa?.Nombre}</p>
-                <p className="md:text-right text-primary-500">
+              <div className="sm:grid sm:grid-cols-4">
+                <p className="col-span-2 text-md">{empresa?.Nombre}</p>
+                <p className="sm:text-right text-primary-500">
                   {pernote.cantidad}
                 </p>
-                <p className="md:text-right text-green-500">
+                <p className="sm:text-right text-green-500 mb-2 sm:mb-0">
                   {formatToCOP(pernote.cantidad * 100906)}
                 </p>
-              </>
+              </div>
             );
           }}
         />
@@ -784,18 +1066,18 @@ const CardLiquidacion = ({ detalleVehiculo } : CardLiquidacionProps) => {
               (empresa) => empresa.NIT === recargo.empresa
             );
             return (
-              <>
-                <p className="col-span-4 text-md">{empresa?.Nombre}</p>
-                <p className="text-right text-green-500">
+              <div className="sm:grid sm:grid-cols-4">
+                <p className="col-span-3 text-md">{empresa?.Nombre}</p>
+                <p className="sm:text-right text-green-500 mb-2 sm:mb-0">
                   {formatToCOP(recargo.valor)}
                 </p>
-              </>
+              </div>
             );
           }}
         />
       </CardBody>
       <Divider />
-      <CardFooter className="w-full space-y-2 flex flex-col">
+      <CardFooter className="w-full space-y-1 flex flex-col">
         <SummaryRow
           label="Total bonificaciones"
           value={formatToCOP(totalBonos)}
@@ -819,7 +1101,7 @@ interface SummaryRowProps {
   value: string;
 }
 
-const SummaryRow = ({ label, value } : SummaryRowProps) => (
+const SummaryRow = ({ label, value }: SummaryRowProps) => (
   <div className="w-full flex justify-between">
     <p className="font-semibold">{label}: </p>
     <p className="text-yellow-500">{value}</p>

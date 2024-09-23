@@ -10,7 +10,7 @@ import { Pagination } from "@nextui-org/react";
 import { useEffect, useMemo, useState } from "react";
 import { Liquidacion } from "@/types/index";
 import useLiquidacion from "@/hooks/useLiquidacion";
-import { formatDateRange, formatToCOP } from "@/helpers";
+import { formatDate, formatToCOP } from "@/helpers";
 import { Button } from "@nextui-org/button";
 import { Accordion, AccordionItem } from "@nextui-org/accordion";
 import { Tooltip } from "@nextui-org/tooltip";
@@ -19,7 +19,8 @@ export default function LiquidacionesList() {
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
 
-  const { state, dispatch, loadingLiquidaciones } = useLiquidacion();
+  const { state, dispatch, loadingLiquidaciones } =
+    useLiquidacion();
 
   const pages = Math.ceil(state.liquidaciones.length / rowsPerPage);
 
@@ -59,7 +60,7 @@ export default function LiquidacionesList() {
 
   const isMobile = useMediaQuery("(max-width: 640px)"); // Tailwind `sm` breakpoint
 
-  if(loadingLiquidaciones) return <p>Cargando liquidaciones...</p>
+  if (loadingLiquidaciones) return <p>Cargando liquidaciones...</p>;
 
   if (!state.liquidaciones || state.liquidaciones.length === 0) {
     return <p>No hay liquidaciones registradas.</p>;
@@ -67,14 +68,15 @@ export default function LiquidacionesList() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-center font-bold text-2xl text-green-700">Historial de liquidaciones</h1>
+      <h1 className="text-center font-bold text-2xl text-green-700">
+        Historial de liquidaciones
+      </h1>
       {isMobile ? (
         // Acordeón para dispositivos móviles
         <Accordion variant="splitted">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <AccordionItem
-              key={item.id}
-              // Agregamos el textValue para mejorar la accesibilidad
+              key={item.id || `liquidacion-${index}`} // Agregamos el textValue para mejorar la accesibilidad
               textValue={`${item.conductor?.nombre} ${item.conductor?.apellido} - ${item.conductor?.cc}`}
               // Personalizar el título del acordeón con la información deseada
               title={
@@ -86,13 +88,13 @@ export default function LiquidacionesList() {
                 <div className="flex flex-col text-sm space-y-1">
                   <span>
                     <strong>Vehiculos:</strong>{" "}
-                    {item.vehiculos
-                      ?.map((vehiculo) => vehiculo.label)
+                    {item?.vehiculos
+                      ?.map((vehiculo) => vehiculo.placa)
                       .join(" - ")}
                   </span>
                   <span>
                     <strong>Periodo:</strong>{" "}
-                    {`${formatDateRange(item.periodo?.start)} - ${formatDateRange(item.periodo?.end)}`}
+                    {`${formatDate(item.periodoStart)} - ${formatDate(item.periodoEnd)}`}
                   </span>
                   <span>
                     <strong>Días trabajados:</strong> {item.diasLaborados}
@@ -130,15 +132,28 @@ export default function LiquidacionesList() {
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-6 mt-10">
-                  <Button color="primary">Editar</Button>
+                  <Button
+                    onPress={() =>
+                      dispatch({
+                        type: "SET_LIQUIDACION",
+                        payload: {
+                          allowEdit: true,
+                          liquidacion: item,
+                        },
+                      })
+                    }
+                    color="primary"
+                  >
+                    Editar
+                  </Button>
                   <Button
                     onPress={() => {
                       dispatch({
                         type: "SET_LIQUIDACION",
-                        payload: item,
-                      });
-                      dispatch({
-                        type: "SET_MODAL",
+                        payload: {
+                          allowEdit: false,
+                          liquidacion: item,
+                        },
                       });
                     }}
                     color="secondary"
@@ -191,40 +206,53 @@ export default function LiquidacionesList() {
             items={items}
           >
             {(item: Liquidacion) => (
-              <TableRow key={item.id}>
-                <TableCell className="text-tiny">{item.id}</TableCell>
+              <TableRow key={item?.id || `row-${item?.conductor?.cc}`}>
+                <TableCell className="text-tiny">{item?.id}</TableCell>
                 <TableCell className="text-tiny">
-                  {formatDateRange(item.periodo?.start)} -{" "}
-                  {formatDateRange(item.periodo?.end)}
+                  {formatDate(item?.periodoStart)} -{" "}
+                  {formatDate(item?.periodoEnd)}
                 </TableCell>
-                <TableCell className="text-tiny">{`${item.conductor?.nombre} ${item.conductor?.apellido}`}</TableCell>
+                <TableCell className="text-tiny">{`${item?.conductor?.nombre} ${item.conductor?.apellido}`}</TableCell>
                 <TableCell className="text-tiny">
-                  {formatToCOP(item.conductor?.salarioBase ?? 0)}
-                </TableCell>
-                <TableCell className="text-tiny">
-                  {formatToCOP(item.auxilioTransporte)}
+                  {formatToCOP(item?.conductor?.salarioBase ?? 0)}
                 </TableCell>
                 <TableCell className="text-tiny">
-                  {item.diasLaborados}
+                  {formatToCOP(item?.auxilioTransporte)}
                 </TableCell>
                 <TableCell className="text-tiny">
-                  {formatToCOP(item.totalBonificaciones)}
+                  {item?.diasLaborados}
                 </TableCell>
                 <TableCell className="text-tiny">
-                  {formatToCOP(item.totalPernotes)}
+                  {formatToCOP(item?.totalBonificaciones)}
                 </TableCell>
                 <TableCell className="text-tiny">
-                  {formatToCOP(item.totalRecargos)}
+                  {formatToCOP(item?.totalPernotes)}
                 </TableCell>
                 <TableCell className="text-tiny">
-                  {formatToCOP(item.ajusteSalarial)}
+                  {formatToCOP(item?.totalRecargos)}
                 </TableCell>
                 <TableCell className="text-tiny">
-                  {formatToCOP(item.sueldoTotal)}
+                  {formatToCOP(item?.ajusteSalarial)}
+                </TableCell>
+                <TableCell className="text-tiny">
+                  {formatToCOP(item?.sueldoTotal)}
                 </TableCell>
                 <TableCell className="flex gap-2">
                   <Tooltip content="Editar" color="primary">
-                    <Button color="primary" className="h-9" isIconOnly>
+                    <Button
+                      onPress={() =>
+                        dispatch({
+                          type: "SET_LIQUIDACION",
+                          payload: {
+                            allowEdit: true,
+                            liquidacion: item,
+                          },
+                        })
+                      }
+                      color="primary"
+                      className="h-9"
+                      isIconOnly
+                    >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -241,17 +269,17 @@ export default function LiquidacionesList() {
                       </svg>
                     </Button>
                   </Tooltip>
-                  <Tooltip content="Ver" color="secondary">
+                  <Tooltip content="Consultar" color="secondary">
                     <Button
-                      onPress={() => {
+                       onPress={() =>
                         dispatch({
                           type: "SET_LIQUIDACION",
-                          payload: item,
-                        });
-                        dispatch({
-                          type: "SET_MODAL",
-                        });
-                      }}
+                          payload: {
+                            allowEdit: false,
+                            liquidacion: item,
+                          },
+                        })
+                      }
                       color="secondary"
                       className="h-9"
                       isIconOnly
