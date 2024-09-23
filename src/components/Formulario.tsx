@@ -890,17 +890,17 @@ export default function Formulario() {
               {(state.allowEdit || state.allowEdit === null) && (
                 <>
                   <Divider />
-                  <CardFooter className="grid grid-cols-5 gap-5">
+                  <CardFooter className="grid grid-cols-1 md:grid-cols-5 gap-5">
                     <Button
                       onPress={handleSubmit}
-                      className="col-span-3 bg-green-700 text-white"
+                      className="col-span-1 md:col-span-3 bg-green-700 text-white"
                     >
                       {stateLiquidacion?.id
                         ? "Editar liquidación"
                         : "Agregar liquidación"}
                     </Button>
                     <Button
-                      className="col-span-2 bg-red-600 text-white"
+                      className="md:col-span-2 bg-red-600 text-white"
                       onPress={() => {
                         // Cancelar y limpiar los estados
                         dispatch({
