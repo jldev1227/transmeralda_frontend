@@ -9,17 +9,20 @@ import {
   NavbarMenuItem,
   Link,
 } from "@nextui-org/react";
+import { Button } from '@nextui-org/button'
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 
 export default function DefaultLayout() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { state } = useUsuario()
+  const { state } = useUsuario();
 
-  const menuItems = [{
-    name: "Liquidaciones",
-    href: '/liquidaciones'
-  }];
+  const menuItems = [
+    {
+      name: "Liquidaciones",
+      href: "/liquidaciones",
+    },
+  ];
 
   return (
     <div className="relative flex flex-col h-screen">
@@ -46,7 +49,7 @@ export default function DefaultLayout() {
             <Link href="#">Hola! {state.usuario?.nombre}</Link>
           </NavbarItem>
         </NavbarContent>
-        <NavbarMenu>
+        <NavbarMenu className="pb-8">
           {menuItems.map((item, index) => (
             <NavbarMenuItem key={`${item}-${index}`}>
               <Link
@@ -59,6 +62,9 @@ export default function DefaultLayout() {
               </Link>
             </NavbarMenuItem>
           ))}
+          <Button className="bg-red-500 text-white mt-auto">
+            Cerrar sesión
+          </Button>
         </NavbarMenu>
       </Navbar>
 
