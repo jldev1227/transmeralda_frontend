@@ -1,3 +1,4 @@
+import { DateValue } from "@nextui-org/react";
 
 export const formatToCOP = (value: number | undefined | null) => {
   if (value === undefined || value === null) {
@@ -29,4 +30,12 @@ export function formatDate(dateString: string | undefined): string {
   // Convertir la fecha al formato deseado utilizando la configuración regional 'es-ES'
   return date.toLocaleDateString('es-ES', options).toUpperCase();
 }
+
+export const formatDateValue = (dateValue: DateValue | null): string => {
+  if (dateValue) {
+    // Ajusta según la estructura de `DateValue`
+    return `${dateValue.year}-${String(dateValue.month).padStart(2, '0')}-${String(dateValue.day).padStart(2, '0')}`;
+  }
+  return ''; // Retorna una cadena vacía si no hay valor
+};
 

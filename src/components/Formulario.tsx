@@ -18,17 +18,23 @@ import {
   Conductor,
 } from "@/types/index";
 import useLiquidacion from "@/hooks/useLiquidacion";
-import {parseDate} from "@internationalized/date";
+import { parseDate } from "@internationalized/date";
 
 // Componente Formulario
 export default function Formulario() {
-  const { state, agregarLiquidacion } = useLiquidacion();
+  const { state, submitLiquidacion } = useLiquidacion();
   const { liquidacion: stateLiquidacion } = state; // Obtenemos la liquidación del estado global
 
-  const [conductorSelected, setConductorSelected] = useState<SingleValue<ConductorOption>>(null);
-  const [vehiculosSelected, setVehiculosSelected] = useState<MultiValue<VehiculoOption>>([]);
-  const [dateSelected, setDateSelected] = useState<RangeValue<DateValue> | null>(null);
-  const [detallesVehiculos, setDetallesVehiculos] = useState<DetalleVehiculo[]>([]);
+  const [conductorSelected, setConductorSelected] =
+    useState<SingleValue<ConductorOption>>(null);
+  const [vehiculosSelected, setVehiculosSelected] = useState<
+    MultiValue<VehiculoOption>
+  >([]);
+  const [dateSelected, setDateSelected] =
+    useState<RangeValue<DateValue> | null>(null);
+  const [detallesVehiculos, setDetallesVehiculos] = useState<DetalleVehiculo[]>(
+    []
+  );
   const [liquidacion, setLiquidacion] = useState<LiquidacionInput | null>(null);
   const [isCheckedAjuste, setIsCheckedAjuste] = useState(false);
   const [diasLaborados, setDiasLaborados] = useState(0);
@@ -67,20 +73,19 @@ export default function Formulario() {
       const selectedConductor = conductoresOptions.find(
         (option) => option.value === stateLiquidacion.conductor.id
       );
+
       setConductorSelected(selectedConductor || null);
-
-
       setDetallesVehiculos(
         stateLiquidacion?.vehiculos?.map((vehiculo) => {
-          const bonosDelVehiculo = stateLiquidacion.bonificaciones.filter(
+          const bonosDelVehiculo = stateLiquidacion.bonificaciones?.filter(
             (bono) => bono.vehiculoId === vehiculo.id
           );
 
-          const pernotesDelVehiculo = stateLiquidacion.pernotes.filter(
+          const pernotesDelVehiculo = stateLiquidacion.pernotes?.filter(
             (pernote) => pernote.vehiculoId === vehiculo.id
           );
 
-          const recargosDelVehiculo = stateLiquidacion.recargos.filter(
+          const recargosDelVehiculo = stateLiquidacion.recargos?.filter(
             (recargo) => recargo.vehiculoId === vehiculo.id
           );
 
@@ -89,43 +94,49 @@ export default function Formulario() {
               value: vehiculo.id,
               label: vehiculo.placa,
             },
-            bonos: bonosDelVehiculo.length > 0 ? bonosDelVehiculo : [
-              { name: "Bono de alimentación", quantity: 0, value: 22960 },
-              { name: "Bono día trabajado", quantity: 0, value: 13000 },
-              { name: "Bono día trabajado doble", quantity: 0, value: 25000 },
-            ],
-            pernotes: pernotesDelVehiculo.length > 0 ? pernotesDelVehiculo : {
-              quantity: 0, value: 10000 
-            }, // Puedes asignar pernotes si están en el stateLiquidacion
-            recargos: recargosDelVehiculo > 0 ? recargosDelVehiculo : [], // Puedes asignar recargos si están en el stateLiquidacion
+            bonos:
+              bonosDelVehiculo.length > 0
+                ? bonosDelVehiculo
+                : [
+                    { name: "Bono de alimentación", quantity: 0, value: 22960 },
+                    { name: "Bono día trabajado", quantity: 0, value: 13000 },
+                    {
+                      name: "Bono día trabajado doble",
+                      quantity: 0,
+                      value: 25000,
+                    },
+                  ],
+            pernotes: pernotesDelVehiculo.length > 0 ? pernotesDelVehiculo : [], // Puedes asignar pernotes si están en el stateLiquidacion
+            recargos: recargosDelVehiculo.length > 0 ? recargosDelVehiculo : [], // Puedes asignar recargos si están en el stateLiquidacion
           };
-      
+
           return detalles;
         })
       );
 
       const selectedVehiculos = vehiculosOptions.filter((option) =>
-        stateLiquidacion.vehiculos.some((vehiculo) => vehiculo.id === option.value)
+        stateLiquidacion.vehiculos.some(
+          (vehiculo) => vehiculo.id === option.value
+        )
       );
-    
-     setVehiculosSelected(selectedVehiculos)
 
-     setDateSelected({
-      start: parseDate(stateLiquidacion.periodoStart),
-      end: parseDate(stateLiquidacion.periodoEnd),
-     })
+      setVehiculosSelected(selectedVehiculos);
 
+      setDateSelected({
+        start: parseDate(stateLiquidacion.periodoStart),
+        end: parseDate(stateLiquidacion.periodoEnd),
+      });
 
-      // // Actualizar otros campos (por ejemplo: ajuste salarial)
-      // setIsCheckedAjuste(stateLiquidacion.ajusteSalarial > 0);
-      // setDiasLaborados(stateLiquidacion.diasLaborados);
+      // Actualizar otros campos (por ejemplo: ajuste salarial)
+      setIsCheckedAjuste(stateLiquidacion.ajusteSalarial > 0);
+      setDiasLaborados(stateLiquidacion.diasLaborados);
     }
   }, [stateLiquidacion, conductoresOptions, vehiculosOptions]);
 
   // Manejador de fechas
   const handleDateChange = (newDate: RangeValue<DateValue> | null) => {
     setDateSelected(newDate);
-  }
+  };
 
   // Manejadores de eventos
   const handleVehiculoSelect = useCallback(
@@ -145,8 +156,8 @@ export default function Formulario() {
 
       // Actualiza detallesVehiculos basado en la selección
       setDetallesVehiculos(
-        selectedVehiculos.map((vehiculo) => {
-          const detalleExistente = detallesMap.get(vehiculo.value);
+        selectedVehiculos?.map((vehiculo) => {
+          const detalleExistente = detallesMap?.get(vehiculo?.value);
           return (
             detalleExistente || {
               vehiculo,
@@ -162,7 +173,12 @@ export default function Formulario() {
         })
       );
     },
-    [detallesVehiculos, conductorSelected, vehiculosSelected, setDetallesVehiculos]
+    [
+      detallesVehiculos,
+      conductorSelected,
+      vehiculosSelected,
+      setDetallesVehiculos,
+    ]
   );
 
   const handleBonoChange = useCallback(
@@ -196,7 +212,9 @@ export default function Formulario() {
             ? {
                 ...detalle,
                 pernotes: detalle.pernotes.map((pernote, i) =>
-                  i === index ? { ...pernote, [field]: value, valor: 100906 } : pernote
+                  i === index
+                    ? { ...pernote, [field]: value, valor: 100906 }
+                    : pernote
                 ),
               }
             : detalle
@@ -309,8 +327,6 @@ export default function Formulario() {
     totalBonificaciones,
     totalRecargos,
   } = useMemo(() => {
-
-    console.log('liquida')
     const total = detallesVehiculos.reduce(
       (acc, item) => {
         const bonos = item.bonos.reduce(
@@ -374,27 +390,30 @@ export default function Formulario() {
   // Actualización de la liquidación en el useEffect
   useEffect(() => {
     // Verificar que `conductorSelected` y `vehiculosSelected` sean válidos
-    if (!conductorSelected || detallesVehiculos.length === 0 || vehiculosSelected.length === 0) return;
-  
-    console.log(detallesVehiculos);
-  
+    if (
+      !conductorSelected ||
+      detallesVehiculos.length === 0 ||
+      vehiculosSelected.length === 0
+    )
+      return;
+
     // Crea el objeto `Liquidacion` compatible con el tipo que definiste
     const nuevaLiquidacion: LiquidacionInput = {
       periodoStart: dateSelected?.start || null,
       periodoEnd: dateSelected?.end || null,
-      bonificaciones: detallesVehiculos.flatMap((detalle) => 
+      bonificaciones: detallesVehiculos.flatMap((detalle) =>
         detalle.bonos.map((bono) => ({
           ...bono,
           vehiculoId: detalle.vehiculo.value, // Agrega el vehiculoId a cada bono
         }))
       ),
-      pernotes: detallesVehiculos.flatMap((detalle) => 
+      pernotes: detallesVehiculos.flatMap((detalle) =>
         detalle.pernotes.map((pernote) => ({
           ...pernote,
           vehiculoId: detalle.vehiculo.value, // Agrega el vehiculoId a cada pernote
         }))
       ),
-      recargos: detallesVehiculos.flatMap((detalle) => 
+      recargos: detallesVehiculos.flatMap((detalle) =>
         detalle.recargos.map((recargo) => ({
           ...recargo,
           vehiculoId: detalle.vehiculo.value, // Agrega el vehiculoId a cada recargo
@@ -413,7 +432,7 @@ export default function Formulario() {
       ajusteSalarial: bonificacionVillanueva,
       vehiculos: detallesVehiculos.map((detalle) => detalle.vehiculo.value),
     };
-  
+
     setLiquidacion(nuevaLiquidacion);
   }, [
     auxilioTransporte,
@@ -427,7 +446,6 @@ export default function Formulario() {
     detallesVehiculos,
     conductores,
   ]);
-  
 
   const customStyles = {
     control: (provided: any) => ({
@@ -468,30 +486,62 @@ export default function Formulario() {
   };
 
   // Función para agregar la liquidación
-  const addLiquidacion = () => {
-    // Verifica que liquidacion no sea null antes de registrarla
-    if (liquidacion) {
-      try {
-        agregarLiquidacion(liquidacion);
+const handleSubmit = async () => {
+  // Verifica que liquidacion no sea null antes de registrarla
+  if (liquidacion) {
+    try {
+      const bonificacionesFiltradas = liquidacion?.bonificaciones?.map(
+        ({ __typename, ...rest }) => rest
+      );
 
-        console.log(liquidacion);
+      const pernotesFiltrados = liquidacion?.pernotes?.map(
+        ({ __typename, ...rest }) => rest
+      );
+      const recargosFiltrados = liquidacion?.recargos?.map(
+        ({ __typename, ...rest }) => rest
+      );
 
-        // Reiniciar liquidacion a null
-        setLiquidacion(null);
-        setConductorSelected(null);
-        setVehiculosSelected([]);
-        setDetallesVehiculos([]);
-        setDateSelected(null);
-      } catch (error) {
-        console.log(error);
-      }
-    } else {
-      console.error("Liquidación no válida.");
+      // Construye el objeto final de liquidación asegurando que todos los campos requeridos están presentes
+      const liquidacionFinal = {
+        id: stateLiquidacion?.id || undefined, // Verifica si hay un ID en stateLiquidacion
+        periodoStart: liquidacion.periodoStart,
+        periodoEnd: liquidacion.periodoEnd,
+        conductorId:
+          stateLiquidacion?.conductor?.id || conductorSelected?.value || null,
+        auxilioTransporte: liquidacion.auxilioTransporte,
+        sueldoTotal: liquidacion.sueldoTotal,
+        totalPernotes: liquidacion.totalPernotes,
+        totalBonificaciones: liquidacion.totalBonificaciones,
+        totalRecargos: liquidacion.totalRecargos,
+        diasLaborados: liquidacion.diasLaborados,
+        ajusteSalarial: liquidacion.ajusteSalarial,
+        vehiculos: liquidacion.vehiculos,
+        bonificaciones: bonificacionesFiltradas, 
+        pernotes: pernotesFiltrados, 
+        recargos: recargosFiltrados, 
+      };
+
+      // Envía la liquidación para agregar o editar
+      await submitLiquidacion(liquidacionFinal);
+
+      // Si todo va bien, limpia los estados
+      setLiquidacion(null);
+      setConductorSelected(null);
+      setVehiculosSelected([]);
+      setDetallesVehiculos([]);
+      setDateSelected(null);
+    } catch (error) {
+      console.error("Error al registrar la liquidación:", error);
+      // No limpiar los estados si hubo un error
     }
-  };
+  } else {
+    console.error("Liquidación no válida.");
+  }
+};
+
 
   return (
-    <div className="grid md:grid-cols-2 gap-10">
+    <div className="grid lg:grid-cols-2 gap-10">
       <form className="w-full flex flex-col space-y-8">
         {/* Conductor y Placa */}
         <div className="space-y-4 flex flex-col">
@@ -521,7 +571,8 @@ export default function Formulario() {
             value={dateSelected}
           />
 
-          {conductorSelected && vehiculosSelected &&
+          {conductorSelected &&
+            vehiculosSelected &&
             dateSelected &&
             detallesVehiculos?.map((detalleVehiculo, index) => (
               <div key={index}>
@@ -564,7 +615,7 @@ export default function Formulario() {
                             detalleVehiculo.vehiculo.value,
                             pernoteIndex,
                             "empresa",
-                            selectedOption?.value || "",
+                            selectedOption?.value || ""
                           )
                         }
                         placeholder="Selecciona una empresa"
@@ -743,10 +794,12 @@ export default function Formulario() {
             <Divider />
             <CardFooter>
               <Button
-                onPress={addLiquidacion}
+                onPress={handleSubmit}
                 className="w-full bg-green-700 text-white"
               >
-                Agregar liquidación
+                {stateLiquidacion?.id
+                  ? "Editar liquidación"
+                  : "Agregar liquidación"}
               </Button>
             </CardFooter>
           </Card>
@@ -768,8 +821,7 @@ const ConductorInfo = ({ conductor, dateSelected }: ConductorInfoProps) => {
       <h1 className="text-center text-2xl font-bold">{`${conductor.nombre} ${conductor.apellido}`}</h1>
       <p className="text-center">C.C. {conductor.cc}</p>
       <h2 className="text-center">
-        {formatDate(dateSelected?.start)} -{" "}
-        {formatDate(dateSelected?.end)}
+        {formatDate(dateSelected?.start)} - {formatDate(dateSelected?.end)}
       </h2>
     </div>
   );
@@ -786,9 +838,7 @@ const ListSection = <T,>({ title, items, formatFn }: ListSectionProps<T>) => (
     <h3 className="text-xl font-semibold">{title}</h3>
     <div>
       {items.map((item, index) => (
-        <div key={index} className="md:grid md:grid-cols-5">
-          {formatFn(item, index)}
-        </div>
+        <div key={index}>{formatFn(item, index)}</div>
       ))}
     </div>
   </div>
@@ -840,15 +890,15 @@ const CardLiquidacion = ({ detalleVehiculo }: CardLiquidacionProps) => {
           title="Bonificaciones"
           items={detalleVehiculo.bonos}
           formatFn={(bono) => (
-            <>
-              <p className="col-span-3">
+            <div className="sm:grid sm:grid-cols-4">
+              <p className="col-span-2">
                 {bono.name} ({formatToCOP(bono.value)}) :
               </p>
-              <p className="md:text-right text-primary-500">{bono.quantity}</p>
-              <p className="md:text-right text-green-500 mb-5 md:mb-0">
+              <p className="sm:text-right text-primary-500">{bono.quantity}</p>
+              <p className="sm:text-right text-green-500 mb-5 md:mb-0">
                 {formatToCOP(bono.quantity * bono.value)}
               </p>
-            </>
+            </div>
           )}
         />
         <ListSection
