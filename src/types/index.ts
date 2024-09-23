@@ -7,9 +7,9 @@ export type IconSvgProps = SVGProps<SVGSVGElement> & {
 };
 
 // Tipos para Bonificaciones, Pernotes y Recargos
-export type Bono = { name: string; quantity: number; value: number, vehiculoId: string | null };
-export type Pernote = { empresa: string; cantidad: number; valor: number, vehiculoId: string | null }; // Agregado `valor` para pernote
-export type Recargo = { empresa: string; valor: number, vehiculoId: string | null };
+export type Bono = { name: string; quantity: number; value: number, vehiculoId: string | null,   __typename?: string; };
+export type Pernote = { empresa: string; cantidad: number; valor: number, vehiculoId: string | null,   __typename?: string; }; // Agregado `valor` para pernote
+export type Recargo = { empresa: string; valor: number, vehiculoId: string | null,   __typename?: string; };
 
 // Vehículo y Conductor
 export type VehiculoOption = {
@@ -39,12 +39,9 @@ export type DetalleVehiculo = {
   recargos: Recargo[];
 };
 
-// Liquidación, relacionada con el conductor y los vehículos
-export type LiquidacionInput = {
-  id?: string;
-  periodoStart: DateValue | null; // Cambiado para reflejar un único valor de fecha
-  periodoEnd: DateValue | null;   // Cambiado para reflejar un único valor de fecha
-  conductorId: Conductor['id'] | null;
+// Tipo base para propiedades comunes entre Liquidacion y LiquidacionInput
+type BaseLiquidacion = {
+  conductorId?: Conductor['id'] | null;
   auxilioTransporte: number;
   sueldoTotal: number;
   totalPernotes: number;
@@ -53,27 +50,24 @@ export type LiquidacionInput = {
   diasLaborados: number;
   ajusteSalarial: number;
   vehiculos: VehiculoOption['value'][]; // Array de valores de vehículos (IDs)
-  bonificaciones?: Bono[]; // Bonificaciones opcionales en caso de que se incluyan
-  pernotes?: Pernote[]; // Pernotes opcionales
-  recargos?: Recargo[]; // Recargos opcionales
+  bonificaciones?: Bono[];              // Bonificaciones opcionales
+  pernotes?: Pernote[];                 // Pernotes opcionales
+  recargos?: Recargo[];                 // Recargos opcionales
 };
 
-export type Liquidacion = {
+// LiquidacionInput: utiliza `DateValue | null` para las fechas
+export type LiquidacionInput = BaseLiquidacion & {
   id?: string;
-  periodoStart: string;
-  periodoEnd: string;
+  periodoStart: DateValue | null;  // Asegúrate de que esta propiedad esté incluida
+  periodoEnd: DateValue | null;    // Asegúrate de que esta propiedad esté incluida
+};
+
+// Liquidacion: utiliza `string` para las fechas
+export type Liquidacion = BaseLiquidacion & {
+  id?: string;
   conductor: Conductor;
-  auxilioTransporte: number;
-  sueldoTotal: number;
-  totalPernotes: number;
-  totalBonificaciones: number;
-  totalRecargos: number;
-  diasLaborados: number;
-  ajusteSalarial: number;
-  vehiculos: VehiculoOption['value'][]; // Array de valores de vehículos (IDs)
-  bonos: Bono[]; // Bonificaciones de la liquidación
-  pernotes: Pernote[]; // Pernotes de la liquidación
-  recargos: Recargo[]; // Recargos de la liquidación
+  periodoStart: string;  // Tipo string para las liquidaciones ya guardadas
+  periodoEnd: string;    // Tipo string para las liquidaciones ya guardadas
 };
 
 // Usuario y credenciales de login
