@@ -77,9 +77,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   
         // Limpiar errores
         dispatch({ type: "CLEAR_ERROR" });
-  
-        console.log(data);
-        console.log("Sesión iniciada");
       }
     } catch (err) {
       console.error("Error capturado en el catch:", err);
@@ -140,9 +137,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           type: "SET_USUARIO",
           payload: data.obtenerUsuario,
         });
-        const { rol } = data.obtenerUsuario;
-
-        console.log(rol);
       } else if (error) {
         console.log("Error en useEffect:", error);
       }
@@ -157,8 +151,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     dispatch({
       type: "CLEAR_USUARIO",
     });
-
-    console.log("Sesión cerrada");
   };
 
   return (

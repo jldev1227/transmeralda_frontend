@@ -1,6 +1,5 @@
 import Formulario from "@/components/Formulario";
 import LiquidacionesList from "@/components/LiquidacionesList";
-import ModalLiquidacion from "@/components/ModalLiquidacion";
 import AlertaModal from "@/components/AlertaModal";
 
 export default function Liquidador() {
@@ -12,7 +11,6 @@ export default function Liquidador() {
       <section className="flex flex-col gap-8 py-8 md:py-10">
         <Formulario />
         <LiquidacionesList />
-        <ModalLiquidacion />
         <AlertaModal />
       </section>
     </>

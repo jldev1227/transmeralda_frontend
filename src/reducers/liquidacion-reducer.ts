@@ -5,15 +5,15 @@ export type LiquidacionActions =
 | { type: 'SET_LIQUIDACIONES'; payload: Liquidacion[] }
 | { type: 'AGREGAR_LIQUIDACION'; payload: Liquidacion }
 | { type: 'EDITAR_LIQUIDACION'; payload: Liquidacion }
-| { type: 'SET_LIQUIDACION'; payload: Liquidacion }
-| { type: 'SET_MODAL' }
+| { type: 'SET_LIQUIDACION'; payload: {liquidacion: Liquidacion | null, allowEdit: boolean | null} }
+| { type: 'SET_MODAL'; payload: Liquidacion }
 | { type: 'SET_ERROR'; payload: { error: boolean; mensaje: string } }
 | { type: 'RESET_ALERTA' };
 
 export type LiquidacionState = {
   liquidaciones: Liquidacion[]; // Cambiamos a un array de Liquidacion, no null
   liquidacion: Liquidacion | null; // Cambiamos a un array de Liquidacion, no null
-  modal: boolean; // Cambiamos a un array de Liquidacion, no null
+  allowEdit: boolean | null; // Cambiamos a un array de Liquidacion, no null
   alerta: {
     visible: boolean, // Indica si la alerta está visible
     success: boolean, // Indica si fue un éxito o un error
@@ -25,7 +25,7 @@ export type LiquidacionState = {
 export const initialState: LiquidacionState = {
   liquidaciones: [],
   liquidacion: null,
-  modal: false,
+  allowEdit: null,
   alerta: {
     visible: false, // Indica si la alerta está visible
     success: false, // Indica si fue un éxito o un error
@@ -45,7 +45,6 @@ export function LiquidacionReducer(
         liquidaciones: action.payload,
       };
     case 'AGREGAR_LIQUIDACION':
-      console.log('action:', action.payload)
       return {
         ...state,
         liquidaciones: [...state.liquidaciones, action.payload],
@@ -89,12 +88,8 @@ export function LiquidacionReducer(
     case 'SET_LIQUIDACION':
       return {
         ...state,
-        liquidacion: action.payload,
-      };
-    case 'SET_MODAL':
-      return {
-        ...state,
-        modal: !state.modal,
+        liquidacion: action.payload.liquidacion,
+        allowEdit: action.payload.allowEdit
       };
     default:
       return state;

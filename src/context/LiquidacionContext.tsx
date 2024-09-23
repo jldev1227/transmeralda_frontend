@@ -124,6 +124,7 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
   const actualizarLiquidacion = useCallback(
     async (liquidacion: LiquidacionInput) => {
       try {
+        console.log(liquidacion)
         const { data, errors } = await editarLiquidacion({
           variables: {
             ...liquidacion,
@@ -167,7 +168,10 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
   const setLiquidacion = async (liquidacion: Liquidacion): Promise<void> => {
     dispatch({
       type: "SET_LIQUIDACION",
-      payload: liquidacion,
+      payload: {
+        allowEdit: false,
+        liquidacion
+      },
     });
   };
 

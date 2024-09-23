@@ -8,7 +8,6 @@ import { AuthProvider } from "./context/AuthContext";
 import AuthLayout from "./layouts/authLayout";
 import ProtectedRoutes from "./layouts/ProtectedLayout"; // Asume que tienes un layout para rutas protegidas
 import Liquidador from "./pages/liquidador";
-// import Dashboard from "./pages/dashboard";
 import DefaultLayout from "./layouts/default";
 
 function App() {

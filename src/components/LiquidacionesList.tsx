@@ -19,7 +19,8 @@ export default function LiquidacionesList() {
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
 
-  const { state, dispatch, loadingLiquidaciones, setLiquidacion } = useLiquidacion();
+  const { state, dispatch, loadingLiquidaciones } =
+    useLiquidacion();
 
   const pages = Math.ceil(state.liquidaciones.length / rowsPerPage);
 
@@ -87,8 +88,8 @@ export default function LiquidacionesList() {
                 <div className="flex flex-col text-sm space-y-1">
                   <span>
                     <strong>Vehiculos:</strong>{" "}
-                    {item.vehiculos
-                      ?.map((vehiculo) => vehiculo.label)
+                    {item?.vehiculos
+                      ?.map((vehiculo) => vehiculo.placa)
                       .join(" - ")}
                   </span>
                   <span>
@@ -131,15 +132,28 @@ export default function LiquidacionesList() {
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-6 mt-10">
-                  <Button onPress={()=>setLiquidacion(item)} color="primary">Editar</Button>
+                  <Button
+                    onPress={() =>
+                      dispatch({
+                        type: "SET_LIQUIDACION",
+                        payload: {
+                          allowEdit: true,
+                          liquidacion: item,
+                        },
+                      })
+                    }
+                    color="primary"
+                  >
+                    Editar
+                  </Button>
                   <Button
                     onPress={() => {
                       dispatch({
                         type: "SET_LIQUIDACION",
-                        payload: item,
-                      });
-                      dispatch({
-                        type: "SET_MODAL",
+                        payload: {
+                          allowEdit: false,
+                          liquidacion: item,
+                        },
                       });
                     }}
                     color="secondary"
@@ -225,7 +239,20 @@ export default function LiquidacionesList() {
                 </TableCell>
                 <TableCell className="flex gap-2">
                   <Tooltip content="Editar" color="primary">
-                    <Button onPress={()=>setLiquidacion(item)} color="primary" className="h-9" isIconOnly>
+                    <Button
+                      onPress={() =>
+                        dispatch({
+                          type: "SET_LIQUIDACION",
+                          payload: {
+                            allowEdit: true,
+                            liquidacion: item,
+                          },
+                        })
+                      }
+                      color="primary"
+                      className="h-9"
+                      isIconOnly
+                    >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -242,17 +269,17 @@ export default function LiquidacionesList() {
                       </svg>
                     </Button>
                   </Tooltip>
-                  <Tooltip content="Ver" color="secondary">
+                  <Tooltip content="Consultar" color="secondary">
                     <Button
-                      onPress={() => {
+                       onPress={() =>
                         dispatch({
                           type: "SET_LIQUIDACION",
-                          payload: item,
-                        });
-                        dispatch({
-                          type: "SET_MODAL",
-                        });
-                      }}
+                          payload: {
+                            allowEdit: false,
+                            liquidacion: item,
+                          },
+                        })
+                      }
                       color="secondary"
                       className="h-9"
                       isIconOnly

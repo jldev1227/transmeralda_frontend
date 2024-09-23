@@ -168,6 +168,7 @@ export const EDITAR_LIQUIDACION = gql`
             nombre
             apellido
             cc
+            salarioBase
         }
         auxilioTransporte
         sueldoTotal
@@ -188,11 +189,13 @@ export const EDITAR_LIQUIDACION = gql`
             empresa
             cantidad
             valor
+            vehiculoId
         }
         recargos {
             id
             empresa
             valor
+            vehiculoId
         }
         vehiculos {
             id

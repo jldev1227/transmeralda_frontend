@@ -1,4 +1,4 @@
-import { DateValue, RangeValue } from "@nextui-org/react";
+import { DateValue } from "@nextui-org/react";
 import { SVGProps } from "react";
 
 // Definición de tipos para SVG
@@ -7,9 +7,9 @@ export type IconSvgProps = SVGProps<SVGSVGElement> & {
 };
 
 // Tipos para Bonificaciones, Pernotes y Recargos
-export type Bono = { name: string; quantity: number; value: number, vehiculoId: string | null,   __typename?: string; };
-export type Pernote = { empresa: string; cantidad: number; valor: number, vehiculoId: string | null,   __typename?: string; }; // Agregado `valor` para pernote
-export type Recargo = { empresa: string; valor: number, vehiculoId: string | null,   __typename?: string; };
+export type Bono = {id?: string, name: string; quantity: number; value: number, vehiculoId?: string | null,   __typename?: string; };
+export type Pernote = {id?: string, empresa: string; cantidad: number; valor: number, vehiculoId?: string | null,   __typename?: string; }; // Agregado `valor` para pernote
+export type Recargo = {id?: string, empresa: string; valor: number, vehiculoId?: string | null,   __typename?: string; };
 
 // Vehículo y Conductor
 export type VehiculoOption = {
@@ -31,6 +31,12 @@ export type Conductor = {
   salarioBase: number;
 };
 
+export type Vehiculo = {
+  id: string;
+  placa: string;
+  __typename?: string;
+};
+
 // Detalles del vehículo, incluyendo Bonificaciones, Pernotes y Recargos
 export type DetalleVehiculo = {
   vehiculo: VehiculoOption;
@@ -49,7 +55,6 @@ type BaseLiquidacion = {
   totalRecargos: number;
   diasLaborados: number;
   ajusteSalarial: number;
-  vehiculos: VehiculoOption['value'][]; // Array de valores de vehículos (IDs)
   bonificaciones?: Bono[];              // Bonificaciones opcionales
   pernotes?: Pernote[];                 // Pernotes opcionales
   recargos?: Recargo[];                 // Recargos opcionales
@@ -60,6 +65,7 @@ export type LiquidacionInput = BaseLiquidacion & {
   id?: string;
   periodoStart: DateValue | null;  // Asegúrate de que esta propiedad esté incluida
   periodoEnd: DateValue | null;    // Asegúrate de que esta propiedad esté incluida
+  vehiculos: string[]
 };
 
 // Liquidacion: utiliza `string` para las fechas
@@ -68,6 +74,7 @@ export type Liquidacion = BaseLiquidacion & {
   conductor: Conductor;
   periodoStart: string;  // Tipo string para las liquidaciones ya guardadas
   periodoEnd: string;    // Tipo string para las liquidaciones ya guardadas
+  vehiculos: Vehiculo[]; // Array de valores de vehículos (IDs)
 };
 
 // Usuario y credenciales de login

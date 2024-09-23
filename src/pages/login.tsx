@@ -31,7 +31,7 @@ export default function Login() {
 
   return (
     <>
-      <h1 className="text-center text-green-700 font-black text-3xl md:text-6xl capitalize">
+      <h1 className="text-center text-green-700 font-black text-5xl md:text-6xl capitalize">
         Inicia sesión{" "}
         <span className="text-slate-600">Transmeralda SAS</span>
       </h1>
