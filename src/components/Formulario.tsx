@@ -6,12 +6,13 @@ import {
   RangeValue,
 } from "@nextui-org/react";
 import SelectReact, { MultiValue, SingleValue } from "react-select";
+import { Select, SelectItem } from "@nextui-org/select";
 import { Divider } from "@nextui-org/divider";
 import { Checkbox } from "@nextui-org/checkbox";
 import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/card";
 import { Button } from "@nextui-org/button";
 import { empresas } from "@/data/index";
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback, useEffect, ChangeEvent } from "react";
 import {
   formatToCOP,
   formatDate,
@@ -391,7 +392,7 @@ export default function Formulario() {
               ...detalle,
               recargos: [
                 ...detalle.recargos,
-                { empresa: "", valor: 0, pagaCliente: null },
+                { empresa: "", valor: 0, pagaCliente: null, mes: "" },
               ],
             }
           : detalle
@@ -434,6 +435,7 @@ export default function Formulario() {
   const limpiarStates = () => {
     setLiquidacion(null);
     setConductorSelected(null);
+    setMesesRange([]);
     setVehiculosSelected([]);
     setDetallesVehiculos([]);
     setDateSelected(null);
@@ -680,7 +682,7 @@ export default function Formulario() {
   return (
     <>
       <div
-        className={`grid ${state.allowEdit || state.allowEdit == null ? "lg:grid-cols-2" : "lg:grid-cols-1"} gap-10`}
+        className={`grid ${state.allowEdit || state.allowEdit == null ? "xl:grid-cols-2" : "lg:grid-cols-1"} gap-10`}
       >
         {(stateLiquidacion || stateLiquidacion === null) &&
           (state.allowEdit || state.allowEdit === null) && (
@@ -928,111 +930,128 @@ export default function Formulario() {
 
                         <Divider />
 
-                        <div className="grid grid-cols-5 items-center">
-                          <h3 className="font-semibold text-xl col-span-3">
-                            Recargos
-                          </h3>
-                          <p className="font-semibold text-sm col-span-1 text-center">
-                            Paga propietario
-                          </p>
-                          <p className="font-semibold text-sm col-span-1 text-center">
-                            Paga cliente
-                          </p>
-                        </div>
+                        <h3 className="font-semibold text-xl">Recargos</h3>
                         {detalleVehiculo.recargos?.map(
                           (recargo, recargoIndex) => (
-                            <div
-                              key={recargoIndex}
-                              className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-center"
-                            >
-                              <SelectReact
-                                options={empresasOptions}
-                                value={
-                                  empresasOptions.find(
-                                    (option) => option.value === recargo.empresa
-                                  ) || null
-                                }
-                                onChange={(selectedOption) =>
-                                  handleRecargoChange(
-                                    detalleVehiculo.vehiculo.value,
-                                    recargoIndex,
-                                    "empresa",
-                                    selectedOption?.value || ""
-                                  )
-                                }
-                                placeholder="Selecciona una empresa"
-                                isSearchable
-                                styles={customStyles}
-                                className="lg:col-span-3"
-                              />
-                              <Input
-                                type="text" // Mantiene el tipo de 'text' para mostrar el formato con símbolos de moneda
-                                label="Valor"
-                                placeholder="$0"
-                                className="col-span-1"
-                                value={
-                                  !recargo.pagCliente && recargo.valor !== 0
-                                    ? formatCurrency(recargo.valor)
-                                    : ""
-                                } // Muestra el valor solo cuando pagCliente es false
-                                onChange={(e) => {
-                                  const inputVal = e.target.value.replace(
-                                    /[^\d]/g,
-                                    ""
-                                  ); // Quitamos caracteres no numéricos
-                                  const numericValue = +inputVal; // Convertimos el string limpio a número
-
-                                  // Llamamos a handleRecargoChange con pagaCliente como false
-                                  handleRecargoChange(
-                                    detalleVehiculo.vehiculo.value,
-                                    recargoIndex,
-                                    "valor",
-                                    numericValue,
-                                    false // Aquí especificamos que pagaCliente es false
-                                  );
-                                }}
-                              />
-
-                              <Input
-                                type="text" // Mantiene el tipo de 'text' para mostrar el formato con símbolos de moneda
-                                label="Valor"
-                                placeholder="$0"
-                                className="col-span-1"
-                                value={
-                                  recargo.pagCliente && recargo.valor !== 0
-                                    ? formatCurrency(recargo.valor)
-                                    : ""
-                                } // Muestra el valor solo cuando pagCliente es true
-                                onChange={(e) => {
-                                  const inputVal = e.target.value.replace(
-                                    /[^\d]/g,
-                                    ""
-                                  ); // Quitamos caracteres no numéricos
-                                  const numericValue = +inputVal; // Convertimos el string limpio a número
-
-                                  // Llamamos a handleRecargoChange con pagaCliente como true
-                                  handleRecargoChange(
-                                    detalleVehiculo.vehiculo.value,
-                                    recargoIndex,
-                                    "valor",
-                                    numericValue,
-                                    true // Aquí especificamos que pagaCliente es true
-                                  );
-                                }}
-                              />
-
-                              <Button
-                                onClick={() =>
-                                  handleRemoveRecargo(
-                                    detalleVehiculo.vehiculo.value,
-                                    recargoIndex
-                                  )
-                                }
-                                className="col-span-5 bg-red-600 text-white"
+                            <>
+                              <div
+                                key={recargoIndex}
+                                className="grid grid-cols-4 gap-4 items-center"
                               >
-                                X
-                              </Button>
-                            </div>
+                                <Select
+                                  label="Mes"
+                                  className="col-span-4 sm:col-span-1"
+                                  onChange={(event) => {
+                                    const mes = mesesRange.find(
+                                      (_, index) =>
+                                        event.target.value === index.toString()
+                                    );
+                                    handleRecargoChange(
+                                      detalleVehiculo.vehiculo.value,
+                                      recargoIndex,
+                                      "mes", // Cambiamos el campo a `mes`
+                                      mes || "" // Este será el valor del mes seleccionado
+                                    );
+                                  }}
+                                >
+                                  {mesesRange.map((mes, index) => (
+                                    <SelectItem key={index} value={mes}>
+                                      {mes}
+                                    </SelectItem>
+                                  ))}
+                                </Select>
+
+                                <SelectReact
+                                  options={empresasOptions}
+                                  value={
+                                    empresasOptions.find(
+                                      (option) =>
+                                        option.value === recargo.empresa
+                                    ) || null
+                                  }
+                                  onChange={(selectedOption) =>
+                                    handleRecargoChange(
+                                      detalleVehiculo.vehiculo.value,
+                                      recargoIndex,
+                                      "empresa",
+                                      selectedOption?.value || ""
+                                    )
+                                  }
+                                  placeholder="Selecciona una empresa"
+                                  isSearchable
+                                  styles={customStyles}
+                                  className="col-span-4 sm:col-span-3"
+                                />
+                                <Input
+                                  type="text" // Mantiene el tipo de 'text' para mostrar el formato con símbolos de moneda
+                                  label="Paga propietario"
+                                  placeholder="$0"
+                                  className="col-span-2"
+                                  value={
+                                    !recargo.pagCliente && recargo.valor !== 0
+                                      ? formatCurrency(recargo.valor)
+                                      : ""
+                                  } // Muestra el valor solo cuando pagCliente es false
+                                  onChange={(e) => {
+                                    const inputVal = e.target.value.replace(
+                                      /[^\d]/g,
+                                      ""
+                                    ); // Quitamos caracteres no numéricos
+                                    const numericValue = +inputVal; // Convertimos el string limpio a número
+
+                                    // Llamamos a handleRecargoChange con pagaCliente como false
+                                    handleRecargoChange(
+                                      detalleVehiculo.vehiculo.value,
+                                      recargoIndex,
+                                      "valor",
+                                      numericValue,
+                                      false // Aquí especificamos que pagaCliente es false
+                                    );
+                                  }}
+                                />
+
+                                <Input
+                                  type="text" // Mantiene el tipo de 'text' para mostrar el formato con símbolos de moneda
+                                  label="Paga cliente"
+                                  placeholder="$0"
+                                  className="col-span-2"
+                                  value={
+                                    recargo.pagCliente && recargo.valor !== 0
+                                      ? formatCurrency(recargo.valor)
+                                      : ""
+                                  } // Muestra el valor solo cuando pagCliente es true
+                                  onChange={(e) => {
+                                    const inputVal = e.target.value.replace(
+                                      /[^\d]/g,
+                                      ""
+                                    ); // Quitamos caracteres no numéricos
+                                    const numericValue = +inputVal; // Convertimos el string limpio a número
+
+                                    // Llamamos a handleRecargoChange con pagaCliente como true
+                                    handleRecargoChange(
+                                      detalleVehiculo.vehiculo.value,
+                                      recargoIndex,
+                                      "valor",
+                                      numericValue,
+                                      true // Aquí especificamos que pagaCliente es true
+                                    );
+                                  }}
+                                />
+
+                                <Button
+                                  onClick={() =>
+                                    handleRemoveRecargo(
+                                      detalleVehiculo.vehiculo.value,
+                                      recargoIndex
+                                    )
+                                  }
+                                  className="col-span-4 bg-red-600 text-white"
+                                >
+                                  X
+                                </Button>
+                              </div>
+                              <Divider />
+                            </>
                           )
                         )}
                         <Button
@@ -1438,6 +1457,7 @@ const CardLiquidacion = ({ detalleVehiculo }: CardLiquidacionProps) => {
                   <thead className="bg-green-500 text-white">
                     <tr>
                       <th className="px-4 py-2 text-left">Empresa</th>
+                      <th className="px-4 py-2 text-left">Mes</th>
                       <th className="px-4 py-2 text-center">Paga cliente</th>
                       <th className="px-4 py-2 text-center">Total</th>
                     </tr>
@@ -1453,6 +1473,7 @@ const CardLiquidacion = ({ detalleVehiculo }: CardLiquidacionProps) => {
                           <td className="border px-4 py-2">
                             {empresa ? empresa.Nombre : "Empresa no encontrada"}
                           </td>
+                          <td className="border px-4 py-2">{recargo.mes}</td>
                           <td className="border px-4 py-2 text-center">
                             {recargo.pagCliente ? "SI" : "NO"}
                           </td>
