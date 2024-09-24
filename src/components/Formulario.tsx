@@ -1,13 +1,24 @@
 import { Input } from "@nextui-org/input";
-import { DateRangePicker, DateValue, RangeValue } from "@nextui-org/react";
+import {
+  DatePicker,
+  DateRangePicker,
+  DateValue,
+  RangeValue,
+} from "@nextui-org/react";
 import SelectReact, { MultiValue, SingleValue } from "react-select";
 import { Divider } from "@nextui-org/divider";
 import { Checkbox } from "@nextui-org/checkbox";
 import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/card";
 import { Button } from "@nextui-org/button";
-import { conductores, vehiculos, empresas } from "@/data/index";
+import { empresas } from "@/data/index";
 import { useMemo, useState, useCallback, useEffect } from "react";
-import { formatToCOP, formatDate } from "@/helpers";
+import {
+  formatToCOP,
+  formatDate,
+  obtenerMesesEntreFechas,
+  dateValueToDate,
+  formatDateValue,
+} from "@/helpers";
 import {
   Pernote,
   Recargo,
@@ -37,6 +48,7 @@ export default function Formulario() {
   const [detallesVehiculos, setDetallesVehiculos] = useState<DetalleVehiculo[]>(
     []
   );
+  const [mesesRange, setMesesRange] = useState<string[]>([]);
   const [liquidacion, setLiquidacion] = useState<LiquidacionInput | null>(null);
   const [isCheckedAjuste, setIsCheckedAjuste] = useState(false);
   const [diasLaborados, setDiasLaborados] = useState(0);
@@ -44,20 +56,20 @@ export default function Formulario() {
   // Opciones para selectores
   const conductoresOptions = useMemo(
     () =>
-      conductores.map((conductor) => ({
+      state.conductores.map((conductor) => ({
         value: conductor.id,
         label: `${conductor.nombre} ${conductor.apellido}`,
       })),
-    []
+    [state.conductores]
   );
 
   const vehiculosOptions = useMemo(
     () =>
-      vehiculos.map((vehiculo) => ({
+      state.vehiculos.map((vehiculo) => ({
         value: vehiculo.id,
         label: vehiculo.placa,
       })),
-    []
+    [state.vehiculos]
   );
 
   const empresasOptions = useMemo(
@@ -79,18 +91,23 @@ export default function Formulario() {
       setConductorSelected(selectedConductor || null);
       setDetallesVehiculos(
         stateLiquidacion?.vehiculos?.map((vehiculo: Vehiculo) => {
-          const bonosDelVehiculo = stateLiquidacion.bonificaciones?.filter(
-            (bono) => bono.vehiculoId === vehiculo.id
-          ) || [];
-      
-          const pernotesDelVehiculo = stateLiquidacion.pernotes?.filter(
-            (pernote) => pernote.vehiculoId === vehiculo.id
-          ) || [];
-      
-          const recargosDelVehiculo = stateLiquidacion.recargos?.filter(
-            (recargo) => recargo.vehiculoId === vehiculo.id
-          ) || [];
-      
+          // Obtener bonos del vehículo filtrados por el vehiculoId
+          const bonosDelVehiculo =
+            stateLiquidacion.bonificaciones?.filter(
+              (bono) => bono.vehiculoId === vehiculo.id
+            ) || [];
+
+          const pernotesDelVehiculo =
+            stateLiquidacion.pernotes?.filter(
+              (pernote) => pernote.vehiculoId === vehiculo.id
+            ) || [];
+
+          const recargosDelVehiculo =
+            stateLiquidacion.recargos?.filter(
+              (recargo) => recargo.vehiculoId === vehiculo.id
+            ) || [];
+
+          // Asignación de los detalles del vehículo
           const detalles: DetalleVehiculo = {
             vehiculo: {
               value: vehiculo.id,
@@ -98,16 +115,44 @@ export default function Formulario() {
             },
             bonos:
               bonosDelVehiculo.length > 0
-                ? bonosDelVehiculo
+                ? bonosDelVehiculo.map((bono) => ({
+                    name: bono.name,
+                    values: bono.values?.map((val) => ({
+                      mes: val.mes,
+                      quantity: val.quantity,
+                    })) || [{ mes: "Mes no definido", quantity: 0 }],
+                    value: bono.value,
+                  }))
                 : [
-                    { name: "Bono de alimentación", quantity: 0, value: 22960 },
-                    { name: "Bono día trabajado", quantity: 0, value: 13000 },
-                    { name: "Bono día trabajado doble", quantity: 0, value: 25000 },
+                    {
+                      name: "Bono de alimentación",
+                      values: mesesRange.map((mes) => ({
+                        mes,
+                        quantity: 0,
+                      })),
+                      value: 22960,
+                    },
+                    {
+                      name: "Bono día trabajado",
+                      values: mesesRange.map((mes) => ({
+                        mes,
+                        quantity: 0,
+                      })),
+                      value: 13000,
+                    },
+                    {
+                      name: "Bono día trabajado doble",
+                      values: mesesRange.map((mes) => ({
+                        mes,
+                        quantity: 0,
+                      })),
+                      value: 25000,
+                    },
                   ],
             pernotes: pernotesDelVehiculo,
             recargos: recargosDelVehiculo,
           };
-      
+
           return detalles;
         }) || []
       );
@@ -129,67 +174,119 @@ export default function Formulario() {
       setIsCheckedAjuste(stateLiquidacion.ajusteSalarial > 0);
       setDiasLaborados(stateLiquidacion.diasLaborados);
     }
-  }, [stateLiquidacion, conductoresOptions, vehiculosOptions]);
+  }, [stateLiquidacion, mesesRange, conductoresOptions, vehiculosOptions]);
 
   // Manejador de fechas
   const handleDateChange = (newDate: RangeValue<DateValue> | null) => {
     setDateSelected(newDate);
   };
 
-  // Manejadores de eventos
-  const handleVehiculoSelect = useCallback(
-    (selected: MultiValue<VehiculoOption>) => {
-      // Convierte `MultiValue<VehiculoOption>` a `VehiculoOption[]`
+  // Efecto para actualizar mesesRange basado en dateSelected
+  useEffect(() => {
+    if (dateSelected && dateSelected.start && dateSelected.end) {
+      const start = dateSelected.start;
+      const end = dateSelected.end;
 
-      const selectedVehiculos = selected.map((option) => ({
-        value: option.value,
-        label: option.label,
-      }));
+      const nuevosMeses = obtenerMesesEntreFechas(start, end);
 
-      setVehiculosSelected(selectedVehiculos);
+      // Solo actualiza mesesRange si es diferente al valor actual
+      if (JSON.stringify(nuevosMeses) !== JSON.stringify(mesesRange)) {
+        setMesesRange(nuevosMeses);
+      }
+    }
+  }, [dateSelected, mesesRange]);
 
-      // Crea un mapa de detallesVehiculos para búsqueda más rápida
+  // Efecto que depende de vehiculosSelected y mesesRange para actualizar detallesVehiculos
+  useEffect(() => {
+    if (vehiculosSelected && mesesRange.length > 0) {
       const detallesMap = new Map(
         detallesVehiculos.map((detalle) => [detalle.vehiculo.value, detalle])
       );
 
-      // Actualiza detallesVehiculos basado en la selección
-      setDetallesVehiculos(
-        selectedVehiculos?.map((vehiculo : DetalleVehiculo['vehiculo']) => {
+      const nuevosDetalles = vehiculosSelected.map(
+        (vehiculo: DetalleVehiculo["vehiculo"]) => {
           const detalleExistente = detallesMap?.get(vehiculo?.value);
+
           return (
             detalleExistente || {
               vehiculo,
               bonos: [
-                { name: "Bono de alimentación", quantity: 0, value: 22960 },
-                { name: "Bono día trabajado", quantity: 0, value: 13000 },
-                { name: "Bono día trabajado doble", quantity: 0, value: 25000 },
+                {
+                  name: "Bono de alimentación",
+                  values: mesesRange.map((mes) => ({
+                    mes: mes,
+                    quantity: 0,
+                  })),
+                  value: 22960,
+                  vehiculoId: vehiculo?.value,
+                },
+                {
+                  name: "Bono día trabajado",
+                  values: mesesRange.map((mes) => ({
+                    mes: mes,
+                    quantity: 0,
+                  })),
+                  value: 13000,
+                },
+                {
+                  name: "Bono día trabajado doble",
+                  values: mesesRange.map((mes) => ({
+                    mes: mes,
+                    quantity: 0,
+                  })),
+                  value: 25000,
+                },
               ],
               pernotes: [],
               recargos: [],
             }
           );
-        })
+        }
       );
+
+      // Solo actualiza detallesVehiculos si ha habido un cambio
+      if (
+        JSON.stringify(nuevosDetalles) !== JSON.stringify(detallesVehiculos)
+      ) {
+        setDetallesVehiculos(nuevosDetalles);
+      }
+    }
+  }, [vehiculosSelected, mesesRange, detallesVehiculos]);
+
+  // Manejadores de eventos
+  const handleVehiculoSelect = useCallback(
+    (selected: MultiValue<VehiculoOption>) => {
+      const selectedVehiculos = selected.map((option) => ({
+        value: option.value,
+        label: option.label,
+      }));
+
+      // Solo actualiza si `selectedVehiculos` ha cambiado
+      if (
+        JSON.stringify(selectedVehiculos) !== JSON.stringify(vehiculosSelected)
+      ) {
+        setVehiculosSelected(selectedVehiculos);
+      }
     },
-    [
-      detallesVehiculos,
-      conductorSelected,
-      dateSelected,
-      vehiculosSelected,
-      setDetallesVehiculos,
-    ]
+    [vehiculosSelected]
   );
 
   const handleBonoChange = useCallback(
-    (vehiculoId: string, name: string, quantity: number) => {
+    (vehiculoId: string, name: string, mes: string, quantity: number) => {
       setDetallesVehiculos((prevDetalles) =>
         prevDetalles.map((detalle) =>
           detalle.vehiculo.value === vehiculoId
             ? {
                 ...detalle,
                 bonos: detalle.bonos.map((bono) =>
-                  bono.name === name ? { ...bono, quantity } : bono
+                  bono.name === name
+                    ? {
+                        ...bono,
+                        values: bono.values.map((val) =>
+                          val.mes === mes ? { ...val, quantity } : val
+                        ),
+                      }
+                    : bono
                 ),
               }
             : detalle
@@ -204,7 +301,7 @@ export default function Formulario() {
       vehiculoId: string,
       index: number,
       field: keyof Pernote,
-      value: string | number
+      value: string | number | Date // Permitir que también sea de tipo Date
     ) => {
       setDetallesVehiculos((prevDetalles) =>
         prevDetalles.map((detalle) =>
@@ -248,12 +345,15 @@ export default function Formulario() {
   );
 
   const handleAddPernote = useCallback((vehiculoId: string) => {
-    setDetallesVehiculos((prevDetalles : any) =>
-      prevDetalles.map((detalle : any) =>
+    setDetallesVehiculos((prevDetalles: any) =>
+      prevDetalles.map((detalle: any) =>
         detalle.vehiculo.value === vehiculoId
           ? {
               ...detalle,
-              pernotes: [...detalle.pernotes, { empresa: "", cantidad: 0 }],
+              pernotes: [
+                ...detalle.pernotes,
+                { empresa: "", cantidad: 0, fecha: new Date() },
+              ],
             }
           : detalle
       )
@@ -261,8 +361,8 @@ export default function Formulario() {
   }, []);
 
   const handleAddRecargo = useCallback((vehiculoId: string) => {
-    setDetallesVehiculos((prevDetalles : any) =>
-      prevDetalles.map((detalle : any) =>
+    setDetallesVehiculos((prevDetalles: any) =>
+      prevDetalles.map((detalle: any) =>
         detalle.vehiculo.value === vehiculoId
           ? {
               ...detalle,
@@ -311,13 +411,13 @@ export default function Formulario() {
     setVehiculosSelected([]);
     setDetallesVehiculos([]);
     setDateSelected(null);
-    setIsCheckedAjuste(false)
-    setDiasLaborados(0)
+    setIsCheckedAjuste(false);
+    setDiasLaborados(0);
   };
 
   const bonificacionVillanueva = useMemo(() => {
     if (isCheckedAjuste) {
-      const conductor = conductores.find(
+      const conductor = state.conductores.find(
         (c) => c.id === conductorSelected?.value
       );
       return conductor
@@ -340,9 +440,15 @@ export default function Formulario() {
     const total = detallesVehiculos.reduce(
       (acc, item) => {
         const bonos = item.bonos.reduce(
-          (total, bono) => total + bono.quantity * bono.value,
+          (total, bono) =>
+            total +
+            bono.values.reduce(
+              (sum, val) => sum + val.quantity * bono.value,
+              0
+            ),
           0
         );
+
         const pernotes = item.pernotes.reduce(
           (total, pernote) => total + pernote.cantidad * 100906, // Puedes ajustar el valor de pernote si es una constante
           0
@@ -369,7 +475,7 @@ export default function Formulario() {
 
     // Obtén el salario base del conductor seleccionado
     const salarioBaseConductor =
-      conductores.find(
+      state.conductores.find(
         (conductorState) => conductorState.id === conductorSelected?.value
       )?.salarioBase || 0;
 
@@ -393,7 +499,7 @@ export default function Formulario() {
     dateSelected,
     conductorSelected,
     vehiculosSelected,
-    conductores,
+    state.conductores,
   ]);
 
   // Actualización de la liquidación en el useEffect
@@ -430,7 +536,7 @@ export default function Formulario() {
         }))
       ),
       conductorId:
-        conductores.find(
+        state.conductores.find(
           (conductor) => conductor.id === conductorSelected?.value
         )?.id || null, // Busca el conductor completo basado en la selección
       auxilioTransporte,
@@ -454,7 +560,7 @@ export default function Formulario() {
     totalRecargos,
     conductorSelected, // Dependemos de cambios en `conductorSelected`
     detallesVehiculos,
-    conductores,
+    state.conductores,
   ]);
 
   const customStyles = {
@@ -591,24 +697,45 @@ export default function Formulario() {
                         <h2 className="text-xl font-semibold mb-3">
                           Vehículo: {detalleVehiculo.vehiculo.label}
                         </h2>
-                        <h3 className="font-semibold mb-2">Bonos</h3>
-                        {detalleVehiculo.bonos.map((bono) => (
-                          <Input
-                            key={bono.name}
-                            type="number"
-                            label={`${bono.name} ($${bono.value.toLocaleString()})`}
-                            placeholder={`Ingresa la cantidad de ${bono.name.toLowerCase()}`}
-                            value={bono.quantity.toString()}
-                            onChange={(e) =>
-                              handleBonoChange(
-                                detalleVehiculo.vehiculo.value,
-                                bono.name,
-                                +e.target.value
-                              )
-                            }
-                          />
+                        <h3 className="font-semibold text-xl mb-2">
+                          Bonificaciones
+                        </h3>
+                        {detalleVehiculo.bonos.map((bono, index) => (
+                          <div
+                            key={index}
+                            className="flex flex-col md:flex-row md:justify-between md:items-center gap-5 shadow-md rounded-xl px-5 py-4 md:py-2"
+                          >
+                            <p className="flex-1 font-semibold">{bono.name}</p>
+                            {mesesRange.map((mes) => {
+                              // Buscar el valor correspondiente al mes dentro de los valores del bono
+                              const bonoMes = bono.values.find(
+                                (val) => val.mes === mes
+                              );
+
+                              return (
+                                <Input
+                                  key={mes}
+                                  type="number"
+                                  label={mes}
+                                  className="md:w-24"
+                                  placeholder={`Ingresa la cantidad de ${bono.name.toLowerCase()}`}
+                                  value={
+                                    bonoMes ? bonoMes.quantity.toString() : "0"
+                                  }
+                                  onChange={(e) =>
+                                    handleBonoChange(
+                                      detalleVehiculo.vehiculo.value,
+                                      bono.name,
+                                      mes,
+                                      +e.target.value
+                                    )
+                                  }
+                                />
+                              );
+                            })}
+                          </div>
                         ))}
-                        <h3 className="font-semibold mb-2">Pernotes</h3>
+                        <h3 className="font-semibold text-xl mb-2">Pernotes</h3>
                         {detalleVehiculo.pernotes?.map(
                           (pernote, pernoteIndex) => (
                             <div
@@ -635,21 +762,77 @@ export default function Formulario() {
                                 styles={customStyles}
                                 className="lg:col-span-3"
                               />
-                              <Input
-                                type="number"
-                                label="Cantidad"
-                                placeholder="0"
-                                className="lg:col-span-1"
-                                value={pernote.cantidad.toString()}
-                                onChange={(e) =>
-                                  handlePernoteChange(
-                                    detalleVehiculo.vehiculo.value,
-                                    pernoteIndex,
-                                    "cantidad",
-                                    +e.target.value
-                                  )
-                                }
-                              />
+                              <div className="grid grid-cols-2 items-center gap-5">
+                                <Input
+                                  type="number"
+                                  label="Cantidad"
+                                  placeholder="0"
+                                  value={pernote.cantidad.toString()}
+                                  onChange={(e) =>
+                                    handlePernoteChange(
+                                      detalleVehiculo.vehiculo.value,
+                                      pernoteIndex,
+                                      "cantidad",
+                                      +e.target.value
+                                    )
+                                  }
+                                />
+                                <DatePicker
+                                  label="Fecha"
+                                  value={
+                                    typeof pernote.fecha === "string"
+                                      ? parseDate(pernote.fecha)
+                                      : null
+                                  } // Validamos que sea string antes de usar parseDate
+                                  onChange={(newDate: DateValue | null) => {
+                                    if (newDate) {
+                                      // Convertir DateValue a un objeto Date de JavaScript
+                                      const jsDate = new Date(
+                                        newDate.year,
+                                        newDate.month - 1,
+                                        newDate.day
+                                      );
+
+                                      // Validar que esté dentro del rango de `dateSelected`
+                                      const startDate = new Date(
+                                        dateSelected.start.year,
+                                        dateSelected.start.month - 1,
+                                        dateSelected.start.day
+                                      );
+                                      const endDate = new Date(
+                                        dateSelected.end.year,
+                                        dateSelected.end.month - 1,
+                                        dateSelected.end.day
+                                      );
+
+                                      if (
+                                        jsDate >= startDate &&
+                                        jsDate <= endDate
+                                      ) {
+                                        // La fecha está dentro del rango, proceder
+                                        handlePernoteChange(
+                                          detalleVehiculo.vehiculo.value,
+                                          pernoteIndex,
+                                          "fecha",
+                                          formatDateValue(jsDate)
+                                        );
+                                      } else {
+                                        // La fecha no está en el rango, resetea la fecha llamando a handlePernoteChange con fecha vacía
+                                        alert(
+                                          "La fecha seleccionada no está dentro del rango permitido"
+                                        );
+                                        handlePernoteChange(
+                                          detalleVehiculo.vehiculo.value,
+                                          pernoteIndex,
+                                          "fecha",
+                                          null
+                                        ); // Resetea la fecha
+                                      }
+                                    }
+                                  }}
+                                />
+                                F
+                              </div>
                               <Button
                                 onClick={() =>
                                   handleRemovePernote(
@@ -664,6 +847,7 @@ export default function Formulario() {
                             </div>
                           )
                         )}
+
                         <Button
                           onClick={() =>
                             handleAddPernote(detalleVehiculo.vehiculo.value)
@@ -672,7 +856,7 @@ export default function Formulario() {
                         >
                           Añadir pernote
                         </Button>
-                        <h3 className="font-semibold mb-2">Recargos</h3>
+                        <h3 className="font-semibold text-xl mb-2">Recargos</h3>
                         {detalleVehiculo.recargos?.map(
                           (recargo, recargoIndex) => (
                             <div
@@ -745,12 +929,13 @@ export default function Formulario() {
         <div
           className={`grid ${state.allowEdit || state.allowEdit == null ? "w-full" : "lg:w-1/2 lg:mx-auto"} gap-10`}
         >
-          {detallesVehiculos && dateSelected && vehiculos && (
+          {detallesVehiculos && dateSelected && state.vehiculos && (
             <>
               <ConductorInfo
                 conductor={
-                  conductores.find((c) => c.id === conductorSelected?.value) ||
-                  null
+                  state.conductores.find(
+                    (c) => c.id === conductorSelected?.value
+                  ) || null
                 }
                 dateSelected={dateSelected}
               />
@@ -759,7 +944,7 @@ export default function Formulario() {
               ))}
             </>
           )}
-          {detallesVehiculos.length > 0 && dateSelected && vehiculos && (
+          {detallesVehiculos.length > 0 && dateSelected && state.vehiculos && (
             <Card>
               <CardHeader>
                 <p className="text-xl font-semibold">Resumen</p>
@@ -973,11 +1158,7 @@ interface ListSectionProps<T> {
 const ListSection = <T,>({ title, items, formatFn }: ListSectionProps<T>) => (
   <div className="space-y-2">
     <h3 className="text-xl font-semibold">{title}</h3>
-    <div>
-      {items.map((item, index) => (
-        <div key={index}>{formatFn(item, index)}</div>
-      ))}
-    </div>
+    <div>{formatFn(items)}</div>
   </div>
 );
 
@@ -989,7 +1170,9 @@ const CardLiquidacion = ({ detalleVehiculo }: CardLiquidacionProps) => {
   const totalBonos = useMemo(
     () =>
       detalleVehiculo.bonos.reduce(
-        (total, bono) => total + bono.quantity * bono.value,
+        (total, bono) =>
+          total +
+          bono.values.reduce((sum, val) => sum + val.quantity * bono.value, 0),
         0
       ),
     [detalleVehiculo.bonos]
@@ -1026,18 +1209,56 @@ const CardLiquidacion = ({ detalleVehiculo }: CardLiquidacionProps) => {
         <ListSection
           title="Bonificaciones"
           items={detalleVehiculo.bonos}
-          formatFn={(bono) => (
-            <div className="sm:grid sm:grid-cols-4">
-              <p className="col-span-2">
-                {bono.name} ({formatToCOP(bono.value)}) :
-              </p>
-              <p className="sm:text-right text-primary-500">{bono.quantity}</p>
-              <p className="sm:text-right text-green-500 mb-2 sm:mb-0">
-                {formatToCOP(bono.quantity * bono.value)}
-              </p>
-            </div>
-          )}
+          formatFn={() => {
+            const totalBonos = detalleVehiculo.bonos.map((bono) =>
+              bono.values.reduce(
+                (sum, val) => sum + val.quantity * bono.value,
+                0
+              )
+            );
+
+            return (
+              <table className="table-auto w-full text-sm mb-5">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-2 text-left">Nombre del bono</th>
+                    {detalleVehiculo.bonos[0]?.values.map((val, index) => (
+                      <th key={index} className="px-4 py-2 text-center">
+                        {val.mes}
+                      </th>
+                    ))}
+                    <th className="px-4 py-2 text-center">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {detalleVehiculo.bonos.map((bono, index) => {
+                    const total = bono.values.reduce(
+                      (sum, val) => sum + val.quantity * bono.value,
+                      0
+                    );
+                    return (
+                      <tr key={index}>
+                        <td className="border px-4 py-2">{bono.name}</td>
+                        {bono.values.map((val, index) => (
+                          <td
+                            key={index}
+                            className="border px-4 py-2 text-center"
+                          >
+                            {val.quantity}
+                          </td>
+                        ))}
+                        <td className="border px-4 py-2 text-center text-green-500">
+                          {formatToCOP(total)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            );
+          }}
         />
+
         <ListSection
           title="Pernotes"
           items={detalleVehiculo.pernotes}

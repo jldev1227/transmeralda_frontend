@@ -39,3 +39,40 @@ export const formatDateValue = (dateValue: DateValue | null): string => {
   return ''; // Retorna una cadena vacía si no hay valor
 };
 
+export function obtenerMesesEntreFechas(start: DateValue | null, end: DateValue | null): string[] {
+  if (!start || !end) {
+    return []; // Si alguna de las fechas es null, devolver un array vacío.
+  }
+
+  const meses = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  ];
+
+  const resultado: string[] = [];
+
+  let fechaActual = new Date(start.year, start.month - 1, 1);
+  const fechaFinal = new Date(end.year, end.month - 1, 1);
+
+  while (fechaActual <= fechaFinal) {
+    resultado.push(meses[fechaActual.getMonth()]);
+    fechaActual.setMonth(fechaActual.getMonth() + 1);
+  }
+
+  return resultado;
+}
+
+
+// Función para convertir un Date de JavaScript a un DateValue
+export const dateToDateValue = (date: Date) => {
+  return {
+    year: date.getFullYear(),
+    month: date.getMonth() + 1, // En DateValue, el mes parece estar basado en 1
+    day: date.getDate(),
+  };
+};
+
+// Función para convertir un DateValue a un Date de JavaScript
+export const dateValueToDate = (dateValue: DateValue): Date => {
+  return new Date(dateValue.year, dateValue.month - 1, dateValue.day); // En JavaScript, los meses empiezan en 0
+};

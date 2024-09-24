@@ -7,8 +7,22 @@ export type IconSvgProps = SVGProps<SVGSVGElement> & {
 };
 
 // Tipos para Bonificaciones, Pernotes y Recargos
-export type Bono = {id?: string, name: string; quantity: number; value: number, vehiculoId?: string | null,   __typename?: string; };
-export type Pernote = {id?: string, empresa: string; cantidad: number; valor: number, vehiculoId?: string | null,   __typename?: string; }; // Agregado `valor` para pernote
+export type Bono = {
+  name: string;
+  values: { mes: string; quantity: number }[];
+  value: number;
+  vehiculoId?: string; // Hacer vehiculoId opcional
+  __typename?: string;
+}
+export type Pernote = {
+  id?: string, 
+  empresa: string; cantidad: 
+  number; valor: number, 
+  vehiculoId?: string | null, 
+  fecha?: string | null; // Agrega el campo de fecha, puede ser string o Date
+  __typename?: string; 
+};
+
 export type Recargo = {id?: string, empresa: string; valor: number, vehiculoId?: string | null,   __typename?: string; };
 
 // Vehículo y Conductor
@@ -34,6 +48,11 @@ export type Conductor = {
 export type Vehiculo = {
   id: string;
   placa: string;
+  marca: string;
+  linea: string;
+  modelo: string;
+  propietarioNombre: string;
+  propietarioIdentificacion: string;
   __typename?: string;
 };
 
