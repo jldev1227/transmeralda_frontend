@@ -30,9 +30,11 @@ export type Recargo = {
   empresa: string;
   valor: number;
   vehiculoId?: string | null;
-  pagCliente: boolean | null; // Nuevo campo de tipo boolean
+  pagCliente: boolean | null;
+  mes?: string; // Añadir el campo `mes` de tipo string
   __typename?: string;
 };
+
 
 // Vehículo y Conductor
 export type VehiculoOption = {
