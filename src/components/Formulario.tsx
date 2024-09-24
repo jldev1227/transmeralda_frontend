@@ -174,7 +174,7 @@ export default function Formulario() {
       setIsCheckedAjuste(stateLiquidacion.ajusteSalarial > 0);
       setDiasLaborados(stateLiquidacion.diasLaborados);
     }
-  }, [stateLiquidacion, mesesRange, conductoresOptions, vehiculosOptions]);
+  }, [stateLiquidacion, conductoresOptions, vehiculosOptions]);
 
   // Manejador de fechas
   const handleDateChange = (newDate: RangeValue<DateValue> | null) => {
@@ -196,7 +196,6 @@ export default function Formulario() {
     }
   }, [dateSelected, mesesRange]);
 
-  // Efecto que depende de vehiculosSelected y mesesRange para actualizar detallesVehiculos
   useEffect(() => {
     if (vehiculosSelected && mesesRange.length > 0) {
       const detallesMap = new Map(
@@ -207,40 +206,55 @@ export default function Formulario() {
         (vehiculo: DetalleVehiculo["vehiculo"]) => {
           const detalleExistente = detallesMap?.get(vehiculo?.value);
 
-          return (
-            detalleExistente || {
-              vehiculo,
-              bonos: [
-                {
-                  name: "Bono de alimentación",
-                  values: mesesRange.map((mes) => ({
-                    mes: mes,
-                    quantity: 0,
-                  })),
-                  value: 22960,
-                  vehiculoId: vehiculo?.value,
-                },
-                {
-                  name: "Bono día trabajado",
-                  values: mesesRange.map((mes) => ({
-                    mes: mes,
-                    quantity: 0,
-                  })),
-                  value: 13000,
-                },
-                {
-                  name: "Bono día trabajado doble",
-                  values: mesesRange.map((mes) => ({
-                    mes: mes,
-                    quantity: 0,
-                  })),
-                  value: 25000,
-                },
-              ],
-              pernotes: [],
-              recargos: [],
-            }
-          );
+          // Si ya existe un detalle, actualizar los bonos con los nuevos mesesRange
+          if (detalleExistente) {
+            return {
+              ...detalleExistente,
+              bonos: detalleExistente.bonos.map((bono) => ({
+                ...bono,
+                values: mesesRange.map((mes) => {
+                  const bonoExistente = bono.values.find(
+                    (val) => val.mes === mes
+                  );
+                  return bonoExistente || { mes, quantity: 0 }; // Mantener el quantity si el mes ya existe
+                }),
+              })),
+            };
+          }
+
+          // Si no existe, crear los detalles con los mesesRange
+          return {
+            vehiculo,
+            bonos: [
+              {
+                name: "Bono de alimentación",
+                values: mesesRange.map((mes) => ({
+                  mes: mes,
+                  quantity: 0,
+                })),
+                value: 22960,
+                vehiculoId: vehiculo?.value,
+              },
+              {
+                name: "Bono día trabajado",
+                values: mesesRange.map((mes) => ({
+                  mes: mes,
+                  quantity: 0,
+                })),
+                value: 13000,
+              },
+              {
+                name: "Bono día trabajado doble",
+                values: mesesRange.map((mes) => ({
+                  mes: mes,
+                  quantity: 0,
+                })),
+                value: 25000,
+              },
+            ],
+            pernotes: [],
+            recargos: [],
+          };
         }
       );
 
@@ -251,7 +265,7 @@ export default function Formulario() {
         setDetallesVehiculos(nuevosDetalles);
       }
     }
-  }, [vehiculosSelected, mesesRange, detallesVehiculos]);
+  }, [vehiculosSelected, mesesRange, detallesVehiculos, dateSelected]);
 
   // Manejadores de eventos
   const handleVehiculoSelect = useCallback(
@@ -326,7 +340,8 @@ export default function Formulario() {
       vehiculoId: string,
       index: number,
       field: keyof Recargo,
-      value: string | number
+      value: string | number | boolean, // Agregamos `boolean` como posible tipo
+      pagaCliente?: boolean // Añadimos el parámetro opcional `pagaCliente`
     ) => {
       setDetallesVehiculos((prevDetalles) =>
         prevDetalles.map((detalle) =>
@@ -334,7 +349,15 @@ export default function Formulario() {
             ? {
                 ...detalle,
                 recargos: detalle.recargos.map((recargo, i) =>
-                  i === index ? { ...recargo, [field]: value } : recargo
+                  i === index
+                    ? {
+                        ...recargo,
+                        [field]: value, // Actualiza el campo especificado
+                        ...(pagaCliente !== undefined && {
+                          pagCliente: pagaCliente,
+                        }), // Inserta `pagaCliente` si se pasó como argumento
+                      }
+                    : recargo
                 ),
               }
             : detalle
@@ -352,7 +375,7 @@ export default function Formulario() {
               ...detalle,
               pernotes: [
                 ...detalle.pernotes,
-                { empresa: "", cantidad: 0, fecha: new Date() },
+                { empresa: "", cantidad: 0, fechas: [] },
               ],
             }
           : detalle
@@ -366,7 +389,10 @@ export default function Formulario() {
         detalle.vehiculo.value === vehiculoId
           ? {
               ...detalle,
-              recargos: [...detalle.recargos, { empresa: "", valor: 0 }],
+              recargos: [
+                ...detalle.recargos,
+                { empresa: "", valor: 0, pagaCliente: null },
+              ],
             }
           : detalle
       )
@@ -561,6 +587,7 @@ export default function Formulario() {
     conductorSelected, // Dependemos de cambios en `conductorSelected`
     detallesVehiculos,
     state.conductores,
+    mesesRange,
   ]);
 
   const customStyles = {
@@ -657,43 +684,47 @@ export default function Formulario() {
       >
         {(stateLiquidacion || stateLiquidacion === null) &&
           (state.allowEdit || state.allowEdit === null) && (
-            <form className="w-full flex flex-col space-y-8">
-              <div className={"space-y-4 flex flex-col"}>
-                <h2 className="font-bold text-2xl text-green-700">
-                  {stateLiquidacion?.id ? "Editando" : "Creando"}
-                </h2>
-                <SelectReact
-                  options={conductoresOptions}
-                  value={conductorSelected}
-                  onChange={setConductorSelected}
-                  placeholder="Seleccione un conductor"
-                  isSearchable
-                  styles={customStyles}
-                />
-                <SelectReact
-                  options={vehiculosOptions}
-                  value={vehiculosSelected}
-                  onChange={(selectedOptions) =>
-                    handleVehiculoSelect(selectedOptions)
-                  }
-                  placeholder="Seleccione una o más placas"
-                  isMulti
-                  isSearchable
-                  styles={customStyles}
-                />
-                <DateRangePicker
-                  onChange={handleDateChange}
-                  label="Periodo a liquidar"
-                  lang="es-ES"
-                  value={dateSelected}
-                />
+            <form className="w-full flex flex-col">
+              <div className={"space-y-6 flex flex-col"}>
+                <div className="space-y-4 mb-6">
+                  <h2 className="font-bold text-2xl text-green-700">
+                    {stateLiquidacion?.id ? "Editando" : "Creando"}
+                  </h2>
+                  <div className="space-y-3">
+                    <SelectReact
+                      options={conductoresOptions}
+                      value={conductorSelected}
+                      onChange={setConductorSelected}
+                      placeholder="Seleccione un conductor"
+                      isSearchable
+                      styles={customStyles}
+                    />
+                    <SelectReact
+                      options={vehiculosOptions}
+                      value={vehiculosSelected}
+                      onChange={(selectedOptions) =>
+                        handleVehiculoSelect(selectedOptions)
+                      }
+                      placeholder="Seleccione una o más placas"
+                      isMulti
+                      isSearchable
+                      styles={customStyles}
+                    />
+                    <DateRangePicker
+                      onChange={handleDateChange}
+                      label="Periodo a liquidar"
+                      lang="es-ES"
+                      value={dateSelected}
+                    />
+                  </div>
+                </div>
 
                 {conductorSelected &&
                   vehiculosSelected &&
                   dateSelected &&
                   detallesVehiculos?.map((detalleVehiculo, index) => (
                     <div key={index}>
-                      <div className="space-y-4 flex flex-col">
+                      <Card className="space-y-5 flex flex-col p-6">
                         <h2 className="text-xl font-semibold mb-3">
                           Vehículo: {detalleVehiculo.vehiculo.label}
                         </h2>
@@ -735,6 +766,7 @@ export default function Formulario() {
                             })}
                           </div>
                         ))}
+                        <Divider />
                         <h3 className="font-semibold text-xl mb-2">Pernotes</h3>
                         {detalleVehiculo.pernotes?.map(
                           (pernote, pernoteIndex) => (
@@ -774,10 +806,23 @@ export default function Formulario() {
                                 onChange={(e) => {
                                   const newCantidad = +e.target.value;
 
-                                  // Si la cantidad cambia, ajustamos el array de fechas para que tenga la misma longitud
-                                  const newFechas = [...Array(newCantidad)].map(
-                                    (_, i) => pernote.fechas?.[i] || null
-                                  );
+                                  // Mantener las fechas existentes
+                                  let newFechas = [...pernote.fechas];
+
+                                  if (newCantidad > pernote.fechas.length) {
+                                    // Si el nuevo valor de cantidad es mayor, añadir fechas vacías
+                                    newFechas = [
+                                      ...newFechas,
+                                      ...Array(
+                                        newCantidad - pernote.fechas.length
+                                      ).fill(null),
+                                    ];
+                                  } else if (
+                                    newCantidad < pernote.fechas.length
+                                  ) {
+                                    // Si el nuevo valor de cantidad es menor, cortar el array de fechas
+                                    newFechas = newFechas.slice(0, newCantidad);
+                                  }
 
                                   // Actualizar el array de fechas junto con la cantidad
                                   handlePernoteChange(
@@ -880,7 +925,20 @@ export default function Formulario() {
                         >
                           Añadir pernote
                         </Button>
-                        <h3 className="font-semibold text-xl mb-2">Recargos</h3>
+
+                        <Divider />
+
+                        <div className="grid grid-cols-5 items-center">
+                          <h3 className="font-semibold text-xl col-span-3">
+                            Recargos
+                          </h3>
+                          <p className="font-semibold text-sm col-span-1 text-center">
+                            Paga propietario
+                          </p>
+                          <p className="font-semibold text-sm col-span-1 text-center">
+                            Paga cliente
+                          </p>
+                        </div>
                         {detalleVehiculo.recargos?.map(
                           (recargo, recargoIndex) => (
                             <div
@@ -908,15 +966,15 @@ export default function Formulario() {
                                 className="lg:col-span-3"
                               />
                               <Input
-                                type="text" // Cambiamos a 'text' para poder mostrar el formato con símbolos de moneda
+                                type="text" // Mantiene el tipo de 'text' para mostrar el formato con símbolos de moneda
                                 label="Valor"
                                 placeholder="$0"
                                 className="col-span-1"
                                 value={
-                                  recargo.valor !== 0
+                                  !recargo.pagCliente && recargo.valor !== 0
                                     ? formatCurrency(recargo.valor)
                                     : ""
-                                } // Formateamos el valor mientras se ingresa
+                                } // Muestra el valor solo cuando pagCliente es false
                                 onChange={(e) => {
                                   const inputVal = e.target.value.replace(
                                     /[^\d]/g,
@@ -924,14 +982,45 @@ export default function Formulario() {
                                   ); // Quitamos caracteres no numéricos
                                   const numericValue = +inputVal; // Convertimos el string limpio a número
 
+                                  // Llamamos a handleRecargoChange con pagaCliente como false
                                   handleRecargoChange(
                                     detalleVehiculo.vehiculo.value,
                                     recargoIndex,
                                     "valor",
-                                    numericValue
+                                    numericValue,
+                                    false // Aquí especificamos que pagaCliente es false
                                   );
                                 }}
                               />
+
+                              <Input
+                                type="text" // Mantiene el tipo de 'text' para mostrar el formato con símbolos de moneda
+                                label="Valor"
+                                placeholder="$0"
+                                className="col-span-1"
+                                value={
+                                  recargo.pagCliente && recargo.valor !== 0
+                                    ? formatCurrency(recargo.valor)
+                                    : ""
+                                } // Muestra el valor solo cuando pagCliente es true
+                                onChange={(e) => {
+                                  const inputVal = e.target.value.replace(
+                                    /[^\d]/g,
+                                    ""
+                                  ); // Quitamos caracteres no numéricos
+                                  const numericValue = +inputVal; // Convertimos el string limpio a número
+
+                                  // Llamamos a handleRecargoChange con pagaCliente como true
+                                  handleRecargoChange(
+                                    detalleVehiculo.vehiculo.value,
+                                    recargoIndex,
+                                    "valor",
+                                    numericValue,
+                                    true // Aquí especificamos que pagaCliente es true
+                                  );
+                                }}
+                              />
+
                               <Button
                                 onClick={() =>
                                   handleRemoveRecargo(
@@ -939,7 +1028,7 @@ export default function Formulario() {
                                     recargoIndex
                                   )
                                 }
-                                className="m-auto bg-red-600 text-white w-full lg:col-span-1 lg:w-auto"
+                                className="col-span-5 bg-red-600 text-white"
                               >
                                 X
                               </Button>
@@ -954,7 +1043,7 @@ export default function Formulario() {
                         >
                           Añadir recargo
                         </Button>
-                      </div>
+                      </Card>
                     </div>
                   ))}
               </div>
@@ -973,7 +1062,7 @@ export default function Formulario() {
                 }
                 dateSelected={dateSelected}
               />
-              {detallesVehiculos.map((detalle, index) => (
+              {detallesVehiculos?.map((detalle, index) => (
                 <CardLiquidacion key={index} detalleVehiculo={detalle} />
               ))}
             </>
@@ -1186,7 +1275,7 @@ const ConductorInfo = ({ conductor, dateSelected }: ConductorInfoProps) => {
 interface ListSectionProps<T> {
   title: string;
   items: T[];
-  formatFn: (item: T, index: number) => React.ReactNode;
+  formatFn: (item: Array<T>) => React.ReactNode;
 }
 
 const ListSection = <T,>({ title, items, formatFn }: ListSectionProps<T>) => (
@@ -1242,11 +1331,11 @@ const CardLiquidacion = ({ detalleVehiculo }: CardLiquidacionProps) => {
       <CardBody className="gap-5 text-sm">
         <ListSection
           title="Bonificaciones"
-          items={detalleVehiculo.bonos}
+          items={detalleVehiculo?.bonos}
           formatFn={() => {
             return (
               <table className="table-auto w-full text-sm mb-5">
-                <thead>
+                <thead className="bg-yellow-500 text-white">
                   <tr>
                     <th className="px-4 py-2 text-left">Nombre del bono</th>
                     {detalleVehiculo.bonos[0]?.values.map((val, index) => (
@@ -1290,51 +1379,47 @@ const CardLiquidacion = ({ detalleVehiculo }: CardLiquidacionProps) => {
           title="Pernotes"
           items={detalleVehiculo.pernotes}
           formatFn={(pernotes) => {
-            // Si es un array, lo recorremos
             if (Array.isArray(pernotes)) {
-              return pernotes.map((pernote, pernoteIndex) => {
-                const empresa = empresas.find(
-                  (empresa) => empresa.NIT === pernote.empresa
-                );
+              // Generar una tabla general con los rows por cada pernote
+              return (
+                <table className="table-auto w-full text-sm mb-5">
+                  <thead className="bg-blue-500 text-white">
+                    <tr>
+                      <th className="px-4 py-2 text-left">Empresa</th>
+                      <th className="px-4 py-2 text-center">Fechas</th>
+                      <th className="px-4 py-2 text-center">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pernotes.map((pernote, index) => {
+                      const empresa = empresas.find(
+                        (empresa) => empresa.NIT === pernote.empresa
+                      );
 
-                if (empresa) {
-                  return (
-                    <div
-                      key={pernoteIndex}
-                      className="sm:grid sm:grid-cols-4 mb-2"
-                    >
-                      <p className="col-span-2 text-md">{empresa.Nombre}</p>
-                      <div>
-                        {pernote?.fechas?.map((fecha: any) => (
-                          <p
-                            className="sm:text-right text-primary-500"
-                            key={fecha}
-                          >
-                            {fecha}
-                          </p>
-                        ))}
-                      </div>
-                      <p className="sm:text-right text-green-500 mb-2 sm:mb-0">
-                        {formatToCOP(pernote.cantidad * 100906 || 0)}
-                      </p>
-                    </div>
-                  );
-                } else {
-                  return (
-                    <div key={pernoteIndex} className="sm:grid sm:grid-cols-4">
-                      <p className="col-span-2 text-md">
-                        Empresa no encontrada
-                      </p>
-                      <p className="sm:text-right text-primary-500">
-                        {pernote.cantidad || 0}
-                      </p>
-                      <p className="sm:text-right text-green-500 mb-2 sm:mb-0">
-                        {formatToCOP(pernote.cantidad * 100906 || 0)}
-                      </p>
-                    </div>
-                  );
-                }
-              });
+                      return (
+                        <tr key={index}>
+                          <td className="border px-4 py-2">
+                            {empresa ? empresa.Nombre : "Empresa no encontrada"}
+                          </td>
+                          <td className="border text-center text-primary-500">
+                            {pernote?.fechas
+                              ?.sort(
+                                (a: string, b: string) =>
+                                  new Date(a).getTime() - new Date(b).getTime()
+                              ) // Ordenar las fechas
+                              .map((fecha: any, index) => (
+                                <p key={index}>{fecha}</p>
+                              ))}
+                          </td>
+                          <td className="border px-4 py-2 text-center text-green-500">
+                            {formatToCOP(pernote.cantidad * pernote.valor || 0)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              );
             }
 
             // Si no es un array, regresamos null o algún valor por defecto
@@ -1348,40 +1433,38 @@ const CardLiquidacion = ({ detalleVehiculo }: CardLiquidacionProps) => {
           formatFn={(recargos) => {
             // Si es un array, lo recorremos
             if (Array.isArray(recargos)) {
-              return recargos.map((recargo, recargoIndex) => {
-                console.log(recargo);
+              return (
+                <table className="table-auto w-full text-sm mb-5">
+                  <thead className="bg-green-500 text-white">
+                    <tr>
+                      <th className="px-4 py-2 text-left">Empresa</th>
+                      <th className="px-4 py-2 text-center">Paga cliente</th>
+                      <th className="px-4 py-2 text-center">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recargos.map((recargo, index) => {
+                      const empresa = empresas.find(
+                        (empresa) => empresa.NIT === recargo.empresa
+                      );
 
-                const empresa = empresas.find(
-                  (empresa) => empresa.NIT === recargo.empresa
-                );
-
-                console.log(empresa);
-
-                if (empresa) {
-                  return (
-                    <div key={recargoIndex} className="sm:grid sm:grid-cols-4">
-                      <p className="col-span-3 text-md">{empresa.Nombre}</p>
-                      <p className="sm:text-right text-green-500 mb-2 sm:mb-0">
-                        {formatToCOP(recargo.valor || 0)}
-                      </p>
-                    </div>
-                  );
-                } else {
-                  return (
-                    <div key={recargoIndex} className="sm:grid sm:grid-cols-4">
-                      <p className="col-span-3 text-md">
-                        Empresa no encontrada
-                      </p>
-                      <p className="sm:text-right text-primary-500">
-                        {recargo.cantidad}
-                      </p>
-                      <p className="sm:text-right text-green-500 mb-2 sm:mb-0">
-                        {formatToCOP(recargo.valor || 0)}
-                      </p>
-                    </div>
-                  );
-                }
-              });
+                      return (
+                        <tr key={index}>
+                          <td className="border px-4 py-2">
+                            {empresa ? empresa.Nombre : "Empresa no encontrada"}
+                          </td>
+                          <td className="border px-4 py-2 text-center">
+                            {recargo.pagCliente ? "SI" : "NO"}
+                          </td>
+                          <td className="border px-4 py-2 text-center text-green-500">
+                            {formatToCOP(recargo.valor || 0)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              );
             }
 
             // Si no es un array, regresamos null o algún valor por defecto

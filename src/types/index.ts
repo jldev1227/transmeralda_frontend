@@ -25,7 +25,14 @@ export type Pernote = {
 };
 
 
-export type Recargo = {id?: string, empresa: string; valor: number, vehiculoId?: string | null,   __typename?: string; };
+export type Recargo = {
+  id?: string;
+  empresa: string;
+  valor: number;
+  vehiculoId?: string | null;
+  pagCliente: boolean | null; // Nuevo campo de tipo boolean
+  __typename?: string;
+};
 
 // Vehículo y Conductor
 export type VehiculoOption = {
