@@ -16,8 +16,8 @@ import {
   formatToCOP,
   formatDate,
   obtenerMesesEntreFechas,
-  dateValueToDate,
-  formatDateValue,
+  dateToDateValue,
+  formatCurrency,
 } from "@/helpers";
 import {
   Pernote,
@@ -568,8 +568,8 @@ export default function Formulario() {
       ...provided,
       backgroundColor: "#f4f4f5",
       border: "none",
-      borderRadius: "8px",
-      padding: "8px",
+      borderRadius: "12px",
+      padding: "11px",
       boxShadow: "none",
       "&:hover": {
         backgroundColor: "#e4e4e7",
@@ -740,8 +740,9 @@ export default function Formulario() {
                           (pernote, pernoteIndex) => (
                             <div
                               key={pernoteIndex}
-                              className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-center"
+                              className="grid grid-cols-5 gap-4"
                             >
+                              {/* Select para la empresa */}
                               <SelectReact
                                 options={empresasOptions}
                                 value={
@@ -762,38 +763,54 @@ export default function Formulario() {
                                 styles={customStyles}
                                 className="lg:col-span-3"
                               />
-                              <div className="grid grid-cols-2 items-center gap-5">
-                                <Input
-                                  type="number"
-                                  label="Cantidad"
-                                  placeholder="0"
-                                  value={pernote.cantidad.toString()}
-                                  onChange={(e) =>
-                                    handlePernoteChange(
-                                      detalleVehiculo.vehiculo.value,
-                                      pernoteIndex,
-                                      "cantidad",
-                                      +e.target.value
-                                    )
-                                  }
-                                />
+
+                              {/* Input de cantidad fuera del map de DatePickers */}
+                              <Input
+                                type="number"
+                                label="Cantidad"
+                                placeholder="0"
+                                className="col-span-2"
+                                value={pernote.cantidad.toString()}
+                                onChange={(e) => {
+                                  const newCantidad = +e.target.value;
+
+                                  // Si la cantidad cambia, ajustamos el array de fechas para que tenga la misma longitud
+                                  const newFechas = [...Array(newCantidad)].map(
+                                    (_, i) => pernote.fechas?.[i] || null
+                                  );
+
+                                  // Actualizar el array de fechas junto con la cantidad
+                                  handlePernoteChange(
+                                    detalleVehiculo.vehiculo.value,
+                                    pernoteIndex,
+                                    "fechas",
+                                    newFechas
+                                  );
+
+                                  handlePernoteChange(
+                                    detalleVehiculo.vehiculo.value,
+                                    pernoteIndex,
+                                    "cantidad",
+                                    newCantidad
+                                  );
+                                }}
+                              />
+
+                              {/* Generar tantos DatePickers como el valor de pernote.cantidad */}
+                              {pernote.fechas?.map((fecha, dateIndex) => (
                                 <DatePicker
-                                  label="Fecha"
-                                  value={
-                                    typeof pernote.fecha === "string"
-                                      ? parseDate(pernote.fecha)
-                                      : null
-                                  } // Validamos que sea string antes de usar parseDate
+                                  key={dateIndex} // Añadir una key para cada DatePicker
+                                  label={`Fecha ${dateIndex + 1}`}
+                                  className="col-span-5"
+                                  value={fecha ? parseDate(fecha) : null}
                                   onChange={(newDate: DateValue | null) => {
                                     if (newDate) {
-                                      // Convertir DateValue a un objeto Date de JavaScript
                                       const jsDate = new Date(
                                         newDate.year,
                                         newDate.month - 1,
                                         newDate.day
                                       );
 
-                                      // Validar que esté dentro del rango de `dateSelected`
                                       const startDate = new Date(
                                         dateSelected.start.year,
                                         dateSelected.start.month - 1,
@@ -809,30 +826,37 @@ export default function Formulario() {
                                         jsDate >= startDate &&
                                         jsDate <= endDate
                                       ) {
-                                        // La fecha está dentro del rango, proceder
+                                        const newFecha =
+                                          dateToDateValue(jsDate);
+                                        const newFechas = [...pernote.fechas];
+                                        newFechas[dateIndex] = newFecha;
+
                                         handlePernoteChange(
                                           detalleVehiculo.vehiculo.value,
                                           pernoteIndex,
-                                          "fecha",
-                                          formatDateValue(jsDate)
+                                          "fechas",
+                                          newFechas
                                         );
                                       } else {
-                                        // La fecha no está en el rango, resetea la fecha llamando a handlePernoteChange con fecha vacía
                                         alert(
                                           "La fecha seleccionada no está dentro del rango permitido"
                                         );
+                                        const newFechas = [...pernote.fechas];
+                                        newFechas[dateIndex] = null;
+
                                         handlePernoteChange(
                                           detalleVehiculo.vehiculo.value,
                                           pernoteIndex,
-                                          "fecha",
-                                          null
-                                        ); // Resetea la fecha
+                                          "fechas",
+                                          newFechas
+                                        );
                                       }
                                     }
                                   }}
                                 />
-                                F
-                              </div>
+                              ))}
+
+                              {/* Botón para remover el pernote */}
                               <Button
                                 onClick={() =>
                                   handleRemovePernote(
@@ -840,7 +864,7 @@ export default function Formulario() {
                                     pernoteIndex
                                   )
                                 }
-                                className="m-auto bg-red-600 text-white w-full lg:col-span-1 lg:w-auto"
+                                className="w-full col-span-5 bg-red-600 text-white"
                               >
                                 X
                               </Button>
@@ -852,7 +876,7 @@ export default function Formulario() {
                           onClick={() =>
                             handleAddPernote(detalleVehiculo.vehiculo.value)
                           }
-                          className="bg-primary-700 text-white"
+                          className="w-full col-span-6 bg-primary-700 text-white"
                         >
                           Añadir pernote
                         </Button>
@@ -884,19 +908,29 @@ export default function Formulario() {
                                 className="lg:col-span-3"
                               />
                               <Input
-                                type="number"
+                                type="text" // Cambiamos a 'text' para poder mostrar el formato con símbolos de moneda
                                 label="Valor"
                                 placeholder="$0"
                                 className="col-span-1"
-                                value={recargo.valor.toString()}
-                                onChange={(e) =>
+                                value={
+                                  recargo.valor !== 0
+                                    ? formatCurrency(recargo.valor)
+                                    : ""
+                                } // Formateamos el valor mientras se ingresa
+                                onChange={(e) => {
+                                  const inputVal = e.target.value.replace(
+                                    /[^\d]/g,
+                                    ""
+                                  ); // Quitamos caracteres no numéricos
+                                  const numericValue = +inputVal; // Convertimos el string limpio a número
+
                                   handleRecargoChange(
                                     detalleVehiculo.vehiculo.value,
                                     recargoIndex,
                                     "valor",
-                                    +e.target.value
-                                  )
-                                }
+                                    numericValue
+                                  );
+                                }}
                               />
                               <Button
                                 onClick={() =>
@@ -927,7 +961,7 @@ export default function Formulario() {
             </form>
           )}
         <div
-          className={`grid ${state.allowEdit || state.allowEdit == null ? "w-full" : "lg:w-1/2 lg:mx-auto"} gap-10`}
+          className={`${state.allowEdit || state.allowEdit == null ? "w-full" : "lg:w-1/2 lg:mx-auto"}`}
         >
           {detallesVehiculos && dateSelected && state.vehiculos && (
             <>
@@ -945,7 +979,7 @@ export default function Formulario() {
             </>
           )}
           {detallesVehiculos.length > 0 && dateSelected && state.vehiculos && (
-            <Card>
+            <Card className="max-h-full">
               <CardHeader>
                 <p className="text-xl font-semibold">Resumen</p>
               </CardHeader>
@@ -1210,13 +1244,6 @@ const CardLiquidacion = ({ detalleVehiculo }: CardLiquidacionProps) => {
           title="Bonificaciones"
           items={detalleVehiculo.bonos}
           formatFn={() => {
-            const totalBonos = detalleVehiculo.bonos.map((bono) =>
-              bono.values.reduce(
-                (sum, val) => sum + val.quantity * bono.value,
-                0
-              )
-            );
-
             return (
               <table className="table-auto w-full text-sm mb-5">
                 <thead>
@@ -1262,38 +1289,103 @@ const CardLiquidacion = ({ detalleVehiculo }: CardLiquidacionProps) => {
         <ListSection
           title="Pernotes"
           items={detalleVehiculo.pernotes}
-          formatFn={(pernote) => {
-            const empresa = empresas.find(
-              (empresa) => empresa.NIT === pernote.empresa
-            );
-            return (
-              <div className="sm:grid sm:grid-cols-4">
-                <p className="col-span-2 text-md">{empresa?.Nombre}</p>
-                <p className="sm:text-right text-primary-500">
-                  {pernote.cantidad}
-                </p>
-                <p className="sm:text-right text-green-500 mb-2 sm:mb-0">
-                  {formatToCOP(pernote.cantidad * 100906)}
-                </p>
-              </div>
-            );
+          formatFn={(pernotes) => {
+            // Si es un array, lo recorremos
+            if (Array.isArray(pernotes)) {
+              return pernotes.map((pernote, pernoteIndex) => {
+                const empresa = empresas.find(
+                  (empresa) => empresa.NIT === pernote.empresa
+                );
+
+                if (empresa) {
+                  return (
+                    <div
+                      key={pernoteIndex}
+                      className="sm:grid sm:grid-cols-4 mb-2"
+                    >
+                      <p className="col-span-2 text-md">{empresa.Nombre}</p>
+                      <div>
+                        {pernote?.fechas?.map((fecha: any) => (
+                          <p
+                            className="sm:text-right text-primary-500"
+                            key={fecha}
+                          >
+                            {fecha}
+                          </p>
+                        ))}
+                      </div>
+                      <p className="sm:text-right text-green-500 mb-2 sm:mb-0">
+                        {formatToCOP(pernote.cantidad * 100906 || 0)}
+                      </p>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div key={pernoteIndex} className="sm:grid sm:grid-cols-4">
+                      <p className="col-span-2 text-md">
+                        Empresa no encontrada
+                      </p>
+                      <p className="sm:text-right text-primary-500">
+                        {pernote.cantidad || 0}
+                      </p>
+                      <p className="sm:text-right text-green-500 mb-2 sm:mb-0">
+                        {formatToCOP(pernote.cantidad * 100906 || 0)}
+                      </p>
+                    </div>
+                  );
+                }
+              });
+            }
+
+            // Si no es un array, regresamos null o algún valor por defecto
+            return null;
           }}
         />
+
         <ListSection
           title="Recargos"
           items={detalleVehiculo.recargos}
-          formatFn={(recargo) => {
-            const empresa = empresas.find(
-              (empresa) => empresa.NIT === recargo.empresa
-            );
-            return (
-              <div className="sm:grid sm:grid-cols-4">
-                <p className="col-span-3 text-md">{empresa?.Nombre}</p>
-                <p className="sm:text-right text-green-500 mb-2 sm:mb-0">
-                  {formatToCOP(recargo.valor)}
-                </p>
-              </div>
-            );
+          formatFn={(recargos) => {
+            // Si es un array, lo recorremos
+            if (Array.isArray(recargos)) {
+              return recargos.map((recargo, recargoIndex) => {
+                console.log(recargo);
+
+                const empresa = empresas.find(
+                  (empresa) => empresa.NIT === recargo.empresa
+                );
+
+                console.log(empresa);
+
+                if (empresa) {
+                  return (
+                    <div key={recargoIndex} className="sm:grid sm:grid-cols-4">
+                      <p className="col-span-3 text-md">{empresa.Nombre}</p>
+                      <p className="sm:text-right text-green-500 mb-2 sm:mb-0">
+                        {formatToCOP(recargo.valor || 0)}
+                      </p>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div key={recargoIndex} className="sm:grid sm:grid-cols-4">
+                      <p className="col-span-3 text-md">
+                        Empresa no encontrada
+                      </p>
+                      <p className="sm:text-right text-primary-500">
+                        {recargo.cantidad}
+                      </p>
+                      <p className="sm:text-right text-green-500 mb-2 sm:mb-0">
+                        {formatToCOP(recargo.valor || 0)}
+                      </p>
+                    </div>
+                  );
+                }
+              });
+            }
+
+            // Si no es un array, regresamos null o algún valor por defecto
+            return null;
           }}
         />
       </CardBody>

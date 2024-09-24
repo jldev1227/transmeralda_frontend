@@ -15,13 +15,15 @@ export type Bono = {
   __typename?: string;
 }
 export type Pernote = {
-  id?: string, 
-  empresa: string; cantidad: 
-  number; valor: number, 
-  vehiculoId?: string | null, 
-  fecha?: string | null; // Agrega el campo de fecha, puede ser string o Date
-  __typename?: string; 
+  id?: string;
+  empresa: string;
+  cantidad: number;
+  valor: number;
+  vehiculoId?: string | null;
+  fechas: string[]; // Se agrega el array de fechas
+  __typename?: string;
 };
+
 
 export type Recargo = {id?: string, empresa: string; valor: number, vehiculoId?: string | null,   __typename?: string; };
 
