@@ -100,6 +100,9 @@ export default function LiquidacionesList() {
                     <strong>Días trabajados:</strong> {item.diasLaborados}
                   </span>
                   <span>
+                    <strong>Días trabajados villanueva:</strong> {item.diasLaboradosVillanueva}
+                  </span>
+                  <span>
                     <strong>Salario total:</strong>{" "}
                     {formatToCOP(item.sueldoTotal)}
                   </span>
@@ -111,6 +114,10 @@ export default function LiquidacionesList() {
                   <p className="flex justify-between">
                     <strong>Salario básico:</strong>{" "}
                     {formatToCOP(item.conductor?.salarioBase ?? 0)}
+                  </p>
+                  <p className="flex justify-between">
+                    <strong>Salario devengado:</strong>{" "}
+                    {formatToCOP(item.salarioDevengado ?? 0)}
                   </p>
                   <p className="flex justify-between">
                     <strong>Auxilio transporte:</strong>{" "}
@@ -192,8 +199,10 @@ export default function LiquidacionesList() {
             <TableColumn>Periodo</TableColumn>
             <TableColumn>Nombre</TableColumn>
             <TableColumn>Salario básico</TableColumn>
+            <TableColumn>Salario devengado</TableColumn>
             <TableColumn>Auxilio transporte</TableColumn>
-            <TableColumn>Días trabajados</TableColumn>
+            <TableColumn>Días laborados</TableColumn>
+            <TableColumn>Días laborados Villanueva</TableColumn>
             <TableColumn>Bonificaciones</TableColumn>
             <TableColumn>Pernotes</TableColumn>
             <TableColumn>Recargos</TableColumn>
@@ -217,10 +226,16 @@ export default function LiquidacionesList() {
                   {formatToCOP(item?.conductor?.salarioBase ?? 0)}
                 </TableCell>
                 <TableCell className="text-tiny">
+                  {formatToCOP(item?.salarioDevengado ?? 0)}
+                </TableCell>
+                <TableCell className="text-tiny">
                   {formatToCOP(item?.auxilioTransporte)}
                 </TableCell>
                 <TableCell className="text-tiny">
                   {item?.diasLaborados}
+                </TableCell>
+                <TableCell className="text-tiny">
+                  {item?.diasLaboradosVillanueva}
                 </TableCell>
                 <TableCell className="text-tiny">
                   {formatToCOP(item?.totalBonificaciones)}
