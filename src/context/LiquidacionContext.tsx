@@ -154,7 +154,6 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
   const actualizarLiquidacion = useCallback(
     async (liquidacion: LiquidacionInput) => {
       try {
-        console.log(liquidacion);
         const { data, errors } = await editarLiquidacion({
           variables: {
             ...liquidacion,
@@ -168,6 +167,7 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
             type: "EDITAR_LIQUIDACION",
             payload: data.editarLiquidacion,
           });
+          console.log(data.editarLiquidacion);
         }
 
         return { data, errors }; // Asegúrate de retornar los datos y errores

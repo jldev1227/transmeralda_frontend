@@ -12,7 +12,7 @@ import { Checkbox } from "@nextui-org/checkbox";
 import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/card";
 import { Button } from "@nextui-org/button";
 import { empresas } from "@/data/index";
-import { useMemo, useState, useCallback, useEffect, ChangeEvent } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import {
   formatToCOP,
   formatDate,
@@ -88,11 +88,12 @@ export default function Formulario() {
       const selectedConductor = conductoresOptions.find(
         (option) => option.value === stateLiquidacion.conductor.id
       );
-
       setConductorSelected(selectedConductor || null);
+
+      // Mapear vehículos y asignar bonos, pernotes y recargos
       setDetallesVehiculos(
         stateLiquidacion?.vehiculos?.map((vehiculo: Vehiculo) => {
-          // Obtener bonos del vehículo filtrados por el vehiculoId
+          // Filtrar los bonos, pernotes y recargos correspondientes al vehículo
           const bonosDelVehiculo =
             stateLiquidacion.bonificaciones?.filter(
               (bono) => bono.vehiculoId === vehiculo.id
@@ -108,7 +109,7 @@ export default function Formulario() {
               (recargo) => recargo.vehiculoId === vehiculo.id
             ) || [];
 
-          // Asignación de los detalles del vehículo
+          // Definir la estructura de los detalles del vehículo
           const detalles: DetalleVehiculo = {
             vehiculo: {
               value: vehiculo.id,
@@ -150,32 +151,40 @@ export default function Formulario() {
                       value: 25000,
                     },
                   ],
-            pernotes: pernotesDelVehiculo,
-            recargos: recargosDelVehiculo,
+            pernotes: pernotesDelVehiculo.map((pernote) => ({
+              ...pernote,
+              fechas: pernote.fechas || [],
+            })),
+            recargos: recargosDelVehiculo.map((recargo) => ({
+              ...recargo,
+              pagCliente: recargo.pagCliente || false,
+              mes: recargo.mes,
+            })),
           };
 
           return detalles;
         }) || []
       );
 
+      // Actualizar vehículos seleccionados
       const selectedVehiculos = vehiculosOptions.filter((option) =>
         stateLiquidacion.vehiculos.some(
           (vehiculo) => vehiculo.id === option.value
         )
       );
-
       setVehiculosSelected(selectedVehiculos);
 
+      // Actualizar las fechas seleccionadas
       setDateSelected({
         start: parseDate(stateLiquidacion.periodoStart),
         end: parseDate(stateLiquidacion.periodoEnd),
       });
 
-      // Actualizar otros campos (por ejemplo: ajuste salarial)
+      // Actualizar otros campos (ajuste salarial, días laborados)
       setIsCheckedAjuste(stateLiquidacion.ajusteSalarial > 0);
       setDiasLaborados(stateLiquidacion.diasLaborados);
     }
-  }, [stateLiquidacion, conductoresOptions, vehiculosOptions]);
+  }, [stateLiquidacion, conductoresOptions, vehiculosOptions, mesesRange]);
 
   // Manejador de fechas
   const handleDateChange = (newDate: RangeValue<DateValue> | null) => {
@@ -342,7 +351,7 @@ export default function Formulario() {
       index: number,
       field: keyof Recargo,
       value: string | number | boolean, // Agregamos `boolean` como posible tipo
-      pagaCliente?: boolean // Añadimos el parámetro opcional `pagaCliente`
+      pagCliente?: boolean // Añadimos el parámetro opcional `pagCliente`
     ) => {
       setDetallesVehiculos((prevDetalles) =>
         prevDetalles.map((detalle) =>
@@ -354,9 +363,9 @@ export default function Formulario() {
                     ? {
                         ...recargo,
                         [field]: value, // Actualiza el campo especificado
-                        ...(pagaCliente !== undefined && {
-                          pagCliente: pagaCliente,
-                        }), // Inserta `pagaCliente` si se pasó como argumento
+                        ...(pagCliente !== undefined && {
+                          pagCliente: pagCliente,
+                        }), // Inserta `pagCliente` si se pasó como argumento
                       }
                     : recargo
                 ),
@@ -392,7 +401,7 @@ export default function Formulario() {
               ...detalle,
               recargos: [
                 ...detalle.recargos,
-                { empresa: "", valor: 0, pagaCliente: null, mes: "" },
+                { empresa: "", valor: 0, pagCliente: null, mes: "" },
               ],
             }
           : detalle
@@ -532,23 +541,29 @@ export default function Formulario() {
 
   // Actualización de la liquidación en el useEffect
   useEffect(() => {
-    // Verificar que `conductorSelected` y `vehiculosSelected` sean válidos
+    // Verificar que todos los campos requeridos estén disponibles antes de continuar
     if (
       !conductorSelected ||
       detallesVehiculos.length === 0 ||
       vehiculosSelected.length === 0 ||
-      !dateSelected
-    )
+      !dateSelected?.start ||
+      !dateSelected?.end
+    ) {
       return;
+    }
 
     // Crea el objeto `Liquidacion` compatible con el tipo que definiste
     const nuevaLiquidacion: LiquidacionInput = {
-      periodoStart: dateSelected?.start || null,
-      periodoEnd: dateSelected?.end || null,
+      periodoStart: dateSelected.start, // Asegura que no sea null
+      periodoEnd: dateSelected.end, // Asegura que no sea null
       bonificaciones: detallesVehiculos.flatMap((detalle) =>
         detalle.bonos.map((bono) => ({
           ...bono,
           vehiculoId: detalle.vehiculo.value, // Agrega el vehiculoId a cada bono
+          values: bono.values.map((value) => ({
+            ...value,
+            quantity: value.quantity || 0, // Asegura que quantity esté presente
+          })),
         }))
       ),
       pernotes: detallesVehiculos.flatMap((detalle) =>
@@ -567,16 +582,17 @@ export default function Formulario() {
         state.conductores.find(
           (conductor) => conductor.id === conductorSelected?.value
         )?.id || null, // Busca el conductor completo basado en la selección
-      auxilioTransporte,
-      sueldoTotal,
-      totalPernotes,
-      totalBonificaciones,
-      totalRecargos,
-      diasLaborados,
-      ajusteSalarial: bonificacionVillanueva,
+      auxilioTransporte: auxilioTransporte || 0, // Asegura un valor por defecto
+      sueldoTotal: sueldoTotal || 0,
+      totalPernotes: totalPernotes || 0,
+      totalBonificaciones: totalBonificaciones || 0,
+      totalRecargos: totalRecargos || 0,
+      diasLaborados: diasLaborados || 0,
+      ajusteSalarial: bonificacionVillanueva || 0, // Usa bonificacionVillanueva o 0
       vehiculos: detallesVehiculos.map((detalle) => detalle.vehiculo.value),
     };
 
+    // Actualizar el estado de `liquidacion`
     setLiquidacion(nuevaLiquidacion);
   }, [
     auxilioTransporte,
@@ -590,6 +606,8 @@ export default function Formulario() {
     detallesVehiculos,
     state.conductores,
     mesesRange,
+    diasLaborados,
+    bonificacionVillanueva, // Ajuste salarial
   ]);
 
   const customStyles = {
@@ -632,37 +650,39 @@ export default function Formulario() {
 
   // Función para agregar la liquidación
   const handleSubmit = async () => {
-    // Verifica que liquidacion no sea null antes de registrarla
+    // Verifica que la liquidación no sea null antes de registrarla
     if (liquidacion) {
       try {
-        const bonificacionesFiltradas = liquidacion?.bonificaciones?.map(
-          ({ __typename, ...rest }) => rest
-        );
+        // Filtra las bonificaciones, pernotes y recargos para remover el campo __typename
+        const bonificacionesFiltradas =
+          liquidacion?.bonificaciones?.map(({ __typename, ...rest }) => rest) ||
+          [];
 
-        const pernotesFiltrados = liquidacion?.pernotes?.map(
-          ({ __typename, ...rest }) => rest
-        );
-        const recargosFiltrados = liquidacion?.recargos?.map(
-          ({ __typename, ...rest }) => rest
-        );
+          console.log(bonificacionesFiltradas)
+
+        const pernotesFiltrados =
+          liquidacion?.pernotes?.map(({ __typename, ...rest }) => rest) || [];
+
+        const recargosFiltrados =
+          liquidacion?.recargos?.map(({ __typename, ...rest }) => rest) || [];
 
         // Construye el objeto final de liquidación asegurando que todos los campos requeridos están presentes
         const liquidacionFinal = {
-          id: stateLiquidacion?.id || undefined, // Verifica si hay un ID en stateLiquidacion
+          id: stateLiquidacion?.id || undefined, // Usa el ID de stateLiquidacion si está disponible
           periodoStart: liquidacion.periodoStart,
           periodoEnd: liquidacion.periodoEnd,
-          conductorId: liquidacion.conductorId || null,
-          auxilioTransporte: liquidacion.auxilioTransporte,
-          sueldoTotal: liquidacion.sueldoTotal,
-          totalPernotes: liquidacion.totalPernotes,
-          totalBonificaciones: liquidacion.totalBonificaciones,
-          totalRecargos: liquidacion.totalRecargos,
-          diasLaborados: liquidacion.diasLaborados,
-          ajusteSalarial: liquidacion.ajusteSalarial,
-          vehiculos: liquidacion.vehiculos,
-          bonificaciones: bonificacionesFiltradas,
-          pernotes: pernotesFiltrados,
-          recargos: recargosFiltrados,
+          conductorId: liquidacion.conductorId || null, // Asegura que conductorId sea nulo si no está presente
+          auxilioTransporte: liquidacion.auxilioTransporte || 0, // Provee un valor por defecto si es necesario
+          sueldoTotal: liquidacion.sueldoTotal || 0,
+          totalPernotes: liquidacion.totalPernotes || 0,
+          totalBonificaciones: liquidacion.totalBonificaciones || 0,
+          totalRecargos: liquidacion.totalRecargos || 0,
+          diasLaborados: liquidacion.diasLaborados || 0,
+          ajusteSalarial: liquidacion.ajusteSalarial || 0,
+          vehiculos: liquidacion.vehiculos, // Mapeamos los valores correctos de los vehículos
+          bonificaciones: bonificacionesFiltradas, // Enviamos las bonificaciones filtradas
+          pernotes: pernotesFiltrados, // Enviamos los pernotes filtrados
+          recargos: recargosFiltrados, // Enviamos los recargos filtrados
         };
 
         // Envía la liquidación para agregar o editar
@@ -774,7 +794,7 @@ export default function Formulario() {
                           (pernote, pernoteIndex) => (
                             <div
                               key={pernoteIndex}
-                              className="grid grid-cols-5 gap-4"
+                              className="grid sm:grid-cols-5 gap-4"
                             >
                               {/* Select para la empresa */}
                               <SelectReact
@@ -795,7 +815,7 @@ export default function Formulario() {
                                 placeholder="Selecciona una empresa"
                                 isSearchable
                                 styles={customStyles}
-                                className="lg:col-span-3"
+                                className="col-span-3"
                               />
 
                               {/* Input de cantidad fuera del map de DatePickers */}
@@ -941,21 +961,19 @@ export default function Formulario() {
                                 <Select
                                   label="Mes"
                                   className="col-span-4 sm:col-span-1"
-                                  onChange={(event) => {
-                                    const mes = mesesRange.find(
-                                      (_, index) =>
-                                        event.target.value === index.toString()
-                                    );
+                                  defaultSelectedKeys={recargo.mes ? [recargo.mes] : ''} // Usamos el mes directamente como clave
+                                  onSelectionChange={(selected) => {
+                                    const mes = Array.from(selected)[0]; // `selected` es un Set, lo convertimos en array para obtener el valor
                                     handleRecargoChange(
                                       detalleVehiculo.vehiculo.value,
                                       recargoIndex,
-                                      "mes", // Cambiamos el campo a `mes`
-                                      mes || "" // Este será el valor del mes seleccionado
+                                      "mes",
+                                      mes // Aquí seleccionamos el mes directamente
                                     );
                                   }}
                                 >
-                                  {mesesRange.map((mes, index) => (
-                                    <SelectItem key={index} value={mes}>
+                                  {mesesRange?.map((mes) => (
+                                    <SelectItem key={mes} value={mes}>
                                       {mes}
                                     </SelectItem>
                                   ))}
@@ -1071,21 +1089,23 @@ export default function Formulario() {
         <div
           className={`${state.allowEdit || state.allowEdit == null ? "w-full" : "lg:w-1/2 lg:mx-auto"}`}
         >
-          {detallesVehiculos && dateSelected && state.vehiculos && (
-            <>
-              <ConductorInfo
-                conductor={
-                  state.conductores.find(
-                    (c) => c.id === conductorSelected?.value
-                  ) || null
-                }
-                dateSelected={dateSelected}
-              />
-              {detallesVehiculos?.map((detalle, index) => (
-                <CardLiquidacion key={index} detalleVehiculo={detalle} />
-              ))}
-            </>
-          )}
+          {conductorSelected &&
+            vehiculosSelected.length > 0 &&
+            dateSelected && (
+              <>
+                <ConductorInfo
+                  conductor={
+                    state.conductores.find(
+                      (c) => c.id === conductorSelected?.value
+                    ) || null
+                  }
+                  dateSelected={dateSelected}
+                />
+                {detallesVehiculos?.map((detalle, index) => (
+                  <CardLiquidacion key={index} detalleVehiculo={detalle} />
+                ))}
+              </>
+            )}
           {detallesVehiculos.length > 0 && dateSelected && state.vehiculos && (
             <Card className="max-h-full">
               <CardHeader>

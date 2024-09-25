@@ -8,6 +8,7 @@ export type IconSvgProps = SVGProps<SVGSVGElement> & {
 
 // Tipos para Bonificaciones, Pernotes y Recargos
 export type Bono = {
+  id?: string;
   name: string;
   values: { mes: string; quantity: number }[];
   value: number;
