@@ -68,7 +68,7 @@ export default function DefaultLayout() {
         </NavbarMenu>
       </Navbar>
 
-      <main className="container mx-auto px-6 flex-grow pt-16">
+      <main className="w-full mx-auto px-6 md:px-20 flex-grow pt-16">
         <Outlet />
       </main>
     </div>

@@ -545,6 +545,8 @@ export default function Formulario() {
     };
   }, [
     detallesVehiculos,
+    diasLaborados,
+    diasLaboradosVillanueva,
     bonificacionVillanueva,
     dateSelected,
     conductorSelected,
