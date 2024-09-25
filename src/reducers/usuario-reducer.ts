@@ -42,6 +42,7 @@ export function UsuarioReducer(
     return {
       ...state,
       usuario: null,
+      isAuthenticated: false
     };
   } else if (action.type === 'CLEAR_ERROR') {
     return {

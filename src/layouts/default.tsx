@@ -9,13 +9,19 @@ import {
   NavbarMenuItem,
   Link,
 } from "@nextui-org/react";
-import { Button } from '@nextui-org/button'
+import { Button } from "@nextui-org/button";
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from "@nextui-org/dropdown";
 
 export default function DefaultLayout() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { state } = useUsuario();
+  const { state, cerrarSesion } = useUsuario();
 
   const menuItems = [
     {
@@ -45,8 +51,28 @@ export default function DefaultLayout() {
           </NavbarItem>
         </NavbarContent>
         <NavbarContent justify="end">
-          <NavbarItem className="hidden lg:flex">
-            <Link href="#">Hola! {state.usuario?.nombre}</Link>
+          <NavbarItem>Hola! {state.usuario?.nombre}</NavbarItem>
+          <NavbarItem className="hidden sm:flex">
+            <Dropdown>
+              <DropdownTrigger>
+                <Button color="success" variant="flat">
+                  Hola! {state.usuario?.nombre}{" "}
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu
+                variant="faded"
+                aria-label="Dropdown menu with icons"
+              >
+                <DropdownItem
+                  key="logout"
+                  className="text-danger"
+                  color="danger"
+                  onPress={cerrarSesion}
+                >
+                  Cerrar sesión
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
           </NavbarItem>
         </NavbarContent>
         <NavbarMenu className="pb-8">
@@ -62,7 +88,7 @@ export default function DefaultLayout() {
               </Link>
             </NavbarMenuItem>
           ))}
-          <Button className="bg-red-500 text-white mt-auto">
+          <Button onPress={cerrarSesion} className="bg-red-500 text-white mt-auto">
             Cerrar sesión
           </Button>
         </NavbarMenu>

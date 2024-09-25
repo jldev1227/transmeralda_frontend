@@ -15,6 +15,7 @@ import { AUTENTICAR_USUARIO, OBTENER_USUARIO } from "../graphql/usuario";
 import { ApolloError, useLazyQuery, useMutation } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
 
+
 // Definir el tipo del contexto
 interface AuthContextType {
   state: UsuarioState;
@@ -39,20 +40,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   });
   const [obtenerUsuario, { data, error }] = useLazyQuery(OBTENER_USUARIO);
 
-  const navigation = useNavigate()
+  const navigation = useNavigate();
 
   const authUsuario = async (correo: string, password: string) => {
     try {
       const { data, errors } = await autenticarUsuario({
         variables: { input: { correo, password } },
       });
-  
+
       // Verifica si hay errores de GraphQL
       if (errors && errors.length > 0) {
         // Manejo de los errores de GraphQL directamente en la respuesta
         errors.forEach((graphQLError) => {
           console.error("GraphQL Error:", graphQLError.message);
-          
+
           // Pasar el error al estado con dispatch
           dispatch({
             type: "SET_ERROR",
@@ -61,32 +62,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         });
         return; // Salir del bloque si hubo errores
       }
-  
+
       // Verificar si la mutación devolvió datos válidos
       if (data?.autenticarUsuario) {
         const { usuario, token } = data.autenticarUsuario;
-  
+
         // Guardar el token en localStorage
         localStorage.setItem("authToken", token);
-  
+
         // Despachar el usuario autenticado
         dispatch({
           type: "SET_USUARIO",
           payload: usuario,
         });
-  
+
         // Limpiar errores
         dispatch({ type: "CLEAR_ERROR" });
       }
     } catch (err) {
       console.error("Error capturado en el catch:", err);
-  
+
       if (err instanceof ApolloError) {
         // Manejo de los errores de GraphQL
         if (err.graphQLErrors.length > 0) {
           err.graphQLErrors.forEach((graphQLError) => {
             console.error("GraphQL Error:", graphQLError.message);
-            
+
             // Pasar el error al estado con dispatch
             dispatch({
               type: "SET_ERROR",
@@ -94,36 +95,39 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             });
           });
         }
-  
+
         // Manejo de los errores de red
         if (err.networkError) {
           console.error("Network Error:", err.networkError.message);
-          
+
           // Pasar el error de red al estado con dispatch
           dispatch({
             type: "SET_ERROR",
-            payload: { message: "Error de red. Inténtalo de nuevo más tarde.", success: false },
+            payload: {
+              message: "Error de red. Inténtalo de nuevo más tarde.",
+              success: false,
+            },
           });
         }
       } else {
         // Otro tipo de error (desconocido)
         console.error("Error desconocido:", err);
-        
+
         dispatch({
           type: "SET_ERROR",
           payload: { message: "Ocurrió un error inesperado.", success: false },
         });
       }
     }
-  };  
+  };
 
   useEffect(() => {
     const autenticarConToken = async () => {
       const token = await localStorage.getItem("authToken");
       if (token) {
         obtenerUsuario();
-      }else{
-        navigation('/')
+      } else {
+        navigation("/");
       }
     };
 
@@ -146,11 +150,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [data, error]);
 
   const cerrarSesion = async () => {
+    // Remover el token de autenticación del localStorage
     await localStorage.removeItem("authToken");
 
+    // Ejecutar la acción del dispatch para limpiar el estado del usuario
     dispatch({
       type: "CLEAR_USUARIO",
     });
+
+    // Redirigir al usuario a la página de inicio o de login
+    navigation('/');
   };
 
   return (
