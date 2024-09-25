@@ -273,14 +273,14 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
             <View key={pernote.id} style={[styles.cardRow]}>
               <Text style={[styles.label, { flex: 2 }]}>Pernote</Text>
               <Text
-                style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+                style={[styles.textValue, { flex: 1, textAlign: "center", fontSize: 10 }]}
               >
-                {pernote.fechas}
+                {pernote.fechas.join(' ')}
               </Text>
               <Text
                 style={[styles.textValue, { flex: 1, textAlign: "center" }]}
               >
-                {item.pernotes?.length}
+                {pernote.fechas?.length}
               </Text>
               <Text
                 style={[styles.textValue, { flex: 1, textAlign: "center" }]}
