@@ -1,9 +1,11 @@
 import { gql } from "@apollo/client";
 
 export const OBTENER_LIQUIDACIONES = gql`
- query Liquidaciones {
+query Liquidaciones {
     liquidaciones {
         id
+        periodoStart
+        periodoEnd
         conductor {
             id
             nombre
@@ -11,46 +13,47 @@ export const OBTENER_LIQUIDACIONES = gql`
             cc
             salarioBase
         }
-        sueldoTotal
-        ajusteSalarial
-        diasLaborados
-        totalRecargos
-        totalBonificaciones
-        totalPernotes
         auxilioTransporte
-        periodoStart
-        periodoEnd
+        sueldoTotal
+        totalPernotes
+        totalBonificaciones
+        totalRecargos
+        diasLaborados
+        ajusteSalarial
+        vehiculos {
+            id
+            placa
+        }
         bonificaciones {
             id
             name
+            values {
+                mes
+                quantity
+            }
             value
-            quantity 
             vehiculoId
         }
         pernotes {
-            id
+            id    
             empresa
             cantidad
             valor
-            vehiculoId
+            fechas
         }
         recargos {
             id
             empresa
             valor
-            vehiculoId
-        }
-        vehiculos {
-            id
-            placa
+            pagCliente
+            mes
         }
     }
 }
-
 `;
 
 export const CREAR_LIQUIDACION = gql`
- mutation CrearLiquidacion(
+  mutation CrearLiquidacion(
     $conductorId: ID!
     $periodoStart: String!
     $periodoEnd: String!
@@ -65,24 +68,26 @@ export const CREAR_LIQUIDACION = gql`
     $bonificaciones: [BonificacionInput!]! 
     $pernotes: [PernoteInput!]!
     $recargos: [RecargoInput!]!
-) {
+  ) {
     crearLiquidacion(
-        conductorId: $conductorId
-        periodoStart: $periodoStart
-        periodoEnd: $periodoEnd
-        auxilioTransporte: $auxilioTransporte
-        sueldoTotal: $sueldoTotal
-        totalPernotes: $totalPernotes
-        totalBonificaciones: $totalBonificaciones
-        totalRecargos: $totalRecargos
-        diasLaborados: $diasLaborados
-        ajusteSalarial: $ajusteSalarial
-        vehiculos: $vehiculos
-        bonificaciones: $bonificaciones
-        pernotes: $pernotes
-        recargos: $recargos
+      conductorId: $conductorId
+      periodoStart: $periodoStart
+      periodoEnd: $periodoEnd
+      auxilioTransporte: $auxilioTransporte
+      sueldoTotal: $sueldoTotal
+      totalPernotes: $totalPernotes
+      totalBonificaciones: $totalBonificaciones
+      totalRecargos: $totalRecargos
+      diasLaborados: $diasLaborados
+      ajusteSalarial: $ajusteSalarial
+      vehiculos: $vehiculos
+      bonificaciones: $bonificaciones
+      pernotes: $pernotes
+      recargos: $recargos
     ) {
         id
+        periodoStart
+        periodoEnd
         conductor {
             id
             nombre
@@ -90,20 +95,25 @@ export const CREAR_LIQUIDACION = gql`
             cc
             salarioBase
         }
-        sueldoTotal
-        ajusteSalarial
-        diasLaborados
-        totalRecargos
-        totalBonificaciones
-        totalPernotes
         auxilioTransporte
-        periodoStart
-        periodoEnd
+        sueldoTotal
+        totalPernotes
+        totalBonificaciones
+        totalRecargos
+        diasLaborados
+        ajusteSalarial
+        vehiculos {
+            id
+            placa
+        }
         bonificaciones {
             id
             name
+            values {
+                mes
+                quantity
+            }
             value
-            quantity 
             vehiculoId
         }
         pernotes {
@@ -111,15 +121,14 @@ export const CREAR_LIQUIDACION = gql`
             empresa
             cantidad
             valor
+            fechas
         }
         recargos {
             id
             empresa
             valor
-        }
-        vehiculos {
-            id
-            placa
+            pagCliente
+            mes
         }
     }
 }
@@ -128,7 +137,7 @@ export const CREAR_LIQUIDACION = gql`
 export const EDITAR_LIQUIDACION = gql`
  mutation editarLiquidacion(
     $id: ID!
-   $conductorId: ID!
+    $conductorId: ID!
     $periodoStart: String!
     $periodoEnd: String!
     $auxilioTransporte: Float!
@@ -177,11 +186,18 @@ export const EDITAR_LIQUIDACION = gql`
         totalRecargos
         diasLaborados
         ajusteSalarial
+        vehiculos {
+            id
+            placa
+        }
         bonificaciones {
             id
             name
+            values {
+                mes
+                quantity
+            }
             value
-            quantity 
             vehiculoId
         }
         pernotes {
@@ -189,18 +205,16 @@ export const EDITAR_LIQUIDACION = gql`
             empresa
             cantidad
             valor
-            vehiculoId
+            fechas
         }
         recargos {
             id
             empresa
             valor
-            vehiculoId
-        }
-        vehiculos {
-            id
-            placa
+            pagCliente
+            mes
         }
     }
 }
 `;
+
