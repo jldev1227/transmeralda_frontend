@@ -15,10 +15,12 @@ query Liquidaciones {
         }
         auxilioTransporte
         sueldoTotal
+        salarioDevengado
         totalPernotes
         totalBonificaciones
         totalRecargos
         diasLaborados
+        diasLaboradosVillanueva
         ajusteSalarial
         vehiculos {
             id
@@ -40,6 +42,7 @@ query Liquidaciones {
             cantidad
             valor
             fechas
+            vehiculoId
         }
         recargos {
             id
@@ -47,6 +50,7 @@ query Liquidaciones {
             valor
             pagCliente
             mes
+            vehiculoId
         }
     }
 }
@@ -59,10 +63,12 @@ export const CREAR_LIQUIDACION = gql`
     $periodoEnd: String!
     $auxilioTransporte: Float!
     $sueldoTotal: Float!
+    $salarioDevengado: Float!
     $totalPernotes: Float!
     $totalBonificaciones: Float!
     $totalRecargos: Float!
     $diasLaborados: Int!
+    $diasLaboradosVillanueva: Int!
     $ajusteSalarial: Float!
     $vehiculos: [ID!]!
     $bonificaciones: [BonificacionInput!]! 
@@ -75,10 +81,12 @@ export const CREAR_LIQUIDACION = gql`
       periodoEnd: $periodoEnd
       auxilioTransporte: $auxilioTransporte
       sueldoTotal: $sueldoTotal
+      salarioDevengado: $salarioDevengado
       totalPernotes: $totalPernotes
       totalBonificaciones: $totalBonificaciones
       totalRecargos: $totalRecargos
       diasLaborados: $diasLaborados
+      diasLaboradosVillanueva: $diasLaboradosVillanueva
       ajusteSalarial: $ajusteSalarial
       vehiculos: $vehiculos
       bonificaciones: $bonificaciones
@@ -97,10 +105,12 @@ export const CREAR_LIQUIDACION = gql`
         }
         auxilioTransporte
         sueldoTotal
+        salarioDevengado
         totalPernotes
         totalBonificaciones
         totalRecargos
         diasLaborados
+        diasLaboradosVillanueva
         ajusteSalarial
         vehiculos {
             id
@@ -122,6 +132,7 @@ export const CREAR_LIQUIDACION = gql`
             cantidad
             valor
             fechas
+            vehiculoId
         }
         recargos {
             id
@@ -129,6 +140,7 @@ export const CREAR_LIQUIDACION = gql`
             valor
             pagCliente
             mes
+            vehiculoId
         }
     }
 }
@@ -142,10 +154,12 @@ export const EDITAR_LIQUIDACION = gql`
     $periodoEnd: String!
     $auxilioTransporte: Float!
     $sueldoTotal: Float!
+    $salarioDevengado: Float!
     $totalPernotes: Float!
     $totalBonificaciones: Float!
     $totalRecargos: Float!
     $diasLaborados: Int!
+    $diasLaboradosVillanueva: Int!
     $ajusteSalarial: Float!
     $vehiculos: [ID!]!
     $bonificaciones: [BonificacionInput!]! 
@@ -159,10 +173,12 @@ export const EDITAR_LIQUIDACION = gql`
         periodoEnd: $periodoEnd
         auxilioTransporte: $auxilioTransporte
         sueldoTotal: $sueldoTotal
+        salarioDevengado: $salarioDevengado
         totalPernotes: $totalPernotes
         totalBonificaciones: $totalBonificaciones
         totalRecargos: $totalRecargos
         diasLaborados: $diasLaborados
+        diasLaboradosVillanueva: $diasLaboradosVillanueva
         ajusteSalarial: $ajusteSalarial
         vehiculos: $vehiculos
         bonificaciones: $bonificaciones
@@ -181,10 +197,12 @@ export const EDITAR_LIQUIDACION = gql`
         }
         auxilioTransporte
         sueldoTotal
+        salarioDevengado
         totalPernotes
         totalBonificaciones
         totalRecargos
         diasLaborados
+        diasLaboradosVillanueva
         ajusteSalarial
         vehiculos {
             id
@@ -206,6 +224,7 @@ export const EDITAR_LIQUIDACION = gql`
             cantidad
             valor
             fechas
+            vehiculoId
         }
         recargos {
             id
@@ -213,6 +232,7 @@ export const EDITAR_LIQUIDACION = gql`
             valor
             pagCliente
             mes
+            vehiculoId
         }
     }
 }

@@ -53,6 +53,7 @@ export default function Formulario() {
   const [liquidacion, setLiquidacion] = useState<LiquidacionInput | null>(null);
   const [isCheckedAjuste, setIsCheckedAjuste] = useState(false);
   const [diasLaborados, setDiasLaborados] = useState(0);
+  const [diasLaboradosVillanueva, setDiasLaboradosVillanueva] = useState(0);
 
   // Opciones para selectores
   const conductoresOptions = useMemo(
@@ -89,6 +90,20 @@ export default function Formulario() {
         (option) => option.value === stateLiquidacion.conductor.id
       );
       setConductorSelected(selectedConductor || null);
+
+      // Actualizar vehículos seleccionados
+      const selectedVehiculos = vehiculosOptions.filter((option) =>
+        stateLiquidacion.vehiculos.some(
+          (vehiculo) => vehiculo.id === option.value
+        )
+      );
+      setVehiculosSelected(selectedVehiculos);
+
+      // Actualizar las fechas seleccionadas
+      setDateSelected({
+        start: parseDate(stateLiquidacion.periodoStart),
+        end: parseDate(stateLiquidacion.periodoEnd),
+      });
 
       // Mapear vehículos y asignar bonos, pernotes y recargos
       setDetallesVehiculos(
@@ -166,23 +181,10 @@ export default function Formulario() {
         }) || []
       );
 
-      // Actualizar vehículos seleccionados
-      const selectedVehiculos = vehiculosOptions.filter((option) =>
-        stateLiquidacion.vehiculos.some(
-          (vehiculo) => vehiculo.id === option.value
-        )
-      );
-      setVehiculosSelected(selectedVehiculos);
-
-      // Actualizar las fechas seleccionadas
-      setDateSelected({
-        start: parseDate(stateLiquidacion.periodoStart),
-        end: parseDate(stateLiquidacion.periodoEnd),
-      });
-
       // Actualizar otros campos (ajuste salarial, días laborados)
       setIsCheckedAjuste(stateLiquidacion.ajusteSalarial > 0);
       setDiasLaborados(stateLiquidacion.diasLaborados);
+      setDiasLaboradosVillanueva(stateLiquidacion.diasLaboradosVillanueva);
     }
   }, [stateLiquidacion, conductoresOptions, vehiculosOptions, mesesRange]);
 
@@ -325,7 +327,7 @@ export default function Formulario() {
       vehiculoId: string,
       index: number,
       field: keyof Pernote,
-      value: string | number | Date // Permitir que también sea de tipo Date
+      value: string | number | Date | string[] | null // Permitir que también sea de tipo Date
     ) => {
       setDetallesVehiculos((prevDetalles) =>
         prevDetalles.map((detalle) =>
@@ -450,26 +452,34 @@ export default function Formulario() {
     setDateSelected(null);
     setIsCheckedAjuste(false);
     setDiasLaborados(0);
+    setDiasLaboradosVillanueva(0);
   };
 
   const bonificacionVillanueva = useMemo(() => {
+    if (diasLaboradosVillanueva > diasLaborados) {
+      // Lanza el alert si diasLaboradosVillanueva es mayor que diasLaborados
+      setDiasLaboradosVillanueva(0);
+      return 0; // Opcional: devolver un valor por defecto si la condición no es válida
+    }
+
     if (isCheckedAjuste) {
       const conductor = state.conductores.find(
         (c) => c.id === conductorSelected?.value
       );
       return conductor
-        ? diasLaborados >= 17
+        ? diasLaboradosVillanueva >= 17
           ? 2101498 - conductor.salarioBase
-          : ((2101498 - conductor.salarioBase) / 30) * diasLaborados
+          : 20050 * diasLaboradosVillanueva
         : 0;
     }
+
     return 0;
-  }, [isCheckedAjuste, liquidacion, diasLaborados]);
+  }, [isCheckedAjuste, liquidacion, diasLaborados, diasLaboradosVillanueva]);
 
   const {
     auxilioTransporte,
-    salarioBaseConductor,
     sueldoTotal,
+    salarioDevengado,
     totalPernotes,
     totalBonificaciones,
     totalRecargos,
@@ -516,7 +526,9 @@ export default function Formulario() {
         (conductorState) => conductorState.id === conductorSelected?.value
       )?.salarioBase || 0;
 
-    const auxilioTransporte = 162000; // Asigna el auxilio de transporte
+    const salarioDevengado = (salarioBaseConductor / 30) * diasLaborados;
+
+    const auxilioTransporte = (162000 / 30) * diasLaborados; // Asigna el auxilio de transporte
 
     return {
       auxilioTransporte,
@@ -524,10 +536,11 @@ export default function Formulario() {
       totalBonificaciones: total.totalBonos,
       totalPernotes: total.totalPernotes,
       totalRecargos: total.totalRecargos,
+      salarioDevengado,
       sueldoTotal:
         total.totalSubtotales +
         bonificacionVillanueva + // Incluye la bonificación si aplica
-        salarioBaseConductor +
+        salarioDevengado +
         auxilioTransporte,
     };
   }, [
@@ -584,10 +597,12 @@ export default function Formulario() {
         )?.id || null, // Busca el conductor completo basado en la selección
       auxilioTransporte: auxilioTransporte || 0, // Asegura un valor por defecto
       sueldoTotal: sueldoTotal || 0,
+      salarioDevengado: salarioDevengado || 0,
       totalPernotes: totalPernotes || 0,
       totalBonificaciones: totalBonificaciones || 0,
       totalRecargos: totalRecargos || 0,
       diasLaborados: diasLaborados || 0,
+      diasLaboradosVillanueva: diasLaboradosVillanueva || 0,
       ajusteSalarial: bonificacionVillanueva || 0, // Usa bonificacionVillanueva o 0
       vehiculos: detallesVehiculos.map((detalle) => detalle.vehiculo.value),
     };
@@ -597,6 +612,7 @@ export default function Formulario() {
   }, [
     auxilioTransporte,
     sueldoTotal,
+    salarioDevengado,
     totalPernotes,
     totalBonificaciones,
     dateSelected,
@@ -607,6 +623,7 @@ export default function Formulario() {
     state.conductores,
     mesesRange,
     diasLaborados,
+    diasLaboradosVillanueva,
     bonificacionVillanueva, // Ajuste salarial
   ]);
 
@@ -658,8 +675,6 @@ export default function Formulario() {
           liquidacion?.bonificaciones?.map(({ __typename, ...rest }) => rest) ||
           [];
 
-          console.log(bonificacionesFiltradas)
-
         const pernotesFiltrados =
           liquidacion?.pernotes?.map(({ __typename, ...rest }) => rest) || [];
 
@@ -674,10 +689,12 @@ export default function Formulario() {
           conductorId: liquidacion.conductorId || null, // Asegura que conductorId sea nulo si no está presente
           auxilioTransporte: liquidacion.auxilioTransporte || 0, // Provee un valor por defecto si es necesario
           sueldoTotal: liquidacion.sueldoTotal || 0,
+          salarioDevengado: liquidacion.salarioDevengado || 0,
           totalPernotes: liquidacion.totalPernotes || 0,
           totalBonificaciones: liquidacion.totalBonificaciones || 0,
           totalRecargos: liquidacion.totalRecargos || 0,
           diasLaborados: liquidacion.diasLaborados || 0,
+          diasLaboradosVillanueva: liquidacion.diasLaboradosVillanueva || 0,
           ajusteSalarial: liquidacion.ajusteSalarial || 0,
           vehiculos: liquidacion.vehiculos, // Mapeamos los valores correctos de los vehículos
           bonificaciones: bonificacionesFiltradas, // Enviamos las bonificaciones filtradas
@@ -909,7 +926,7 @@ export default function Formulario() {
                                           "La fecha seleccionada no está dentro del rango permitido"
                                         );
                                         const newFechas = [...pernote.fechas];
-                                        newFechas[dateIndex] = null;
+                                        newFechas[dateIndex] = "";
 
                                         handlePernoteChange(
                                           detalleVehiculo.vehiculo.value,
@@ -961,7 +978,9 @@ export default function Formulario() {
                                 <Select
                                   label="Mes"
                                   className="col-span-4 sm:col-span-1"
-                                  defaultSelectedKeys={recargo.mes ? [recargo.mes] : ''} // Usamos el mes directamente como clave
+                                  defaultSelectedKeys={
+                                    recargo.mes ? [recargo.mes] : ""
+                                  } // Usamos el mes directamente como clave
                                   onSelectionChange={(selected) => {
                                     const mes = Array.from(selected)[0]; // `selected` es un Set, lo convertimos en array para obtener el valor
                                     handleRecargoChange(
@@ -1113,6 +1132,17 @@ export default function Formulario() {
               </CardHeader>
               <Divider />
               <CardBody className="space-y-4">
+                <Input
+                  isDisabled={
+                    state.allowEdit || state.allowEdit == null ? false : true
+                  }
+                  value={diasLaborados.toString()}
+                  onChange={(e) => setDiasLaborados(+e.target.value)}
+                  type="number"
+                  label="Cantidad días laborados"
+                  placeholder="Ingresa la cantidad de días laborados"
+                  className="max-w-xs"
+                />
                 <Checkbox
                   isDisabled={
                     state.allowEdit || state.allowEdit == null ? false : true
@@ -1130,11 +1160,13 @@ export default function Formulario() {
                           ? false
                           : true
                       }
-                      value={diasLaborados.toString()}
-                      onChange={(e) => setDiasLaborados(+e.target.value)}
+                      value={diasLaboradosVillanueva.toString()}
+                      onChange={(e) =>
+                        setDiasLaboradosVillanueva(+e.target.value)
+                      }
                       type="number"
-                      label="Cantidad días laborados"
-                      placeholder="Ingresa la cantidad de días laborados"
+                      label="Cantidad días laborados Villanueva"
+                      placeholder="Ingresa la cantidad de días laborados en villanueva"
                       className="max-w-xs"
                     />
                     <div>
@@ -1146,9 +1178,9 @@ export default function Formulario() {
                   </>
                 )}
                 <div>
-                  <p>Salario base:</p>
+                  <p>Salario devengado:</p>
                   <p className="text-xl text-primary-400">
-                    {formatToCOP(salarioBaseConductor)}
+                    {formatToCOP(salarioDevengado)}
                   </p>
                 </div>
                 <div>
@@ -1160,9 +1192,19 @@ export default function Formulario() {
                 <div>
                   <p>Total bonificacaciones:</p>
                   <p className="text-xl text-secondary-500">
-                    {formatToCOP(
-                      totalBonificaciones + totalPernotes + totalRecargos
-                    )}
+                    {formatToCOP(totalBonificaciones)}
+                  </p>
+                </div>
+                <div>
+                  <p>Total pernotes:</p>
+                  <p className="text-xl text-foreground-500">
+                    {formatToCOP(totalPernotes)}
+                  </p>
+                </div>
+                <div>
+                  <p>Total recargos:</p>
+                  <p className="text-xl text-red-600">
+                    {formatToCOP(totalRecargos)}
                   </p>
                 </div>
                 <div>

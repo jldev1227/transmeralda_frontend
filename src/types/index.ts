@@ -15,6 +15,15 @@ export type Bono = {
   vehiculoId?: string; // Hacer vehiculoId opcional
   __typename?: string;
 }
+
+export type BonificacionesAcc = {
+  [key: string]: {
+    name: string;
+    quantity: number;
+    totalValue: number;
+  };
+}
+
 export type Pernote = {
   id?: string;
   empresa: string;
@@ -81,10 +90,12 @@ type BaseLiquidacion = {
   conductorId?: Conductor['id'] | null;
   auxilioTransporte: number;
   sueldoTotal: number;
+  salarioDevengado: number;
   totalPernotes: number;
   totalBonificaciones: number;
   totalRecargos: number;
   diasLaborados: number;
+  diasLaboradosVillanueva: number;
   ajusteSalarial: number;
   bonificaciones?: Bono[];              // Bonificaciones opcionales
   pernotes?: Pernote[];                 // Pernotes opcionales
