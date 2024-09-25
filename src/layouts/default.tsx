@@ -51,7 +51,7 @@ export default function DefaultLayout() {
           </NavbarItem>
         </NavbarContent>
         <NavbarContent justify="end">
-          <NavbarItem>Hola! {state.usuario?.nombre}</NavbarItem>
+          <NavbarItem className="sm:hidden">Hola! {state.usuario?.nombre}</NavbarItem>
           <NavbarItem className="hidden sm:flex">
             <Dropdown>
               <DropdownTrigger>
