@@ -7,9 +7,44 @@ export type IconSvgProps = SVGProps<SVGSVGElement> & {
 };
 
 // Tipos para Bonificaciones, Pernotes y Recargos
-export type Bono = {id?: string, name: string; quantity: number; value: number, vehiculoId?: string | null,   __typename?: string; };
-export type Pernote = {id?: string, empresa: string; cantidad: number; valor: number, vehiculoId?: string | null,   __typename?: string; }; // Agregado `valor` para pernote
-export type Recargo = {id?: string, empresa: string; valor: number, vehiculoId?: string | null,   __typename?: string; };
+export type Bono = {
+  id?: string;
+  name: string;
+  values: { mes: string; quantity: number }[];
+  value: number;
+  vehiculoId?: string; // Hacer vehiculoId opcional
+  __typename?: string;
+}
+
+export type BonificacionesAcc = {
+  [key: string]: {
+    name: string;
+    quantity: number;
+    totalValue: number;
+  };
+}
+
+export type Pernote = {
+  id?: string;
+  empresa: string;
+  cantidad: number;
+  valor: number;
+  vehiculoId?: string | null;
+  fechas: string[]; // Se agrega el array de fechas
+  __typename?: string;
+};
+
+
+export type Recargo = {
+  id?: string;
+  empresa: string;
+  valor: number;
+  vehiculoId?: string | null;
+  pagCliente: boolean | null;
+  mes?: string; // Añadir el campo `mes` de tipo string
+  __typename?: string;
+};
+
 
 // Vehículo y Conductor
 export type VehiculoOption = {
@@ -34,6 +69,11 @@ export type Conductor = {
 export type Vehiculo = {
   id: string;
   placa: string;
+  marca: string;
+  linea: string;
+  modelo: string;
+  propietarioNombre: string;
+  propietarioIdentificacion: string;
   __typename?: string;
 };
 
@@ -50,10 +90,12 @@ type BaseLiquidacion = {
   conductorId?: Conductor['id'] | null;
   auxilioTransporte: number;
   sueldoTotal: number;
+  salarioDevengado: number;
   totalPernotes: number;
   totalBonificaciones: number;
   totalRecargos: number;
   diasLaborados: number;
+  diasLaboradosVillanueva: number;
   ajusteSalarial: number;
   bonificaciones?: Bono[];              // Bonificaciones opcionales
   pernotes?: Pernote[];                 // Pernotes opcionales

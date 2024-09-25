@@ -1,8 +1,10 @@
 // Definimos los tipos de acciones que puede manejar el reducer
-import { Liquidacion } from '@/types/index';
+import { Liquidacion, Conductor, Vehiculo } from '@/types/index';
 
 export type LiquidacionActions =
 | { type: 'SET_LIQUIDACIONES'; payload: Liquidacion[] }
+| { type: 'SET_CONDUCTORES'; payload: Conductor[] }
+| { type: 'SET_VEHICULOS'; payload: Vehiculo[] }
 | { type: 'AGREGAR_LIQUIDACION'; payload: Liquidacion }
 | { type: 'EDITAR_LIQUIDACION'; payload: Liquidacion }
 | { type: 'SET_LIQUIDACION'; payload: {liquidacion: Liquidacion | null, allowEdit: boolean | null} }
@@ -12,6 +14,8 @@ export type LiquidacionActions =
 
 export type LiquidacionState = {
   liquidaciones: Liquidacion[]; // Cambiamos a un array de Liquidacion, no null
+  conductores: Conductor[]; // Cambiamos a un array de Liquidacion, no null
+  vehiculos: Vehiculo[]; // Cambiamos a un array de Liquidacion, no null
   liquidacion: Liquidacion | null; // Cambiamos a un array de Liquidacion, no null
   allowEdit: boolean | null; // Cambiamos a un array de Liquidacion, no null
   alerta: {
@@ -24,6 +28,8 @@ export type LiquidacionState = {
 // Estado inicial de liquidaciones
 export const initialState: LiquidacionState = {
   liquidaciones: [],
+  conductores: [], 
+  vehiculos: [], 
   liquidacion: null,
   allowEdit: null,
   alerta: {
@@ -43,6 +49,16 @@ export function LiquidacionReducer(
       return {
         ...state,
         liquidaciones: action.payload,
+      };
+    case 'SET_CONDUCTORES':
+      return {
+        ...state,
+        conductores: action.payload,
+      };
+    case 'SET_VEHICULOS':
+      return {
+        ...state,
+        vehiculos: action.payload,
       };
     case 'AGREGAR_LIQUIDACION':
       return {

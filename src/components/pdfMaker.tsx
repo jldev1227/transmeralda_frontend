@@ -8,10 +8,9 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import { Button } from "@nextui-org/react";
-import { Liquidacion } from "@/types/index";
+import { BonificacionesAcc, Bono, Liquidacion } from "@/types/index";
 import { formatDate, formatToCOP } from "@/helpers";
 import { Font } from "@react-pdf/renderer";
-import { empresas } from "@/data";
 
 Font.register({
   family: "Roboto",
@@ -31,7 +30,7 @@ Font.register({
 const styles = StyleSheet.create({
   page: {
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 60,
     backgroundColor: "#FFF", // Fondo gris claro para el PDF}
     fontFamily: "Helvetica", // Usa una fuente predeterminada
     fontSize: 12,
@@ -41,7 +40,7 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto", // Usa la fuente registrada
     fontWeight: "bold", // Aplica el peso
     fontSize: 24,
-    marginBottom: 8,
+    marginBottom: 2,
     textAlign: "center",
     color: "#2E8B57", // Verde para el título principal
   },
@@ -105,6 +104,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
           <Image
             style={{
               width: 150,
+              position: "absolute",
               height: 90,
               objectFit: "cover",
             }}
@@ -112,18 +112,9 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
           />
         </View>
         <Text style={styles.header}>LIQUIDACION #{item?.id}</Text>
-        <Text style={styles.title}>
-          {`${formatDate(item?.periodoStart)} - ${formatDate(item?.periodoEnd)}`}
-        </Text>
       </View>
-      {/* Ajuste de los componentes del Card */}
 
-      <View
-        style={{
-          paddingHorizontal: 65,
-          gap: 30,
-        }}
-      >
+      <View style={{ paddingHorizontal: 65, gap: 20 }}>
         <View style={styles.card}>
           <View style={styles.cardRow}>
             <Text style={styles.label}>Nombre</Text>
@@ -135,182 +126,10 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
             <Text style={styles.label}>C.C.</Text>
             <Text style={styles.textValue}>{item?.conductor?.cc}</Text>
           </View>
-          <View
-            style={[
-              styles.cardRow,
-              {
-                borderBottom: 0,
-              },
-            ]}
-          >
+          <View style={styles.cardRow}>
             <Text style={styles.label}>Días laborados</Text>
             <Text style={styles.textValue}>{item?.diasLaborados}</Text>
           </View>
-        </View>
-
-        <View style={styles.card}>
-          <View
-            style={[
-              styles.cardRow,
-              {
-                backgroundColor: "#2E8B571e",
-                borderTopLeftRadius: 10,
-                borderTopRightRadius: 10,
-                color: "#2E8B57",
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.label,
-                {
-                  flex: 1,
-                },
-              ]}
-            >
-              Concepto
-            </Text>
-            <Text
-              style={[
-                styles.label,
-                {
-                  flex: 0.5,
-                  textAlign: "center",
-                },
-              ]}
-            >
-              Cantidad
-            </Text>
-            <Text
-              style={[
-                styles.label,
-                {
-                  flex: 0.5,
-                  textAlign: "right",
-                },
-              ]}
-            >
-              Valor
-            </Text>
-          </View>
-          {item?.bonificaciones?.map((bonificacion) => (
-            <View key={bonificacion.id} style={styles.cardRow}>
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    flex: 1,
-                  },
-                ]}
-              >
-                {bonificacion?.name}
-              </Text>
-              <Text
-                style={[
-                  styles.textValue,
-                  {
-                    textAlign: "center",
-                    flex: 0.5,
-                  },
-                ]}
-              >
-                {bonificacion.quantity}
-              </Text>
-              <Text
-                style={[
-                  styles.textValue,
-                  {
-                    textAlign: "right",
-                    flex: 0.5,
-                  },
-                ]}
-              >
-                {formatToCOP(bonificacion.quantity * bonificacion.value)}
-              </Text>
-            </View>
-          ))}
-          {item?.pernotes?.map((pernote) => (
-            <View key={pernote.id} style={styles.cardRow}>
-              <Text
-                style={[
-                  styles.label,
-                  {
-                    flex: 1,
-                  },
-                ]}
-              >
-                Pernote{" - "}
-                {empresas.find((empresa) => empresa.NIT === pernote.empresa)
-                  ?.Nombre || ""}
-              </Text>
-              <Text
-                style={[
-                  styles.textValue,
-                  {
-                    textAlign: "center",
-                    flex: 0.5,
-                  },
-                ]}
-              >
-                {pernote.cantidad}
-              </Text>
-              <Text
-                style={[
-                  styles.textValue,
-                  {
-                    textAlign: "right",
-                    flex: 0.5,
-                  },
-                ]}
-              >
-                {formatToCOP(pernote.cantidad * pernote.valor)}
-              </Text>
-            </View>
-          ))}
-          <View
-            style={[
-              styles.cardRow,
-              {
-                borderBottom: 0,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.label,
-                {
-                  flex: 1,
-                },
-              ]}
-            >
-              Recargos
-            </Text>
-            <Text
-              style={[
-                styles.textValue,
-                {
-                  flex: 0.5,
-                  textAlign: "center",
-                },
-              ]}
-            >
-              {item?.recargos?.length}
-            </Text>
-            <Text
-              style={[
-                styles.textValue,
-                {
-                  flex: 0.5,
-                  textAlign: "right",
-                },
-              ]}
-            >
-              {formatToCOP(item?.totalRecargos)}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.card}>
           <View style={styles.cardRow}>
             <Text style={styles.label}>Salario básico</Text>
             <Text
@@ -326,40 +145,6 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
               ]}
             >
               {formatToCOP(item?.conductor?.salarioBase)}
-            </Text>
-          </View>
-          <View style={styles.cardRow}>
-            <Text style={styles.label}>Total bonificaciones</Text>
-            <Text
-              style={[
-                styles.textValue,
-                {
-                  color: "#5856D6",
-                  backgroundColor: "#5856D61e",
-                  padding: 3,
-                  borderRadius: 5,
-                  fontSize: 14,
-                },
-              ]}
-            >
-              {formatToCOP(item?.totalBonificaciones)}
-            </Text>
-          </View>
-          <View style={styles.cardRow}>
-            <Text style={styles.label}>Ajuste villanueva</Text>
-            <Text
-              style={[
-                styles.textValue,
-                {
-                  color: "#FF9500",
-                  backgroundColor: "#FF95001e",
-                  padding: 3,
-                  borderRadius: 5,
-                  fontSize: 14,
-                },
-              ]}
-            >
-              {formatToCOP(item?.ajusteSalarial)}
             </Text>
           </View>
           <View style={styles.cardRow}>
@@ -379,14 +164,150 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
               {formatToCOP(item?.auxilioTransporte)}
             </Text>
           </View>
+          <View style={[styles.cardRow, { borderBottom: 0 }]}>
+            <Text style={styles.label}>Ajuste villanueva</Text>
+            <Text>
+              {item?.diasLaborados
+                ? item.diasLaborados >= 17
+                  ? 30
+                  : item?.diasLaboradosVillanueva
+                : 0}{" "}
+              días
+            </Text>
+            <Text
+              style={[
+                styles.textValue,
+                {
+                  color: "#FF9500",
+                  backgroundColor: "#FF95001e",
+                  padding: 3,
+                  borderRadius: 5,
+                  fontSize: 14,
+                },
+              ]}
+            >
+              {formatToCOP(item?.ajusteSalarial)}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.title}>
+          {`${formatDate(item?.periodoStart)} - ${formatDate(item?.periodoEnd)}`}
+        </Text>
+
+        <View style={styles.card}>
           <View
             style={[
               styles.cardRow,
               {
-                borderBottom: 0,
+                backgroundColor: "#2E8B571e",
+                borderTopLeftRadius: 10,
+                borderTopRightRadius: 10,
+                color: "#2E8B57",
               },
             ]}
           >
+            <Text style={[styles.label, { flex: 2, textAlign: "left" }]}>
+              Concepto
+            </Text>
+            <Text style={[styles.label, { flex: 1, textAlign: "center" }]}>
+              Observación
+            </Text>
+            <Text style={[styles.label, { flex: 1, textAlign: "center" }]}>
+              Cantidad
+            </Text>
+            <Text style={[styles.label, { flex: 1, textAlign: "center" }]}>
+              Valor
+            </Text>
+          </View>
+
+          {item?.bonificaciones &&
+            Object.values(
+              item.bonificaciones.reduce(
+                (acc: BonificacionesAcc, bonificacion: Bono) => {
+                  // Sumamos la cantidad de bonificaciones y el valor total
+                  const totalQuantity = bonificacion.values.reduce(
+                    (sum, val) => sum + (val.quantity || 0),
+                    0
+                  );
+
+                  if (acc[bonificacion.name]) {
+                    // Si ya existe la bonificación, sumamos la cantidad y el valor total
+                    acc[bonificacion.name].quantity += totalQuantity;
+                    acc[bonificacion.name].totalValue +=
+                      totalQuantity * bonificacion.value;
+                  } else {
+                    // Si no existe, la añadimos al acumulador
+                    acc[bonificacion.name] = {
+                      name: bonificacion.name,
+                      quantity: totalQuantity,
+                      totalValue: totalQuantity * bonificacion.value,
+                    };
+                  }
+                  return acc;
+                },
+                {}
+              )
+            ).map((bono: any) => (
+              <View key={bono.name} style={[styles.cardRow]}>
+                <Text style={[styles.label, { flex: 2, textAlign: "left" }]}>
+                  {bono.name || ""}
+                </Text>
+                <Text
+                  style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+                ></Text>
+                <Text
+                  style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+                >
+                  {bono.quantity}
+                </Text>
+                <Text
+                  style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+                >
+                  {formatToCOP(bono.totalValue)}
+                </Text>
+              </View>
+            ))}
+
+          {item?.pernotes?.map((pernote) => (
+            <View key={pernote.id} style={[styles.cardRow]}>
+              <Text style={[styles.label, { flex: 2 }]}>Pernote</Text>
+              <Text
+                style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+              >
+                {pernote.fechas}
+              </Text>
+              <Text
+                style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+              >
+                {item.pernotes?.length}
+              </Text>
+              <Text
+                style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+              >
+                {formatToCOP(item.totalPernotes)}
+              </Text>
+            </View>
+          ))}
+
+          <View style={[styles.cardRow, {
+            borderBottom: 0
+          }]}>
+            <Text style={[styles.label, { flex: 2 }]}>recargo</Text>
+            <Text style={[styles.textValue, { flex: 1, textAlign: "center" }]}>
+            <Text></Text>
+            </Text>
+            <Text style={[styles.textValue, { flex: 1, textAlign: "center" }]}>
+              {item?.recargos?.length}
+            </Text>
+            <Text style={[styles.textValue, { flex: 1, textAlign: "center" }]}>
+              {formatToCOP(item?.totalRecargos)}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.card}>
+          <View style={[styles.cardRow, { borderBottom: 0 }]}>
             <Text style={styles.label}>Salario total</Text>
             <Text
               style={[

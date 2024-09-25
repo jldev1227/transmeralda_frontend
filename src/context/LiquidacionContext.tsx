@@ -19,12 +19,15 @@ import {
   EDITAR_LIQUIDACION,
 } from "../graphql/liquidacion"; // Asegúrate de tener esta mutación bien definida
 import { formatDateValue } from "@/helpers";
+import { OBTENER_CONDUCTORES } from "@/graphql/conductor";
+import { OBTENER_VEHICULOS } from "@/graphql/vehiculo";
 
 type LiquidacionContextType = {
   state: LiquidacionState;
   dispatch: Dispatch<LiquidacionActions>;
   obtenerLiquidaciones: () => void;
   loadingLiquidaciones: boolean;
+  loadingConductores: boolean;
   submitLiquidacion: (liquidacion: LiquidacionInput) => void;
   setLiquidacion: (liquidacion: Liquidacion) => void;
 };
@@ -42,22 +45,50 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
 
   // Apollo Client hooks
   const {
-    data,
+    data: liquidacionesData,
     loading: loadingLiquidaciones,
-    error: errorQuery,
+    error: errorQueryLiquidaciones,
   } = useQuery(OBTENER_LIQUIDACIONES);
+  const {
+    data: conductoresData,
+    loading: loadingConductores,
+    error: errorQueryConductores,
+  } = useQuery(OBTENER_CONDUCTORES);
+  const {
+    data: vehiculosData,
+    loading: loadingVehiculos,
+    error: errorQueryVehiculos,
+  } = useQuery(OBTENER_VEHICULOS);
   const [crearLiquidacion] = useMutation(CREAR_LIQUIDACION);
   const [editarLiquidacion] = useMutation(EDITAR_LIQUIDACION);
 
   // Función para obtener liquidaciones y hacer dispatch, optimizado con useCallback para evitar recrear la función en cada renderizado.
   const obtenerLiquidaciones = useCallback(() => {
-    if (!loadingLiquidaciones && data) {
+    if (!loadingLiquidaciones && liquidacionesData.liquidaciones) {
       dispatch({
         type: "SET_LIQUIDACIONES",
-        payload: data.liquidaciones,
+        payload: liquidacionesData.liquidaciones,
       });
     }
-  }, [data, loadingLiquidaciones, dispatch]);
+  }, [liquidacionesData, loadingLiquidaciones, dispatch]);
+
+  const obtenerConductores = useCallback(() => {
+    if (!loadingConductores && conductoresData.obtenerConductores) {
+      dispatch({
+        type: "SET_CONDUCTORES",
+        payload: conductoresData.obtenerConductores,
+      });
+    }
+  }, [conductoresData, loadingConductores, dispatch]);
+
+  const obtenerVehiculos = useCallback(() => {
+    if (!loadingVehiculos && vehiculosData.obtenerVehiculos) {
+      dispatch({
+        type: "SET_VEHICULOS",
+        payload: vehiculosData.obtenerVehiculos,
+      });
+    }
+  }, [vehiculosData, loadingVehiculos, dispatch]);
 
   const submitLiquidacion = async (liquidacion: LiquidacionInput) => {
     try {
@@ -78,7 +109,7 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
             payload: {
               error: true, // true si fue exitoso, false si fue un error
               mensaje: error.message, // Mensaje a mostrar en la alerta
-            }
+            },
           });
         });
         throw new Error("Errores en la respuesta de GraphQL.");
@@ -109,7 +140,6 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
         }
 
         return { data, errors }; // Asegúrate de retornar los datos y errores
-
       } catch (err) {
         if (err instanceof ApolloError) {
           handleApolloError(err);
@@ -124,7 +154,6 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
   const actualizarLiquidacion = useCallback(
     async (liquidacion: LiquidacionInput) => {
       try {
-        console.log(liquidacion)
         const { data, errors } = await editarLiquidacion({
           variables: {
             ...liquidacion,
@@ -141,7 +170,6 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
         }
 
         return { data, errors }; // Asegúrate de retornar los datos y errores
-
       } catch (err) {
         if (err instanceof ApolloError) {
           handleApolloError(err);
@@ -170,20 +198,42 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
       type: "SET_LIQUIDACION",
       payload: {
         allowEdit: false,
-        liquidacion
+        liquidacion,
       },
     });
   };
 
   // Efecto para obtener las liquidaciones cuando los datos están listos
   useEffect(() => {
-    if (data) {
+    if (liquidacionesData) {
       obtenerLiquidaciones();
     }
-  }, [data, obtenerLiquidaciones]);
+  }, [liquidacionesData, obtenerLiquidaciones]);
 
-  if (errorQuery) {
-    console.error("Error obteniendo liquidaciones:", errorQuery);
+  // Efecto para obtener los Conductores cuando los datos están listos
+  useEffect(() => {
+    if (conductoresData) {
+      obtenerConductores();
+    }
+  }, [conductoresData, obtenerConductores]);
+
+  // Efecto para obtener los Vehiculos cuando los datos están listos
+  useEffect(() => {
+    if (vehiculosData) {
+      obtenerVehiculos();
+    }
+  }, [vehiculosData, obtenerConductores]);
+
+  if (errorQueryLiquidaciones) {
+    console.error("Error obteniendo liquidaciones:", errorQueryLiquidaciones);
+  }
+
+  if (errorQueryConductores) {
+    console.error("Error obteniendo conductores:", errorQueryConductores);
+  }
+
+  if (errorQueryConductores) {
+    console.error("Error obteniendo vehiculos:", errorQueryVehiculos);
   }
 
   return (
@@ -193,6 +243,7 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
         dispatch,
         obtenerLiquidaciones,
         loadingLiquidaciones,
+        loadingConductores,
         submitLiquidacion,
         setLiquidacion,
       }}
