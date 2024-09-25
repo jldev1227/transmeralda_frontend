@@ -58,7 +58,7 @@ export default function LiquidacionesList() {
     return matches;
   }
 
-  const isMobile = useMediaQuery("(max-width: 640px)"); // Tailwind `sm` breakpoint
+  const isMobile = useMediaQuery("(max-width: 1080px)"); // Tailwind `sm` breakpoint
 
   if (loadingLiquidaciones) return <p>Cargando liquidaciones...</p>;
 
@@ -177,6 +177,7 @@ export default function LiquidacionesList() {
         <Table
           aria-label="liquidaciones"
           cellSpacing={2}
+          isStriped 
           bottomContent={
             <div className="flex w-full justify-center">
               <Pagination
@@ -195,27 +196,27 @@ export default function LiquidacionesList() {
           }}
         >
           <TableHeader>
-            <TableColumn>#</TableColumn>
-            <TableColumn>Periodo</TableColumn>
-            <TableColumn>Nombre</TableColumn>
-            <TableColumn>Salario básico</TableColumn>
-            <TableColumn>Salario devengado</TableColumn>
-            <TableColumn>Auxilio transporte</TableColumn>
-            <TableColumn>Días laborados</TableColumn>
-            <TableColumn>Días laborados Villanueva</TableColumn>
-            <TableColumn>Bonificaciones</TableColumn>
-            <TableColumn>Pernotes</TableColumn>
-            <TableColumn>Recargos</TableColumn>
-            <TableColumn>Bonificación villanueva</TableColumn>
-            <TableColumn>Salario total</TableColumn>
-            <TableColumn>Acciones</TableColumn>
+            <TableColumn className="bg-green-700 text-white">#</TableColumn>
+            <TableColumn className="bg-green-700 text-white">Periodo</TableColumn>
+            <TableColumn className="bg-green-700 text-white">Nombre</TableColumn>
+            <TableColumn className="bg-green-700 text-white">Salario básico</TableColumn>
+            <TableColumn className="bg-green-700 text-white">Salario devengado</TableColumn>
+            <TableColumn className="bg-green-700 text-white">Auxilio transporte</TableColumn>
+            <TableColumn className="bg-green-700 text-white">Días laborados</TableColumn>
+            <TableColumn className="bg-green-700 text-white">Días laborados Villanueva</TableColumn>
+            <TableColumn className="bg-green-700 text-white">Bonificaciones</TableColumn>
+            <TableColumn className="bg-green-700 text-white">Pernotes</TableColumn>
+            <TableColumn className="bg-green-700 text-white">Recargos</TableColumn>
+            <TableColumn className="bg-green-700 text-white">Bonificación villanueva</TableColumn>
+            <TableColumn className="bg-green-700 text-white">Salario total</TableColumn>
+            <TableColumn className="bg-green-700 text-white">Acciones</TableColumn>
           </TableHeader>
           <TableBody
             emptyContent={"No hay liquidaciones registradas."}
             items={items}
           >
             {(item: Liquidacion) => (
-              <TableRow key={item?.id || `row-${item?.conductor?.cc}`}>
+              <TableRow className={`${item.salarioDevengado === 0 && item.auxilioTransporte === 0 ? 'bg-yellow-100' : ''}`} key={item?.id || `row-${item?.conductor?.cc}`}>
                 <TableCell className="text-tiny">{item?.id}</TableCell>
                 <TableCell className="text-tiny">
                   {formatDate(item?.periodoStart)} -{" "}
@@ -231,10 +232,10 @@ export default function LiquidacionesList() {
                 <TableCell className="text-tiny">
                   {formatToCOP(item?.auxilioTransporte)}
                 </TableCell>
-                <TableCell className="text-tiny">
+                <TableCell className="text-tiny text-center">
                   {item?.diasLaborados}
                 </TableCell>
-                <TableCell className="text-tiny">
+                <TableCell className="text-tiny text-center">
                   {item?.diasLaboradosVillanueva}
                 </TableCell>
                 <TableCell className="text-tiny">
