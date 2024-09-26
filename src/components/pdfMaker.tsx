@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 60,
     backgroundColor: "#FFF", // Fondo gris claro para el PDF}
-    fontFamily: "Helvetica", // Usa una fuente predeterminada
+    fontFamily: "Roboto", // Usa una fuente predeterminada
     fontSize: 12,
     gap: 35,
   },

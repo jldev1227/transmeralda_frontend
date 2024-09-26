@@ -56,7 +56,7 @@ export default function AlertaModal() {
                       />
                     </svg>
                   )}
-                  <p className={`text-semibold text-md ${success ? 'text-green-700' : 'text-red-700'}`}>
+                  <p className={`text-semibold text-md text-center ${success ? 'text-green-700' : 'text-red-700'}`}>
                     {mensaje}
                   </p>
                 </div>
