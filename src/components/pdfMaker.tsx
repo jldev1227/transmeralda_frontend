@@ -13,18 +13,19 @@ import { formatDate, formatToCOP } from "@/helpers";
 import { Font } from "@react-pdf/renderer";
 
 Font.register({
-  family: "Roboto",
+  family: "Open Sans",
   fonts: [
     {
-      src: "https://fonts.gstatic.com/s/roboto/v20/KFOmCnqEu92Fr1Mu4mxP.ttf",
+      src: "https://fonts.gstatic.com/s/opensans/v18/mem8YaGs126MiZpBA-UFVZ0e.ttf",
       fontWeight: "normal",
     },
     {
-      src: "https://fonts.gstatic.com/s/roboto/v20/KFOlCnqEu92Fr1MmWUlfBBc.ttf",
+      src: "https://fonts.gstatic.com/s/opensans/v18/mem5YaGs126MiZpBA-UN7rgOUuhp.ttf",
       fontWeight: "bold",
     },
   ],
 });
+
 
 // Estilos para el PDF
 const styles = StyleSheet.create({
@@ -37,7 +38,7 @@ const styles = StyleSheet.create({
     gap: 35,
   },
   header: {
-    fontFamily: "Roboto", // Usa la fuente registrada
+    fontFamily: "Open Sans", // Usa la fuente registrada
     fontWeight: "bold", // Aplica el peso
     fontSize: 24,
     marginBottom: 2,
@@ -45,19 +46,19 @@ const styles = StyleSheet.create({
     color: "#2E8B57", // Verde para el título principal
   },
   title: {
-    fontFamily: "Roboto", // Usa la fuente registrada
+    fontFamily: "Open Sans", // Usa la fuente registrada
     fontWeight: "bold", // Aplica el peso
     fontSize: 16,
     color: "#2E8B57", // Azul para los títulos de las secciones
     textAlign: "center",
   },
   label: {
-    fontFamily: "Roboto", // Usa la fuente registrada
+    fontFamily: "Open Sans", // Usa la fuente registrada
     fontWeight: "semibold", // Aplica el peso,
     fontSize: 12,
   },
   textValue: {
-    fontFamily: "Roboto", // Usa la fuente registrada
+    fontFamily: "Open Sans", // Usa la fuente registrada
     fontSize: 12,
   },
   card: {
