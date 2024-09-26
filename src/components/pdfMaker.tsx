@@ -10,6 +10,21 @@ import {
 import { Button } from "@nextui-org/react";
 import { BonificacionesAcc, Bono, Liquidacion } from "@/types/index";
 import { formatDate, formatToCOP } from "@/helpers";
+import { Font } from "@react-pdf/renderer";
+
+Font.register({
+  family: "Roboto",
+  fonts: [
+    {
+      src: "/fonts/Roboto-Regular.ttf", // Ruta local a la fuente en formato .ttf
+      fontWeight: "normal",
+    },
+    {
+      src: "/fonts/Roboto-Bold.ttf", // Ruta local a la fuente en formato .ttf
+      fontWeight: "bold",
+    },
+  ],
+});
 
 // Estilos para el PDF
 const styles = StyleSheet.create({
@@ -17,12 +32,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 60,
     backgroundColor: "#FFF", // Fondo gris claro para el PDF}
-    fontFamily: "Helvetica", // Usa una fuente predeterminada
+    fontFamily: "Roboto", // Usa una fuente predeterminada
     fontSize: 12,
     gap: 35,
   },
   header: {
-    fontFamily: "Open Sans", // Usa la fuente registrada
+    fontFamily: "Roboto", // Usa la fuente registrada
     fontWeight: "bold", // Aplica el peso
     fontSize: 24,
     marginBottom: 2,
@@ -30,19 +45,19 @@ const styles = StyleSheet.create({
     color: "#2E8B57", // Verde para el título principal
   },
   title: {
-    fontFamily: "Open Sans", // Usa la fuente registrada
+    fontFamily: "Roboto", // Usa la fuente registrada
     fontWeight: "bold", // Aplica el peso
     fontSize: 16,
     color: "#2E8B57", // Azul para los títulos de las secciones
     textAlign: "center",
   },
   label: {
-    fontFamily: "Open Sans", // Usa la fuente registrada
+    fontFamily: "Roboto", // Usa la fuente registrada
     fontWeight: "semibold", // Aplica el peso,
     fontSize: 12,
   },
   textValue: {
-    fontFamily: "Open Sans", // Usa la fuente registrada
+    fontFamily: "Roboto", // Usa la fuente registrada
     fontSize: 12,
   },
   card: {
