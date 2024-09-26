@@ -10,22 +10,6 @@ import {
 import { Button } from "@nextui-org/react";
 import { BonificacionesAcc, Bono, Liquidacion } from "@/types/index";
 import { formatDate, formatToCOP } from "@/helpers";
-import { Font } from "@react-pdf/renderer";
-
-Font.register({
-  family: "Open Sans",
-  fonts: [
-    {
-      src: "https://fonts.gstatic.com/s/opensans/v18/mem8YaGs126MiZpBA-UFVZ0e.ttf",
-      fontWeight: "normal",
-    },
-    {
-      src: "https://fonts.gstatic.com/s/opensans/v18/mem5YaGs126MiZpBA-UN7rgOUuhp.ttf",
-      fontWeight: "bold",
-    },
-  ],
-});
-
 
 // Estilos para el PDF
 const styles = StyleSheet.create({
