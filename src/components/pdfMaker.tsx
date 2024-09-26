@@ -293,7 +293,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
           <View style={[styles.cardRow, {
             borderBottom: 0
           }]}>
-            <Text style={[styles.label, { flex: 2 }]}>recargo</Text>
+            <Text style={[styles.label, { flex: 2 }]}>Recargo</Text>
             <Text style={[styles.textValue, { flex: 1, textAlign: "center" }]}>
             <Text></Text>
             </Text>
