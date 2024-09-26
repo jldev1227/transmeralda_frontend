@@ -1,6 +1,12 @@
 import { DateValue } from "@nextui-org/react";
 import { SVGProps } from "react";
 
+export type ConfiguracionLiquidacion = {
+  id?: string;
+  nombre: string;
+  valor: number;
+}
+
 // Definición de tipos para SVG
 export type IconSvgProps = SVGProps<SVGSVGElement> & {
   size?: number;

@@ -147,7 +147,7 @@ export default function Formulario() {
                         mes,
                         quantity: 0,
                       })),
-                      value: 22960,
+                      value: state?.configuracion?.find(config => config.nombre === 'Bono de alimentación')?.valor || 0,
                     },
                     {
                       name: "Bono día trabajado",
@@ -224,6 +224,7 @@ export default function Formulario() {
               ...detalleExistente,
               bonos: detalleExistente.bonos.map((bono) => ({
                 ...bono,
+                value: state?.configuracion?.find(config => config.nombre === 'Bono de alimentación')?.valor || 0,
                 values: mesesRange.map((mes) => {
                   const bonoExistente = bono.values.find(
                     (val) => val.mes === mes
@@ -244,7 +245,7 @@ export default function Formulario() {
                   mes: mes,
                   quantity: 0,
                 })),
-                value: 22960,
+                value: state?.configuracion?.find(config => config.nombre === 'Bono de alimentación')?.valor || 0,
                 vehiculoId: vehiculo?.value,
               },
               {
@@ -277,7 +278,7 @@ export default function Formulario() {
         setDetallesVehiculos(nuevosDetalles);
       }
     }
-  }, [vehiculosSelected, mesesRange, detallesVehiculos, dateSelected]);
+  }, [vehiculosSelected, mesesRange, detallesVehiculos, dateSelected, state?.configuracion]);
 
   // Manejadores de eventos
   const handleVehiculoSelect = useCallback(
@@ -336,7 +337,7 @@ export default function Formulario() {
                 ...detalle,
                 pernotes: detalle.pernotes.map((pernote, i) =>
                   i === index
-                    ? { ...pernote, [field]: value, valor: 100906 }
+                    ? { ...pernote, [field]: value, valor: state?.configuracion?.find(config => config.nombre === 'Pernote')?.valor || 0 }
                     : pernote
                 ),
               }
@@ -456,6 +457,7 @@ export default function Formulario() {
   };
 
   const bonificacionVillanueva = useMemo(() => {
+
     if (diasLaboradosVillanueva > diasLaborados) {
       // Lanza el alert si diasLaboradosVillanueva es mayor que diasLaborados
       setDiasLaboradosVillanueva(0);
@@ -469,12 +471,12 @@ export default function Formulario() {
       return conductor
         ? diasLaboradosVillanueva >= 17
           ? 2101498 - conductor.salarioBase
-          : 20050 * diasLaboradosVillanueva
+          : (state.configuracion?.find(config => config.nombre == 'Ajuste villanueva')?.valor || 0) * diasLaboradosVillanueva
         : 0;
     }
 
     return 0;
-  }, [isCheckedAjuste, liquidacion, diasLaborados, diasLaboradosVillanueva]);
+  }, [isCheckedAjuste, liquidacion, diasLaborados, diasLaboradosVillanueva, state.configuracion]);
 
   const {
     auxilioTransporte,
@@ -497,7 +499,11 @@ export default function Formulario() {
         );
 
         const pernotes = item.pernotes.reduce(
-          (total, pernote) => total + pernote.cantidad * 100906, // Puedes ajustar el valor de pernote si es una constante
+          (total, pernote) => {
+            const configPernote = state.configuracion?.find(config => config.nombre == 'Pernote')
+
+            return total + (configPernote?.valor || 0 * pernote.cantidad)
+          }, // Puedes ajustar el valor de pernote si es una constante
           0
         );
         const recargos = item.recargos.reduce(
@@ -528,8 +534,7 @@ export default function Formulario() {
 
     const salarioDevengado = (salarioBaseConductor / 30) * diasLaborados;
 
-    const auxilioTransporte = (162000 / 30) * diasLaborados; // Asigna el auxilio de transporte
-
+    const auxilioTransporte = (state?.configuracion?.find(config => config.nombre === 'Auxilio de transporte')?.valor || 0) / 30 * diasLaborados; 
     return {
       auxilioTransporte,
       salarioBaseConductor,
@@ -552,6 +557,7 @@ export default function Formulario() {
     conductorSelected,
     vehiculosSelected,
     state.conductores,
+    state.configuracion,
   ]);
 
   // Actualización de la liquidación en el useEffect
@@ -767,7 +773,7 @@ export default function Formulario() {
                     <div key={index}>
                       <Card className="space-y-5 flex flex-col p-6">
                         <h2 className="text-xl font-semibold mb-3">
-                          Vehículo: {detalleVehiculo.vehiculo.label}
+                          Vehículo: <b>{detalleVehiculo.vehiculo.label}</b>
                         </h2>
                         <h3 className="font-semibold text-xl mb-2">
                           Bonificaciones

@@ -16,11 +16,11 @@ Font.register({
   family: "Roboto",
   fonts: [
     {
-      src: "/fonts/Roboto-Regular.ttf", // Ruta local a la fuente en formato .ttf
+      src: "https://fonts.gstatic.com/s/roboto/v20/KFOmCnqEu92Fr1Mu4mxP.ttf",
       fontWeight: "normal",
     },
     {
-      src: "/fonts/Roboto-Bold.ttf", // Ruta local a la fuente en formato .ttf
+      src: "https://fonts.gstatic.com/s/roboto/v20/KFOlCnqEu92Fr1MmWUlfBBc.ttf",
       fontWeight: "bold",
     },
   ],
