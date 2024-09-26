@@ -16,11 +16,11 @@ Font.register({
   family: "Roboto",
   fonts: [
     {
-      src: "https://fonts.gstatic.com/s/roboto/v20/KFOmCnqEu92Fr1Mu4mxP.ttf",
+      src: "/fonts/Roboto-Regular.ttf", // Ruta local a la fuente en formato .ttf
       fontWeight: "normal",
     },
     {
-      src: "https://fonts.gstatic.com/s/roboto/v20/KFOlCnqEu92Fr1MmWUlfBBc.ttf",
+      src: "/fonts/Roboto-Bold.ttf", // Ruta local a la fuente en formato .ttf
       fontWeight: "bold",
     },
   ],
@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 60,
     backgroundColor: "#FFF", // Fondo gris claro para el PDF}
-    fontFamily: "Helvetica", // Usa una fuente predeterminada
+    fontFamily: "Roboto", // Usa una fuente predeterminada
     fontSize: 12,
     gap: 35,
   },
