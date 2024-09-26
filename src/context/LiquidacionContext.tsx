@@ -12,7 +12,7 @@ import {
   LiquidacionState,
   initialState,
 } from "../reducers/liquidacion-reducer";
-import { Liquidacion, LiquidacionInput } from "@/types";
+import { ConfiguracionLiquidacion, Liquidacion, LiquidacionInput } from "@/types";
 import {
   OBTENER_LIQUIDACIONES,
   CREAR_LIQUIDACION,
@@ -21,6 +21,8 @@ import {
 import { formatDateValue } from "@/helpers";
 import { OBTENER_CONDUCTORES } from "@/graphql/conductor";
 import { OBTENER_VEHICULOS } from "@/graphql/vehiculo";
+import { OBTENER_CONFIGURACION_LIQUIDACION } from "@/graphql/configuracionLiquidacion";
+import { ACTUALIZAR_CONFIGURACION } from "@/graphql/configuracionLiquidacion"; // Asegúrate de la ruta correcta
 
 type LiquidacionContextType = {
   state: LiquidacionState;
@@ -30,6 +32,7 @@ type LiquidacionContextType = {
   loadingConductores: boolean;
   submitLiquidacion: (liquidacion: LiquidacionInput) => void;
   setLiquidacion: (liquidacion: Liquidacion) => void;
+  handleActualizarConfiguracion: (configuracion: ConfiguracionLiquidacion[]) => void;
 };
 
 export const LiquidacionContext = createContext<LiquidacionContextType | null>(
@@ -59,8 +62,14 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
     loading: loadingVehiculos,
     error: errorQueryVehiculos,
   } = useQuery(OBTENER_VEHICULOS);
+  const {
+    data: configuracionData,
+    loading: loadingConfiguracion,
+    error: errorQueryConfiguracion,
+  } = useQuery(OBTENER_CONFIGURACION_LIQUIDACION);
   const [crearLiquidacion] = useMutation(CREAR_LIQUIDACION);
   const [editarLiquidacion] = useMutation(EDITAR_LIQUIDACION);
+  const [actualizarConfiguracion] = useMutation(ACTUALIZAR_CONFIGURACION);
 
   // Función para obtener liquidaciones y hacer dispatch, optimizado con useCallback para evitar recrear la función en cada renderizado.
   const obtenerLiquidaciones = useCallback(() => {
@@ -181,6 +190,47 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
     [editarLiquidacion, dispatch]
   );
 
+
+  const obtenerConfiguracion = useCallback(() => {
+    if (!loadingConfiguracion && configuracionData.configuracionesLiquidador) {
+      dispatch({
+        type: "SET_CONFIGURACION",
+        payload: configuracionData.configuracionesLiquidador,
+      });
+    }
+  }, [configuracionData, loadingConfiguracion, dispatch]);
+  
+  const handleActualizarConfiguracion = async (configuraciones: ConfiguracionLiquidacion[]) => {
+    let errorCounter = 0; // Contador de errores
+  
+    for (const config of configuraciones) {
+      try {
+        await actualizarConfiguracion({
+          variables: {
+            id: config.id, // Asegúrate de pasar el ID de la configuración
+            input: {
+              nombre: config.nombre,
+              valor: config.valor,
+            },
+          },
+        });
+      } catch (error) {
+        console.error(`Error al actualizar la configuración ${config.nombre}:`, error);
+        errorCounter++; // Incrementa el contador de errores si ocurre alguno
+      }
+    }
+  
+    // Si no hubo errores, ejecuta el dispatch
+    if (errorCounter === 0) {
+      dispatch({
+        type: "UPDATE_CONFIGURACION",
+        payload: configuraciones, // Pasa las configuraciones actualizadas como payload
+      });
+    } else {
+      console.error("Algunas configuraciones no se pudieron actualizar.");
+    }
+  };
+
   const handleApolloError = (error: ApolloError) => {
     if (error.networkError) {
       console.error("Error de red:", error.networkError);
@@ -224,6 +274,13 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
     }
   }, [vehiculosData, obtenerConductores]);
 
+  // Efecto para obtener la configuración cuando los datos están listos
+  useEffect(() => {
+    if (configuracionData) {
+      obtenerConfiguracion();
+    }
+  }, [configuracionData, obtenerConfiguracion]);
+
   if (errorQueryLiquidaciones) {
     console.error("Error obteniendo liquidaciones:", errorQueryLiquidaciones);
   }
@@ -236,6 +293,10 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
     console.error("Error obteniendo vehiculos:", errorQueryVehiculos);
   }
 
+  if (errorQueryConductores) {
+    console.error("Error obteniendo la configuración:", errorQueryConfiguracion);
+  }
+
   return (
     <LiquidacionContext.Provider
       value={{
@@ -246,6 +307,7 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
         loadingConductores,
         submitLiquidacion,
         setLiquidacion,
+        handleActualizarConfiguracion
       }}
     >
       {children}
