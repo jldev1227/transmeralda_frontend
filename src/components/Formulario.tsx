@@ -155,7 +155,7 @@ export default function Formulario() {
                         mes,
                         quantity: 0,
                       })),
-                      value: 13000,
+                      value: state?.configuracion?.find(config => config.nombre === 'Bono día trabajado')?.valor || 0,
                     },
                     {
                       name: "Bono día trabajado doble",
@@ -163,7 +163,7 @@ export default function Formulario() {
                         mes,
                         quantity: 0,
                       })),
-                      value: 25000,
+                      value: state?.configuracion?.find(config => config.nombre === 'Bono día trabajado doble')?.valor || 0,
                     },
                   ],
             pernotes: pernotesDelVehiculo.map((pernote) => ({
@@ -224,7 +224,7 @@ export default function Formulario() {
               ...detalleExistente,
               bonos: detalleExistente.bonos.map((bono) => ({
                 ...bono,
-                value: state?.configuracion?.find(config => config.nombre === 'Bono de alimentación')?.valor || 0,
+                value: state?.configuracion?.find(config => config.nombre === bono.name)?.valor || 0,
                 values: mesesRange.map((mes) => {
                   const bonoExistente = bono.values.find(
                     (val) => val.mes === mes
@@ -254,7 +254,7 @@ export default function Formulario() {
                   mes: mes,
                   quantity: 0,
                 })),
-                value: 13000,
+                value: state?.configuracion?.find(config => config.nombre === 'Bono día trabajado')?.valor || 0,
               },
               {
                 name: "Bono día trabajado doble",
@@ -262,7 +262,7 @@ export default function Formulario() {
                   mes: mes,
                   quantity: 0,
                 })),
-                value: 25000,
+                value: state?.configuracion?.find(config => config.nombre === 'Bono día trabajado doble')?.valor || 0,
               },
             ],
             pernotes: [],
