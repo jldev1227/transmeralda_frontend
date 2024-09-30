@@ -74,7 +74,7 @@ export default function LiquidacionesList() {
       {isMobile ? (
         // Acordeón para dispositivos móviles
         <Accordion variant="splitted">
-          {items.map((item, index) => (
+          {state.liquidaciones.map((item, index) => (
             <AccordionItem
               key={item.id || `liquidacion-${index}`} // Agregamos el textValue para mejorar la accesibilidad
               textValue={`${item.conductor?.nombre} ${item.conductor?.apellido} - ${item.conductor?.cc}`}
