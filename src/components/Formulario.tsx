@@ -11,7 +11,6 @@ import { Divider } from "@nextui-org/divider";
 import { Checkbox } from "@nextui-org/checkbox";
 import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/card";
 import { Button } from "@nextui-org/button";
-import { empresas } from "@/data/index";
 import { useMemo, useState, useCallback, useEffect } from "react";
 import {
   formatToCOP,
@@ -29,6 +28,7 @@ import {
   VehiculoOption,
   Conductor,
   Vehiculo,
+  Empresa,
 } from "@/types/index";
 import useLiquidacion from "@/hooks/useLiquidacion";
 import { parseDate } from "@internationalized/date";
@@ -76,11 +76,11 @@ export default function Formulario() {
 
   const empresasOptions = useMemo(
     () =>
-      empresas.map((empresa) => ({
+      state.empresas.map((empresa) => ({
         value: empresa.NIT,
         label: empresa.Nombre,
       })),
-    []
+    [state.empresas]
   );
 
   useEffect(() => {
@@ -169,6 +169,7 @@ export default function Formulario() {
             pernotes: pernotesDelVehiculo.map((pernote) => ({
               ...pernote,
               fechas: pernote.fechas || [],
+              valor: state?.configuracion?.find(config => config.nombre === 'Pernote')?.valor || 0,
             })),
             recargos: recargosDelVehiculo.map((recargo) => ({
               ...recargo,
@@ -501,11 +502,11 @@ export default function Formulario() {
         const pernotes = item.pernotes.reduce(
           (total, pernote) => {
             const configPernote = state.configuracion?.find(config => config.nombre == 'Pernote')
-
-            return total + (configPernote?.valor || 0 * pernote.cantidad)
+            return total + ((configPernote?.valor || 0) * pernote.cantidad)
           }, // Puedes ajustar el valor de pernote si es una constante
           0
         );
+        
         const recargos = item.recargos.reduce(
           (total, recargo) => total + recargo.valor,
           0
@@ -1129,11 +1130,11 @@ export default function Formulario() {
                   dateSelected={dateSelected}
                 />
                 {detallesVehiculos?.map((detalle, index) => (
-                  <CardLiquidacion key={index} detalleVehiculo={detalle} />
+                  <CardLiquidacion key={index} detalleVehiculo={detalle} empresas={state.empresas} />
                 ))}
               </>
             )}
-          {detallesVehiculos.length > 0 && dateSelected && state.vehiculos && (
+          {conductorSelected && detallesVehiculos.length > 0 && dateSelected && state.vehiculos && (
             <Card className="max-h-full">
               <CardHeader>
                 <p className="text-xl font-semibold">Resumen</p>
@@ -1376,9 +1377,10 @@ const ListSection = <T,>({ title, items, formatFn }: ListSectionProps<T>) => (
 
 interface CardLiquidacionProps {
   detalleVehiculo: DetalleVehiculo;
+  empresas: Empresa[]; // Añadimos las empresas como prop
 }
 
-const CardLiquidacion = ({ detalleVehiculo }: CardLiquidacionProps) => {
+const CardLiquidacion = ({ detalleVehiculo, empresas  }: CardLiquidacionProps) => {
   const totalBonos = useMemo(
     () =>
       detalleVehiculo.bonos.reduce(

@@ -28,6 +28,10 @@ export default function DefaultLayout() {
       name: "Liquidaciones",
       href: "/liquidaciones",
     },
+    {
+      name: "Empresas",
+      href: "/empresas",
+    },
   ];
 
   return (
@@ -44,11 +48,13 @@ export default function DefaultLayout() {
         </NavbarContent>
 
         <NavbarContent className="hidden sm:flex gap-4" justify="center">
-          <NavbarItem>
-            <Link color="foreground" href="/liquidaciones">
-              Liquidaciones
-            </Link>
-          </NavbarItem>
+          {menuItems.map(link => (
+            <NavbarItem key={link.name}>
+              <Link color="foreground" href={link.href}>
+                {link.name}
+              </Link>
+            </NavbarItem>
+          ))}
         </NavbarContent>
         <NavbarContent justify="end">
           <NavbarItem className="sm:hidden">Hola! {state.usuario?.nombre}</NavbarItem>

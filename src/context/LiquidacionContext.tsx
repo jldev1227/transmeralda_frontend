@@ -23,6 +23,7 @@ import { OBTENER_CONDUCTORES } from "@/graphql/conductor";
 import { OBTENER_VEHICULOS } from "@/graphql/vehiculo";
 import { OBTENER_CONFIGURACION_LIQUIDACION } from "@/graphql/configuracionLiquidacion";
 import { ACTUALIZAR_CONFIGURACION } from "@/graphql/configuracionLiquidacion"; // Asegúrate de la ruta correcta
+import { OBTERNER_EMPRESAS } from "@/graphql/empresa";
 
 type LiquidacionContextType = {
   state: LiquidacionState;
@@ -63,6 +64,11 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
     error: errorQueryVehiculos,
   } = useQuery(OBTENER_VEHICULOS);
   const {
+    data: empresasData,
+    loading: loadingEmpresas,
+    error: errorQueryEmpresas,
+  } = useQuery(OBTERNER_EMPRESAS);
+  const {
     data: configuracionData,
     loading: loadingConfiguracion,
     error: errorQueryConfiguracion,
@@ -98,6 +104,15 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
       });
     }
   }, [vehiculosData, loadingVehiculos, dispatch]);
+
+  const obtenerEmpresas = useCallback(() => {
+    if (!loadingEmpresas && empresasData.obtenerEmpresas) {
+      dispatch({
+        type: "SET_EMPRESAS",
+        payload: empresasData.obtenerEmpresas,
+      });
+    }
+  }, [empresasData, loadingEmpresas, dispatch]);
 
   const submitLiquidacion = async (liquidacion: LiquidacionInput) => {
     try {
@@ -190,7 +205,6 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
     [editarLiquidacion, dispatch]
   );
 
-
   const obtenerConfiguracion = useCallback(() => {
     if (!loadingConfiguracion && configuracionData.configuracionesLiquidador) {
       dispatch({
@@ -272,7 +286,14 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
     if (vehiculosData) {
       obtenerVehiculos();
     }
-  }, [vehiculosData, obtenerConductores]);
+  }, [vehiculosData, obtenerVehiculos]);
+
+  // Efecto para obtener los empresas cuando los datos están listos
+  useEffect(() => {
+    if (empresasData) {
+      obtenerEmpresas();
+    }
+  }, [empresasData, obtenerEmpresas]);
 
   // Efecto para obtener la configuración cuando los datos están listos
   useEffect(() => {
@@ -289,11 +310,15 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
     console.error("Error obteniendo conductores:", errorQueryConductores);
   }
 
-  if (errorQueryConductores) {
+  if (errorQueryVehiculos) {
     console.error("Error obteniendo vehiculos:", errorQueryVehiculos);
   }
 
-  if (errorQueryConductores) {
+  if (errorQueryEmpresas) {
+    console.error("Error obteniendo las empresas:", errorQueryEmpresas);
+  }
+
+  if (errorQueryConfiguracion) {
     console.error("Error obteniendo la configuración:", errorQueryConfiguracion);
   }
 
