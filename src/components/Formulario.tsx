@@ -11,7 +11,6 @@ import { Divider } from "@nextui-org/divider";
 import { Checkbox } from "@nextui-org/checkbox";
 import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/card";
 import { Button } from "@nextui-org/button";
-import { empresas } from "@/data/index";
 import { useMemo, useState, useCallback, useEffect } from "react";
 import {
   formatToCOP,
@@ -29,6 +28,7 @@ import {
   VehiculoOption,
   Conductor,
   Vehiculo,
+  Empresa,
 } from "@/types/index";
 import useLiquidacion from "@/hooks/useLiquidacion";
 import { parseDate } from "@internationalized/date";
@@ -76,11 +76,11 @@ export default function Formulario() {
 
   const empresasOptions = useMemo(
     () =>
-      empresas.map((empresa) => ({
+      state.empresas.map((empresa) => ({
         value: empresa.NIT,
         label: empresa.Nombre,
       })),
-    []
+    [state.empresas]
   );
 
   useEffect(() => {
@@ -1129,7 +1129,7 @@ export default function Formulario() {
                   dateSelected={dateSelected}
                 />
                 {detallesVehiculos?.map((detalle, index) => (
-                  <CardLiquidacion key={index} detalleVehiculo={detalle} />
+                  <CardLiquidacion key={index} detalleVehiculo={detalle} empresas={state.empresas} />
                 ))}
               </>
             )}
@@ -1376,9 +1376,10 @@ const ListSection = <T,>({ title, items, formatFn }: ListSectionProps<T>) => (
 
 interface CardLiquidacionProps {
   detalleVehiculo: DetalleVehiculo;
+  empresas: Empresa[]; // Añadimos las empresas como prop
 }
 
-const CardLiquidacion = ({ detalleVehiculo }: CardLiquidacionProps) => {
+const CardLiquidacion = ({ detalleVehiculo, empresas  }: CardLiquidacionProps) => {
   const totalBonos = useMemo(
     () =>
       detalleVehiculo.bonos.reduce(

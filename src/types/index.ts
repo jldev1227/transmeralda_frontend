@@ -83,6 +83,13 @@ export type Vehiculo = {
   __typename?: string;
 };
 
+export type Empresa = {
+  id: string,
+  NIT: string,
+  Nombre: string,
+  __typename?: string;
+};
+
 // Detalles del vehículo, incluyendo Bonificaciones, Pernotes y Recargos
 export type DetalleVehiculo = {
   vehiculo: VehiculoOption;

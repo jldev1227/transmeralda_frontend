@@ -9,6 +9,7 @@ import AuthLayout from "./layouts/authLayout";
 import ProtectedRoutes from "./layouts/ProtectedLayout"; // Asume que tienes un layout para rutas protegidas
 import Liquidador from "./pages/liquidador";
 import DefaultLayout from "./layouts/default";
+import Empresas from "./pages/empresas";
 
 function App() {
   return (
@@ -24,7 +25,7 @@ function App() {
             {/* Envuelve todas las rutas protegidas en DefaultLayout */}
             <Route element={<DefaultLayout />}>
               {/* Ruta para Dashboard */}
-              {/* <Route path="dashboard" element={<Dashboard />} /> */}
+              <Route path="empresas" element={<Empresas />} />
 
               {/* Ruta para Liquidaciones con LiquidacionProvider */}
               <Route
