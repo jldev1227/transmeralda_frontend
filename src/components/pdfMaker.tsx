@@ -167,12 +167,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
           <View style={[styles.cardRow, { borderBottom: 0 }]}>
             <Text style={styles.label}>Ajuste villanueva</Text>
             <Text>
-              {item?.diasLaboradosVillanueva
-                ? item.diasLaboradosVillanueva >= 17
-                  ? 30
-                  : item?.diasLaboradosVillanueva
-                : 0}{" "}
-              días
+              {item?.diasLaboradosVillanueva}{' '}días
             </Text>
             <Text
               style={[
