@@ -169,6 +169,7 @@ export default function Formulario() {
             pernotes: pernotesDelVehiculo.map((pernote) => ({
               ...pernote,
               fechas: pernote.fechas || [],
+              valor: state?.configuracion?.find(config => config.nombre === 'Pernote')?.valor || 0,
             })),
             recargos: recargosDelVehiculo.map((recargo) => ({
               ...recargo,
@@ -501,11 +502,11 @@ export default function Formulario() {
         const pernotes = item.pernotes.reduce(
           (total, pernote) => {
             const configPernote = state.configuracion?.find(config => config.nombre == 'Pernote')
-
-            return total + (configPernote?.valor || 0 * pernote.cantidad)
+            return total + ((configPernote?.valor || 0) * pernote.cantidad)
           }, // Puedes ajustar el valor de pernote si es una constante
           0
         );
+        
         const recargos = item.recargos.reduce(
           (total, recargo) => total + recargo.valor,
           0
@@ -1133,7 +1134,7 @@ export default function Formulario() {
                 ))}
               </>
             )}
-          {detallesVehiculos.length > 0 && dateSelected && state.vehiculos && (
+          {conductorSelected && detallesVehiculos.length > 0 && dateSelected && state.vehiculos && (
             <Card className="max-h-full">
               <CardHeader>
                 <p className="text-xl font-semibold">Resumen</p>

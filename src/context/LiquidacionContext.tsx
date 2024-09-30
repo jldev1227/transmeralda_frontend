@@ -107,7 +107,6 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
 
   const obtenerEmpresas = useCallback(() => {
     if (!loadingEmpresas && empresasData.obtenerEmpresas) {
-      
       dispatch({
         type: "SET_EMPRESAS",
         payload: empresasData.obtenerEmpresas,
@@ -205,7 +204,6 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
     },
     [editarLiquidacion, dispatch]
   );
-
 
   const obtenerConfiguracion = useCallback(() => {
     if (!loadingConfiguracion && configuracionData.configuracionesLiquidador) {
@@ -317,6 +315,10 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
   }
 
   if (errorQueryEmpresas) {
+    console.error("Error obteniendo las empresas:", errorQueryEmpresas);
+  }
+
+  if (errorQueryConfiguracion) {
     console.error("Error obteniendo la configuración:", errorQueryConfiguracion);
   }
 
