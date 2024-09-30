@@ -147,7 +147,10 @@ export default function Formulario() {
                         mes,
                         quantity: 0,
                       })),
-                      value: state?.configuracion?.find(config => config.nombre === 'Bono de alimentación')?.valor || 0,
+                      value:
+                        state?.configuracion?.find(
+                          (config) => config.nombre === "Bono de alimentación"
+                        )?.valor || 0,
                     },
                     {
                       name: "Bono día trabajado",
@@ -155,7 +158,10 @@ export default function Formulario() {
                         mes,
                         quantity: 0,
                       })),
-                      value: state?.configuracion?.find(config => config.nombre === 'Bono día trabajado')?.valor || 0,
+                      value:
+                        state?.configuracion?.find(
+                          (config) => config.nombre === "Bono día trabajado"
+                        )?.valor || 0,
                     },
                     {
                       name: "Bono día trabajado doble",
@@ -163,13 +169,20 @@ export default function Formulario() {
                         mes,
                         quantity: 0,
                       })),
-                      value: state?.configuracion?.find(config => config.nombre === 'Bono día trabajado doble')?.valor || 0,
+                      value:
+                        state?.configuracion?.find(
+                          (config) =>
+                            config.nombre === "Bono día trabajado doble"
+                        )?.valor || 0,
                     },
                   ],
             pernotes: pernotesDelVehiculo.map((pernote) => ({
               ...pernote,
               fechas: pernote.fechas || [],
-              valor: state?.configuracion?.find(config => config.nombre === 'Pernote')?.valor || 0,
+              valor:
+                state?.configuracion?.find(
+                  (config) => config.nombre === "Pernote"
+                )?.valor || 0,
             })),
             recargos: recargosDelVehiculo.map((recargo) => ({
               ...recargo,
@@ -225,13 +238,23 @@ export default function Formulario() {
               ...detalleExistente,
               bonos: detalleExistente.bonos.map((bono) => ({
                 ...bono,
-                value: state?.configuracion?.find(config => config.nombre === bono.name)?.valor || 0,
+                value:
+                  state?.configuracion?.find(
+                    (config) => config.nombre === bono.name
+                  )?.valor || 0,
                 values: mesesRange.map((mes) => {
                   const bonoExistente = bono.values.find(
                     (val) => val.mes === mes
                   );
                   return bonoExistente || { mes, quantity: 0 }; // Mantener el quantity si el mes ya existe
                 }),
+              })),
+              pernotes: detalleExistente.pernotes.map((pernote) => ({
+                ...pernote,
+                valor:
+                  state?.configuracion?.find(
+                    (config) => config.nombre === "Pernote"
+                  )?.valor || 0,
               })),
             };
           }
@@ -246,7 +269,10 @@ export default function Formulario() {
                   mes: mes,
                   quantity: 0,
                 })),
-                value: state?.configuracion?.find(config => config.nombre === 'Bono de alimentación')?.valor || 0,
+                value:
+                  state?.configuracion?.find(
+                    (config) => config.nombre === "Bono de alimentación"
+                  )?.valor || 0,
                 vehiculoId: vehiculo?.value,
               },
               {
@@ -255,7 +281,10 @@ export default function Formulario() {
                   mes: mes,
                   quantity: 0,
                 })),
-                value: state?.configuracion?.find(config => config.nombre === 'Bono día trabajado')?.valor || 0,
+                value:
+                  state?.configuracion?.find(
+                    (config) => config.nombre === "Bono día trabajado"
+                  )?.valor || 0,
               },
               {
                 name: "Bono día trabajado doble",
@@ -263,7 +292,10 @@ export default function Formulario() {
                   mes: mes,
                   quantity: 0,
                 })),
-                value: state?.configuracion?.find(config => config.nombre === 'Bono día trabajado doble')?.valor || 0,
+                value:
+                  state?.configuracion?.find(
+                    (config) => config.nombre === "Bono día trabajado doble"
+                  )?.valor || 0,
               },
             ],
             pernotes: [],
@@ -279,7 +311,13 @@ export default function Formulario() {
         setDetallesVehiculos(nuevosDetalles);
       }
     }
-  }, [vehiculosSelected, mesesRange, detallesVehiculos, dateSelected, state?.configuracion]);
+  }, [
+    vehiculosSelected,
+    mesesRange,
+    detallesVehiculos,
+    dateSelected,
+    state?.configuracion,
+  ]);
 
   // Manejadores de eventos
   const handleVehiculoSelect = useCallback(
@@ -337,9 +375,7 @@ export default function Formulario() {
             ? {
                 ...detalle,
                 pernotes: detalle.pernotes.map((pernote, i) =>
-                  i === index
-                    ? { ...pernote, [field]: value, valor: state?.configuracion?.find(config => config.nombre === 'Pernote')?.valor || 0 }
-                    : pernote
+                  i === index ? { ...pernote, [field]: value } : pernote
                 ),
               }
             : detalle
@@ -381,21 +417,31 @@ export default function Formulario() {
     []
   );
 
-  const handleAddPernote = useCallback((vehiculoId: string) => {
-    setDetallesVehiculos((prevDetalles: any) =>
-      prevDetalles.map((detalle: any) =>
-        detalle.vehiculo.value === vehiculoId
-          ? {
-              ...detalle,
-              pernotes: [
-                ...detalle.pernotes,
-                { empresa: "", cantidad: 0, fechas: [] },
-              ],
-            }
-          : detalle
-      )
-    );
-  }, []);
+  const handleAddPernote = useCallback(
+    (vehiculoId: string) => {
+      setDetallesVehiculos((prevDetalles: any) =>
+        prevDetalles.map((detalle: any) =>
+          detalle.vehiculo.value === vehiculoId
+            ? {
+                ...detalle,
+                pernotes: [
+                  ...detalle.pernotes,
+                  {
+                    empresa: "",
+                    cantidad: 0,
+                    fechas: [],
+                    valor: state?.configuracion?.find(
+                      (config) => config.nombre === "Pernote"
+                    )?.valor,
+                  },
+                ],
+              }
+            : detalle
+        )
+      );
+    },
+    [state.configuracion]
+  );
 
   const handleAddRecargo = useCallback((vehiculoId: string) => {
     setDetallesVehiculos((prevDetalles: any) =>
@@ -458,7 +504,6 @@ export default function Formulario() {
   };
 
   const bonificacionVillanueva = useMemo(() => {
-
     if (diasLaboradosVillanueva > diasLaborados) {
       // Lanza el alert si diasLaboradosVillanueva es mayor que diasLaborados
       setDiasLaboradosVillanueva(0);
@@ -472,12 +517,20 @@ export default function Formulario() {
       return conductor
         ? diasLaboradosVillanueva >= 17
           ? 2101498 - conductor.salarioBase
-          : (state.configuracion?.find(config => config.nombre == 'Ajuste villanueva')?.valor || 0) * diasLaboradosVillanueva
+          : (state.configuracion?.find(
+              (config) => config.nombre == "Ajuste villanueva"
+            )?.valor || 0) * diasLaboradosVillanueva
         : 0;
     }
 
     return 0;
-  }, [isCheckedAjuste, liquidacion, diasLaborados, diasLaboradosVillanueva, state.configuracion]);
+  }, [
+    isCheckedAjuste,
+    liquidacion,
+    diasLaborados,
+    diasLaboradosVillanueva,
+    state.configuracion,
+  ]);
 
   const {
     auxilioTransporte,
@@ -501,12 +554,11 @@ export default function Formulario() {
 
         const pernotes = item.pernotes.reduce(
           (total, pernote) => {
-            const configPernote = state.configuracion?.find(config => config.nombre == 'Pernote')
-            return total + ((configPernote?.valor || 0) * pernote.cantidad)
+            return total + pernote.valor * pernote.cantidad;
           }, // Puedes ajustar el valor de pernote si es una constante
           0
         );
-        
+
         const recargos = item.recargos.reduce(
           (total, recargo) => total + recargo.valor,
           0
@@ -535,7 +587,12 @@ export default function Formulario() {
 
     const salarioDevengado = (salarioBaseConductor / 30) * diasLaborados;
 
-    const auxilioTransporte = (state?.configuracion?.find(config => config.nombre === 'Auxilio de transporte')?.valor || 0) / 30 * diasLaborados; 
+    const auxilioTransporte =
+      ((state?.configuracion?.find(
+        (config) => config.nombre === "Auxilio de transporte"
+      )?.valor || 0) /
+        30) *
+      diasLaborados;
     return {
       auxilioTransporte,
       salarioBaseConductor,
@@ -770,346 +827,327 @@ export default function Formulario() {
                 {conductorSelected &&
                   vehiculosSelected &&
                   dateSelected &&
-                  detallesVehiculos?.map((detalleVehiculo, index) => (
-                    <div key={index}>
-                      <Card className="space-y-5 flex flex-col p-6">
-                        <h2 className="text-xl font-semibold mb-3">
-                          Vehículo: <b>{detalleVehiculo.vehiculo.label}</b>
-                        </h2>
-                        <h3 className="font-semibold text-xl mb-2">
-                          Bonificaciones
-                        </h3>
-                        {detalleVehiculo.bonos.map((bono, index) => (
-                          <div
-                            key={index}
-                            className="flex flex-col md:flex-row md:justify-between md:items-center gap-5 shadow-md rounded-xl px-5 py-4 md:py-2"
-                          >
-                            <p className="flex-1 font-semibold">{bono.name}</p>
-                            {mesesRange.map((mes) => {
-                              // Buscar el valor correspondiente al mes dentro de los valores del bono
-                              const bonoMes = bono.values.find(
-                                (val) => val.mes === mes
-                              );
+                  detallesVehiculos?.map((detalleVehiculo) => (
+                    <Card
+                      key={detalleVehiculo.vehiculo.value}
+                      className="space-y-5 flex flex-col p-6"
+                    >
+                      <h2 className="text-xl font-semibold mb-3">
+                        Vehículo: <b>{detalleVehiculo.vehiculo.label}</b>
+                      </h2>
+                      <h3 className="font-semibold text-xl mb-2">
+                        Bonificaciones
+                      </h3>
+                      {detalleVehiculo.bonos.map((bono) => (
+                        <div
+                          key={bono.name} // Usa 'name' como clave, o cualquier identificador único
+                          className="flex flex-col md:flex-row md:justify-between md:items-center gap-5 shadow-md rounded-xl px-5 py-4 md:py-2"
+                        >
+                          <p className="flex-1 font-semibold">{bono.name}</p>
+                          {mesesRange.map((mes) => {
+                            const bonoMes = bono.values.find(
+                              (val) => val.mes === mes
+                            );
 
-                              return (
-                                <Input
-                                  key={mes}
-                                  type="number"
-                                  label={mes}
-                                  className="md:w-24"
-                                  placeholder={`Ingresa la cantidad de ${bono.name.toLowerCase()}`}
-                                  value={
-                                    bonoMes ? bonoMes.quantity.toString() : "0"
-                                  }
-                                  onChange={(e) =>
-                                    handleBonoChange(
-                                      detalleVehiculo.vehiculo.value,
-                                      bono.name,
-                                      mes,
-                                      +e.target.value
-                                    )
-                                  }
-                                />
-                              );
-                            })}
-                          </div>
-                        ))}
-                        <Divider />
-                        <h3 className="font-semibold text-xl mb-2">Pernotes</h3>
-                        {detalleVehiculo.pernotes?.map(
-                          (pernote, pernoteIndex) => (
-                            <div
-                              key={pernoteIndex}
-                              className="grid sm:grid-cols-5 gap-4"
-                            >
-                              {/* Select para la empresa */}
-                              <SelectReact
-                                options={empresasOptions}
+                            return (
+                              <Input
+                                key={mes} // 'mes' debería ser único aquí
+                                type="number"
+                                label={mes}
+                                className="md:w-24"
+                                placeholder={`Ingresa la cantidad de ${bono.name.toLowerCase()}`}
                                 value={
-                                  empresasOptions.find(
-                                    (option) => option.value === pernote.empresa
-                                  ) || null
+                                  bonoMes ? bonoMes.quantity.toString() : "0"
                                 }
-                                onChange={(selectedOption) =>
-                                  handlePernoteChange(
+                                onChange={(e) =>
+                                  handleBonoChange(
                                     detalleVehiculo.vehiculo.value,
-                                    pernoteIndex,
-                                    "empresa",
-                                    selectedOption?.value || ""
+                                    bono.name,
+                                    mes,
+                                    +e.target.value
                                   )
                                 }
-                                placeholder="Selecciona una empresa"
-                                isSearchable
-                                styles={customStyles}
-                                className="col-span-3"
                               />
+                            );
+                          })}
+                        </div>
+                      ))}
+                      <Divider />
+                      <h3 className="font-semibold text-xl mb-2">Pernotes</h3>
+                      {detalleVehiculo.pernotes?.map(
+                        (pernote, pernoteIndex) => (
+                          <div
+                            key={`${pernote.empresa}-${pernoteIndex}`} // Combina la empresa y el índice para asegurarte de tener una clave única
+                            className="grid sm:grid-cols-5 gap-4"
+                          >
+                            <SelectReact
+                              options={empresasOptions}
+                              value={
+                                empresasOptions.find(
+                                  (option) => option.value === pernote.empresa
+                                ) || null
+                              }
+                              onChange={(selectedOption) =>
+                                handlePernoteChange(
+                                  detalleVehiculo.vehiculo.value,
+                                  pernoteIndex,
+                                  "empresa",
+                                  selectedOption?.value || ""
+                                )
+                              }
+                              placeholder="Selecciona una empresa"
+                              isSearchable
+                              styles={customStyles}
+                              className="col-span-3"
+                            />
 
-                              {/* Input de cantidad fuera del map de DatePickers */}
-                              <Input
-                                type="number"
-                                label="Cantidad"
-                                placeholder="0"
-                                className="col-span-2"
-                                value={pernote.cantidad.toString()}
-                                onChange={(e) => {
-                                  const newCantidad = +e.target.value;
+                            <Input
+                              type="number"
+                              label="Cantidad"
+                              placeholder="0"
+                              className="col-span-2"
+                              value={pernote.cantidad.toString()}
+                              onChange={(e) => {
+                                const newCantidad = +e.target.value;
+                                let newFechas = [...pernote.fechas];
+                                if (newCantidad > pernote.fechas.length) {
+                                  newFechas = [
+                                    ...newFechas,
+                                    ...Array(
+                                      newCantidad - pernote.fechas.length
+                                    ).fill(null),
+                                  ];
+                                } else if (
+                                  newCantidad < pernote.fechas.length
+                                ) {
+                                  newFechas = newFechas.slice(0, newCantidad);
+                                }
+                                handlePernoteChange(
+                                  detalleVehiculo.vehiculo.value,
+                                  pernoteIndex,
+                                  "fechas",
+                                  newFechas
+                                );
+                                handlePernoteChange(
+                                  detalleVehiculo.vehiculo.value,
+                                  pernoteIndex,
+                                  "cantidad",
+                                  newCantidad
+                                );
+                              }}
+                            />
 
-                                  // Mantener las fechas existentes
-                                  let newFechas = [...pernote.fechas];
-
-                                  if (newCantidad > pernote.fechas.length) {
-                                    // Si el nuevo valor de cantidad es mayor, añadir fechas vacías
-                                    newFechas = [
-                                      ...newFechas,
-                                      ...Array(
-                                        newCantidad - pernote.fechas.length
-                                      ).fill(null),
-                                    ];
-                                  } else if (
-                                    newCantidad < pernote.fechas.length
-                                  ) {
-                                    // Si el nuevo valor de cantidad es menor, cortar el array de fechas
-                                    newFechas = newFechas.slice(0, newCantidad);
+                            {pernote.fechas?.map((fecha, dateIndex) => (
+                              <DatePicker
+                                key={`${pernote.empresa}-${dateIndex}`} // Combina la empresa y el índice para asegurar una clave única
+                                label={`Fecha ${dateIndex + 1}`}
+                                className="col-span-5"
+                                value={fecha ? parseDate(fecha) : null}
+                                onChange={(newDate: DateValue | null) => {
+                                  if (newDate) {
+                                    const jsDate = new Date(
+                                      newDate.year,
+                                      newDate.month - 1,
+                                      newDate.day
+                                    );
+                                    const startDate = new Date(
+                                      dateSelected.start.year,
+                                      dateSelected.start.month - 1,
+                                      dateSelected.start.day
+                                    );
+                                    const endDate = new Date(
+                                      dateSelected.end.year,
+                                      dateSelected.end.month - 1,
+                                      dateSelected.end.day
+                                    );
+                                    if (
+                                      jsDate >= startDate &&
+                                      jsDate <= endDate
+                                    ) {
+                                      const newFecha = dateToDateValue(jsDate);
+                                      const newFechas = [...pernote.fechas];
+                                      newFechas[dateIndex] = newFecha;
+                                      handlePernoteChange(
+                                        detalleVehiculo.vehiculo.value,
+                                        pernoteIndex,
+                                        "fechas",
+                                        newFechas
+                                      );
+                                    } else {
+                                      alert(
+                                        "La fecha seleccionada no está dentro del rango permitido"
+                                      );
+                                      const newFechas = [...pernote.fechas];
+                                      newFechas[dateIndex] = "";
+                                      handlePernoteChange(
+                                        detalleVehiculo.vehiculo.value,
+                                        pernoteIndex,
+                                        "fechas",
+                                        newFechas
+                                      );
+                                    }
                                   }
-
-                                  // Actualizar el array de fechas junto con la cantidad
-                                  handlePernoteChange(
-                                    detalleVehiculo.vehiculo.value,
-                                    pernoteIndex,
-                                    "fechas",
-                                    newFechas
-                                  );
-
-                                  handlePernoteChange(
-                                    detalleVehiculo.vehiculo.value,
-                                    pernoteIndex,
-                                    "cantidad",
-                                    newCantidad
-                                  );
                                 }}
                               />
+                            ))}
 
-                              {/* Generar tantos DatePickers como el valor de pernote.cantidad */}
-                              {pernote.fechas?.map((fecha, dateIndex) => (
-                                <DatePicker
-                                  key={dateIndex} // Añadir una key para cada DatePicker
-                                  label={`Fecha ${dateIndex + 1}`}
-                                  className="col-span-5"
-                                  value={fecha ? parseDate(fecha) : null}
-                                  onChange={(newDate: DateValue | null) => {
-                                    if (newDate) {
-                                      const jsDate = new Date(
-                                        newDate.year,
-                                        newDate.month - 1,
-                                        newDate.day
-                                      );
+                            <Button
+                              onClick={() =>
+                                handleRemovePernote(
+                                  detalleVehiculo.vehiculo.value,
+                                  pernoteIndex
+                                )
+                              }
+                              className="w-full col-span-5 bg-red-600 text-white"
+                            >
+                              X
+                            </Button>
+                          </div>
+                        )
+                      )}
 
-                                      const startDate = new Date(
-                                        dateSelected.start.year,
-                                        dateSelected.start.month - 1,
-                                        dateSelected.start.day
-                                      );
-                                      const endDate = new Date(
-                                        dateSelected.end.year,
-                                        dateSelected.end.month - 1,
-                                        dateSelected.end.day
-                                      );
+                      <Button
+                        onClick={() =>
+                          handleAddPernote(detalleVehiculo.vehiculo.value)
+                        }
+                        className="w-full col-span-6 bg-primary-700 text-white"
+                      >
+                        Añadir pernote
+                      </Button>
 
-                                      if (
-                                        jsDate >= startDate &&
-                                        jsDate <= endDate
-                                      ) {
-                                        const newFecha =
-                                          dateToDateValue(jsDate);
-                                        const newFechas = [...pernote.fechas];
-                                        newFechas[dateIndex] = newFecha;
+                      <Divider />
 
-                                        handlePernoteChange(
-                                          detalleVehiculo.vehiculo.value,
-                                          pernoteIndex,
-                                          "fechas",
-                                          newFechas
-                                        );
-                                      } else {
-                                        alert(
-                                          "La fecha seleccionada no está dentro del rango permitido"
-                                        );
-                                        const newFechas = [...pernote.fechas];
-                                        newFechas[dateIndex] = "";
-
-                                        handlePernoteChange(
-                                          detalleVehiculo.vehiculo.value,
-                                          pernoteIndex,
-                                          "fechas",
-                                          newFechas
-                                        );
-                                      }
-                                    }
-                                  }}
-                                />
+                      <h3 className="font-semibold text-xl">Recargos</h3>
+                      {detalleVehiculo.recargos?.map(
+                        (recargo, recargoIndex) => (
+                          <div
+                            key={`${recargo.mes}-${recargo.empresa}-${recargoIndex}`} // Combina mes, empresa, e índice para asegurar clave única
+                            className="grid grid-cols-4 gap-4 items-center"
+                          >
+                            <Select
+                              label="Mes"
+                              className="col-span-4 sm:col-span-1"
+                              defaultSelectedKeys={
+                                recargo.mes ? [recargo.mes] : ""
+                              }
+                              onSelectionChange={(selected) => {
+                                const mes = Array.from(selected)[0];
+                                handleRecargoChange(
+                                  detalleVehiculo.vehiculo.value,
+                                  recargoIndex,
+                                  "mes",
+                                  mes
+                                );
+                              }}
+                            >
+                              {mesesRange?.map((mes) => (
+                                <SelectItem key={mes} value={mes}>
+                                  {mes}
+                                </SelectItem>
                               ))}
+                            </Select>
 
-                              {/* Botón para remover el pernote */}
-                              <Button
-                                onClick={() =>
-                                  handleRemovePernote(
-                                    detalleVehiculo.vehiculo.value,
-                                    pernoteIndex
-                                  )
-                                }
-                                className="w-full col-span-5 bg-red-600 text-white"
-                              >
-                                X
-                              </Button>
-                            </div>
-                          )
-                        )}
+                            <SelectReact
+                              options={empresasOptions}
+                              value={
+                                empresasOptions.find(
+                                  (option) => option.value === recargo.empresa
+                                ) || null
+                              }
+                              onChange={(selectedOption) =>
+                                handleRecargoChange(
+                                  detalleVehiculo.vehiculo.value,
+                                  recargoIndex,
+                                  "empresa",
+                                  selectedOption?.value || ""
+                                )
+                              }
+                              placeholder="Selecciona una empresa"
+                              isSearchable
+                              styles={customStyles}
+                              className="col-span-4 sm:col-span-3"
+                            />
 
-                        <Button
-                          onClick={() =>
-                            handleAddPernote(detalleVehiculo.vehiculo.value)
-                          }
-                          className="w-full col-span-6 bg-primary-700 text-white"
-                        >
-                          Añadir pernote
-                        </Button>
+                            <Input
+                              type="text" // Mantiene el tipo de 'text' para mostrar el formato con símbolos de moneda
+                              label="Paga propietario"
+                              placeholder="$0"
+                              className="col-span-2"
+                              value={
+                                !recargo.pagCliente && recargo.valor !== 0
+                                  ? formatCurrency(recargo.valor)
+                                  : ""
+                              } // Muestra el valor solo cuando pagCliente es false
+                              onChange={(e) => {
+                                const inputVal = e.target.value.replace(
+                                  /[^\d]/g,
+                                  ""
+                                ); // Quitamos caracteres no numéricos
+                                const numericValue = +inputVal; // Convertimos el string limpio a número
 
-                        <Divider />
+                                // Llamamos a handleRecargoChange con pagaCliente como false
+                                handleRecargoChange(
+                                  detalleVehiculo.vehiculo.value,
+                                  recargoIndex,
+                                  "valor",
+                                  numericValue,
+                                  false // Aquí especificamos que pagaCliente es false
+                                );
+                              }}
+                            />
 
-                        <h3 className="font-semibold text-xl">Recargos</h3>
-                        {detalleVehiculo.recargos?.map(
-                          (recargo, recargoIndex) => (
-                            <>
-                              <div
-                                key={recargoIndex}
-                                className="grid grid-cols-4 gap-4 items-center"
-                              >
-                                <Select
-                                  label="Mes"
-                                  className="col-span-4 sm:col-span-1"
-                                  defaultSelectedKeys={
-                                    recargo.mes ? [recargo.mes] : ""
-                                  } // Usamos el mes directamente como clave
-                                  onSelectionChange={(selected) => {
-                                    const mes = Array.from(selected)[0]; // `selected` es un Set, lo convertimos en array para obtener el valor
-                                    handleRecargoChange(
-                                      detalleVehiculo.vehiculo.value,
-                                      recargoIndex,
-                                      "mes",
-                                      mes // Aquí seleccionamos el mes directamente
-                                    );
-                                  }}
-                                >
-                                  {mesesRange?.map((mes) => (
-                                    <SelectItem key={mes} value={mes}>
-                                      {mes}
-                                    </SelectItem>
-                                  ))}
-                                </Select>
+                            <Input
+                              type="text" // Mantiene el tipo de 'text' para mostrar el formato con símbolos de moneda
+                              label="Paga cliente"
+                              placeholder="$0"
+                              className="col-span-2"
+                              value={
+                                recargo.pagCliente && recargo.valor !== 0
+                                  ? formatCurrency(recargo.valor)
+                                  : ""
+                              } // Muestra el valor solo cuando pagCliente es true
+                              onChange={(e) => {
+                                const inputVal = e.target.value.replace(
+                                  /[^\d]/g,
+                                  ""
+                                ); // Quitamos caracteres no numéricos
+                                const numericValue = +inputVal; // Convertimos el string limpio a número
 
-                                <SelectReact
-                                  options={empresasOptions}
-                                  value={
-                                    empresasOptions.find(
-                                      (option) =>
-                                        option.value === recargo.empresa
-                                    ) || null
-                                  }
-                                  onChange={(selectedOption) =>
-                                    handleRecargoChange(
-                                      detalleVehiculo.vehiculo.value,
-                                      recargoIndex,
-                                      "empresa",
-                                      selectedOption?.value || ""
-                                    )
-                                  }
-                                  placeholder="Selecciona una empresa"
-                                  isSearchable
-                                  styles={customStyles}
-                                  className="col-span-4 sm:col-span-3"
-                                />
-                                <Input
-                                  type="text" // Mantiene el tipo de 'text' para mostrar el formato con símbolos de moneda
-                                  label="Paga propietario"
-                                  placeholder="$0"
-                                  className="col-span-2"
-                                  value={
-                                    !recargo.pagCliente && recargo.valor !== 0
-                                      ? formatCurrency(recargo.valor)
-                                      : ""
-                                  } // Muestra el valor solo cuando pagCliente es false
-                                  onChange={(e) => {
-                                    const inputVal = e.target.value.replace(
-                                      /[^\d]/g,
-                                      ""
-                                    ); // Quitamos caracteres no numéricos
-                                    const numericValue = +inputVal; // Convertimos el string limpio a número
+                                // Llamamos a handleRecargoChange con pagaCliente como true
+                                handleRecargoChange(
+                                  detalleVehiculo.vehiculo.value,
+                                  recargoIndex,
+                                  "valor",
+                                  numericValue,
+                                  true // Aquí especificamos que pagaCliente es true
+                                );
+                              }}
+                            />
 
-                                    // Llamamos a handleRecargoChange con pagaCliente como false
-                                    handleRecargoChange(
-                                      detalleVehiculo.vehiculo.value,
-                                      recargoIndex,
-                                      "valor",
-                                      numericValue,
-                                      false // Aquí especificamos que pagaCliente es false
-                                    );
-                                  }}
-                                />
+                            <Button
+                              onClick={() =>
+                                handleRemoveRecargo(
+                                  detalleVehiculo.vehiculo.value,
+                                  recargoIndex
+                                )
+                              }
+                              className="col-span-4 bg-red-600 text-white"
+                            >
+                              X
+                            </Button>
+                          </div>
+                        )
+                      )}
 
-                                <Input
-                                  type="text" // Mantiene el tipo de 'text' para mostrar el formato con símbolos de moneda
-                                  label="Paga cliente"
-                                  placeholder="$0"
-                                  className="col-span-2"
-                                  value={
-                                    recargo.pagCliente && recargo.valor !== 0
-                                      ? formatCurrency(recargo.valor)
-                                      : ""
-                                  } // Muestra el valor solo cuando pagCliente es true
-                                  onChange={(e) => {
-                                    const inputVal = e.target.value.replace(
-                                      /[^\d]/g,
-                                      ""
-                                    ); // Quitamos caracteres no numéricos
-                                    const numericValue = +inputVal; // Convertimos el string limpio a número
-
-                                    // Llamamos a handleRecargoChange con pagaCliente como true
-                                    handleRecargoChange(
-                                      detalleVehiculo.vehiculo.value,
-                                      recargoIndex,
-                                      "valor",
-                                      numericValue,
-                                      true // Aquí especificamos que pagaCliente es true
-                                    );
-                                  }}
-                                />
-
-                                <Button
-                                  onClick={() =>
-                                    handleRemoveRecargo(
-                                      detalleVehiculo.vehiculo.value,
-                                      recargoIndex
-                                    )
-                                  }
-                                  className="col-span-4 bg-red-600 text-white"
-                                >
-                                  X
-                                </Button>
-                              </div>
-                              <Divider />
-                            </>
-                          )
-                        )}
-                        <Button
-                          onClick={() =>
-                            handleAddRecargo(detalleVehiculo.vehiculo.value)
-                          }
-                          className="bg-primary-700 text-white"
-                        >
-                          Añadir recargo
-                        </Button>
-                      </Card>
-                    </div>
+                      <Button
+                        onClick={() =>
+                          handleAddRecargo(detalleVehiculo.vehiculo.value)
+                        }
+                        className="bg-primary-700 text-white"
+                      >
+                        Añadir recargo
+                      </Button>
+                    </Card>
                   ))}
               </div>
             </form>
@@ -1130,214 +1168,221 @@ export default function Formulario() {
                   dateSelected={dateSelected}
                 />
                 {detallesVehiculos?.map((detalle, index) => (
-                  <CardLiquidacion key={index} detalleVehiculo={detalle} empresas={state.empresas} />
+                  <CardLiquidacion
+                    key={index}
+                    detalleVehiculo={detalle}
+                    empresas={state.empresas}
+                  />
                 ))}
               </>
             )}
-          {conductorSelected && detallesVehiculos.length > 0 && dateSelected && state.vehiculos && (
-            <Card className="max-h-full">
-              <CardHeader>
-                <p className="text-xl font-semibold">Resumen</p>
-              </CardHeader>
-              <Divider />
-              <CardBody className="space-y-4">
-                <Input
-                  isDisabled={
-                    state.allowEdit || state.allowEdit == null ? false : true
-                  }
-                  value={diasLaborados.toString()}
-                  onChange={(e) => setDiasLaborados(+e.target.value)}
-                  type="number"
-                  label="Cantidad días laborados"
-                  placeholder="Ingresa la cantidad de días laborados"
-                  className="max-w-xs"
-                />
-                <Checkbox
-                  isDisabled={
-                    state.allowEdit || state.allowEdit == null ? false : true
-                  }
-                  isSelected={isCheckedAjuste}
-                  onChange={(e) => setIsCheckedAjuste(e.target.checked)}
-                >
-                  Bonificación Villanueva
-                </Checkbox>
-                {isCheckedAjuste && (
-                  <>
-                    <Input
-                      isDisabled={
-                        state.allowEdit || state.allowEdit == null
-                          ? false
-                          : true
-                      }
-                      value={diasLaboradosVillanueva.toString()}
-                      onChange={(e) =>
-                        setDiasLaboradosVillanueva(+e.target.value)
-                      }
-                      type="number"
-                      label="Cantidad días laborados Villanueva"
-                      placeholder="Ingresa la cantidad de días laborados en villanueva"
-                      className="max-w-xs"
-                    />
-                    <div>
-                      <p>Bonificación villanueva</p>
-                      <p className="text-xl text-orange-400">
-                        {formatToCOP(bonificacionVillanueva)}
-                      </p>
-                    </div>
-                  </>
-                )}
-                <div>
-                  <p>Salario devengado:</p>
-                  <p className="text-xl text-primary-400">
-                    {formatToCOP(salarioDevengado)}
-                  </p>
-                </div>
-                <div>
-                  <p>Auxilio transporte:</p>
-                  <p className="text-xl text-yellow-500">
-                    {formatToCOP(auxilioTransporte)}
-                  </p>
-                </div>
-                <div>
-                  <p>Total bonificacaciones:</p>
-                  <p className="text-xl text-secondary-500">
-                    {formatToCOP(totalBonificaciones)}
-                  </p>
-                </div>
-                <div>
-                  <p>Total pernotes:</p>
-                  <p className="text-xl text-foreground-500">
-                    {formatToCOP(totalPernotes)}
-                  </p>
-                </div>
-                <div>
-                  <p>Total recargos:</p>
-                  <p className="text-xl text-red-600">
-                    {formatToCOP(totalRecargos)}
-                  </p>
-                </div>
-                <div>
-                  <p>Salario total:</p>
-                  <p className="text-2xl text-green-500">
-                    {formatToCOP(sueldoTotal)}
-                  </p>
-                </div>
-                {!state.allowEdit && state?.liquidacion?.id && (
-                  <div className="grid md:grid-cols-3 gap-5">
-                    <div className="col-span-2">
-                      <PdfMaker item={state.liquidacion}>
+          {conductorSelected &&
+            detallesVehiculos.length > 0 &&
+            dateSelected &&
+            state.vehiculos && (
+              <Card className="max-h-full">
+                <CardHeader>
+                  <p className="text-xl font-semibold">Resumen</p>
+                </CardHeader>
+                <Divider />
+                <CardBody className="space-y-4">
+                  <Input
+                    isDisabled={
+                      state.allowEdit || state.allowEdit == null ? false : true
+                    }
+                    value={diasLaborados.toString()}
+                    onChange={(e) => setDiasLaborados(+e.target.value)}
+                    type="number"
+                    label="Cantidad días laborados"
+                    placeholder="Ingresa la cantidad de días laborados"
+                    className="max-w-xs"
+                  />
+                  <Checkbox
+                    isDisabled={
+                      state.allowEdit || state.allowEdit == null ? false : true
+                    }
+                    isSelected={isCheckedAjuste}
+                    onChange={(e) => setIsCheckedAjuste(e.target.checked)}
+                  >
+                    Bonificación Villanueva
+                  </Checkbox>
+                  {isCheckedAjuste && (
+                    <>
+                      <Input
+                        isDisabled={
+                          state.allowEdit || state.allowEdit == null
+                            ? false
+                            : true
+                        }
+                        value={diasLaboradosVillanueva.toString()}
+                        onChange={(e) =>
+                          setDiasLaboradosVillanueva(+e.target.value)
+                        }
+                        type="number"
+                        label="Cantidad días laborados Villanueva"
+                        placeholder="Ingresa la cantidad de días laborados en villanueva"
+                        className="max-w-xs"
+                      />
+                      <div>
+                        <p>Bonificación villanueva</p>
+                        <p className="text-xl text-orange-400">
+                          {formatToCOP(bonificacionVillanueva)}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                  <div>
+                    <p>Salario devengado:</p>
+                    <p className="text-xl text-primary-400">
+                      {formatToCOP(salarioDevengado)}
+                    </p>
+                  </div>
+                  <div>
+                    <p>Auxilio transporte:</p>
+                    <p className="text-xl text-yellow-500">
+                      {formatToCOP(auxilioTransporte)}
+                    </p>
+                  </div>
+                  <div>
+                    <p>Total bonificacaciones:</p>
+                    <p className="text-xl text-secondary-500">
+                      {formatToCOP(totalBonificaciones)}
+                    </p>
+                  </div>
+                  <div>
+                    <p>Total pernotes:</p>
+                    <p className="text-xl text-foreground-500">
+                      {formatToCOP(totalPernotes)}
+                    </p>
+                  </div>
+                  <div>
+                    <p>Total recargos:</p>
+                    <p className="text-xl text-red-600">
+                      {formatToCOP(totalRecargos)}
+                    </p>
+                  </div>
+                  <div>
+                    <p>Salario total:</p>
+                    <p className="text-2xl text-green-500">
+                      {formatToCOP(sueldoTotal)}
+                    </p>
+                  </div>
+                  {!state.allowEdit && state?.liquidacion?.id && (
+                    <div className="grid md:grid-cols-3 gap-5">
+                      <div className="col-span-2">
+                        <PdfMaker item={state.liquidacion}>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.5}
+                            stroke="currentColor"
+                            className="size-6"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+                            />
+                          </svg>
+                          <p className="ml-2">Desprendible de nomina</p>
+                        </PdfMaker>
+                      </div>
+                      <Button
+                        className="col-span-2 md:col-span-1 bg-red-600 text-white"
+                        onPress={() => {
+                          // Cancelar y limpiar los estados
+                          dispatch({
+                            type: "SET_LIQUIDACION",
+                            payload: {
+                              allowEdit: null,
+                              liquidacion: null,
+                            },
+                          });
+
+                          limpiarStates();
+                        }}
+                      >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           fill="none"
                           viewBox="0 0 24 24"
                           strokeWidth={1.5}
                           stroke="currentColor"
-                          className="size-6"
+                          className="size-5 text-white"
                         >
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+                            d="M6 18 18 6M6 6l12 12"
                           />
                         </svg>
-                        <p className="ml-2">Desprendible de nomina</p>
-                      </PdfMaker>
+                        <p>
+                          {" "}
+                          Cancelar{" "}
+                          {stateLiquidacion?.id && state.allowEdit
+                            ? "edición"
+                            : stateLiquidacion?.id && !state.allowEdit
+                              ? "consulta"
+                              : "creación"}
+                        </p>
+                      </Button>
                     </div>
-                    <Button
-                      className="col-span-2 md:col-span-1 bg-red-600 text-white"
-                      onPress={() => {
-                        // Cancelar y limpiar los estados
-                        dispatch({
-                          type: "SET_LIQUIDACION",
-                          payload: {
-                            allowEdit: null,
-                            liquidacion: null,
-                          },
-                        });
-
-                        limpiarStates();
-                      }}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        className="size-5 text-white"
+                  )}
+                </CardBody>
+                {(state.allowEdit || state.allowEdit === null) && (
+                  <>
+                    <Divider />
+                    <CardFooter className="grid grid-cols-1 md:grid-cols-5 gap-5">
+                      <Button
+                        onPress={handleSubmit}
+                        className="col-span-1 md:col-span-3 bg-green-700 text-white"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M6 18 18 6M6 6l12 12"
-                        />
-                      </svg>
-                      <p>
-                        {" "}
+                        {stateLiquidacion?.id
+                          ? "Editar liquidación"
+                          : "Agregar liquidación"}
+                      </Button>
+                      <Button
+                        className="md:col-span-2 bg-red-600 text-white"
+                        onPress={() => {
+                          // Cancelar y limpiar los estados
+                          dispatch({
+                            type: "SET_LIQUIDACION",
+                            payload: {
+                              allowEdit: null,
+                              liquidacion: null,
+                            },
+                          });
+
+                          limpiarStates();
+                        }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="size-5 text-white"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M6 18 18 6M6 6l12 12"
+                          />
+                        </svg>
                         Cancelar{" "}
                         {stateLiquidacion?.id && state.allowEdit
                           ? "edición"
                           : stateLiquidacion?.id && !state.allowEdit
                             ? "consulta"
                             : "creación"}
-                      </p>
-                    </Button>
-                  </div>
+                      </Button>
+                    </CardFooter>
+                  </>
                 )}
-              </CardBody>
-              {(state.allowEdit || state.allowEdit === null) && (
-                <>
-                  <Divider />
-                  <CardFooter className="grid grid-cols-1 md:grid-cols-5 gap-5">
-                    <Button
-                      onPress={handleSubmit}
-                      className="col-span-1 md:col-span-3 bg-green-700 text-white"
-                    >
-                      {stateLiquidacion?.id
-                        ? "Editar liquidación"
-                        : "Agregar liquidación"}
-                    </Button>
-                    <Button
-                      className="md:col-span-2 bg-red-600 text-white"
-                      onPress={() => {
-                        // Cancelar y limpiar los estados
-                        dispatch({
-                          type: "SET_LIQUIDACION",
-                          payload: {
-                            allowEdit: null,
-                            liquidacion: null,
-                          },
-                        });
-
-                        limpiarStates();
-                      }}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        className="size-5 text-white"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M6 18 18 6M6 6l12 12"
-                        />
-                      </svg>
-                      Cancelar{" "}
-                      {stateLiquidacion?.id && state.allowEdit
-                        ? "edición"
-                        : stateLiquidacion?.id && !state.allowEdit
-                          ? "consulta"
-                          : "creación"}
-                    </Button>
-                  </CardFooter>
-                </>
-              )}
-            </Card>
-          )}
+              </Card>
+            )}
         </div>
       </div>
     </>
@@ -1380,7 +1425,10 @@ interface CardLiquidacionProps {
   empresas: Empresa[]; // Añadimos las empresas como prop
 }
 
-const CardLiquidacion = ({ detalleVehiculo, empresas  }: CardLiquidacionProps) => {
+const CardLiquidacion = ({
+  detalleVehiculo,
+  empresas,
+}: CardLiquidacionProps) => {
   const totalBonos = useMemo(
     () =>
       detalleVehiculo.bonos.reduce(
@@ -1394,7 +1442,7 @@ const CardLiquidacion = ({ detalleVehiculo, empresas  }: CardLiquidacionProps) =
   const totalPernotes = useMemo(
     () =>
       detalleVehiculo.pernotes.reduce(
-        (total, pernote) => total + pernote.cantidad * 100906,
+        (total, pernote) => total + pernote.cantidad * pernote.valor,
         0
       ),
     [detalleVehiculo.pernotes]
