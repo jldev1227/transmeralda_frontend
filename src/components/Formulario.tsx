@@ -33,6 +33,7 @@ import {
 import useLiquidacion from "@/hooks/useLiquidacion";
 import { parseDate } from "@internationalized/date";
 import PdfMaker from "./pdfMaker";
+import { selectStyles } from "@/styles/selectStyles";
 
 // Componente Formulario
 export default function Formulario() {
@@ -693,44 +694,6 @@ export default function Formulario() {
     bonificacionVillanueva, // Ajuste salarial
   ]);
 
-  const customStyles = {
-    control: (provided: any) => ({
-      ...provided,
-      backgroundColor: "#f4f4f5",
-      border: "none",
-      borderRadius: "12px",
-      padding: "11px",
-      boxShadow: "none",
-      "&:hover": {
-        backgroundColor: "#e4e4e7",
-      },
-    }),
-    option: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: state.isSelected ? "#D1F4E0" : "white",
-      color: state.isSelected ? "black" : "black",
-      "&:hover": {
-        backgroundColor: "#e6f7ff",
-      },
-      opacity: 1,
-      zIndex: 10,
-    }),
-    menu: (provided: any) => ({
-      ...provided,
-      borderRadius: "8px",
-      marginTop: "4px",
-      zIndex: 100,
-    }),
-    singleValue: (provided: any) => ({
-      ...provided,
-      color: "#333",
-    }),
-    placeholder: (provided: any) => ({
-      ...provided,
-      color: "#999",
-    }),
-  };
-
   // Función para agregar la liquidación
   const handleSubmit = async () => {
     // Verifica que la liquidación no sea null antes de registrarla
@@ -802,7 +765,7 @@ export default function Formulario() {
                       onChange={setConductorSelected}
                       placeholder="Seleccione un conductor"
                       isSearchable
-                      styles={customStyles}
+                      styles={selectStyles}
                     />
                     <SelectReact
                       options={vehiculosOptions}
@@ -813,7 +776,7 @@ export default function Formulario() {
                       placeholder="Seleccione una o más placas"
                       isMulti
                       isSearchable
-                      styles={customStyles}
+                      styles={selectStyles}
                     />
                     <DateRangePicker
                       onChange={handleDateChange}
@@ -897,7 +860,7 @@ export default function Formulario() {
                               }
                               placeholder="Selecciona una empresa"
                               isSearchable
-                              styles={customStyles}
+                              styles={selectStyles}
                               className="col-span-3"
                             />
 
@@ -1064,7 +1027,7 @@ export default function Formulario() {
                               }
                               placeholder="Selecciona una empresa"
                               isSearchable
-                              styles={customStyles}
+                              styles={selectStyles}
                               className="col-span-4 sm:col-span-3"
                             />
 

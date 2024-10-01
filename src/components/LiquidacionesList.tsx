@@ -67,10 +67,8 @@ export default function LiquidacionesList() {
   }
 
   return (
-    <div className="space-y-5">
-      <h1 className="text-center font-bold text-2xl text-green-700">
-        Historial de liquidaciones
-      </h1>
+    <>
+     
       {isMobile ? (
         // Acordeón para dispositivos móviles
         <Accordion variant="splitted">
@@ -177,7 +175,6 @@ export default function LiquidacionesList() {
         <Table
           aria-label="liquidaciones"
           cellSpacing={2}
-          isStriped 
           bottomContent={
             <div className="flex w-full justify-center">
               <Pagination
@@ -216,7 +213,7 @@ export default function LiquidacionesList() {
             items={items}
           >
             {(item: Liquidacion) => (
-              <TableRow className={`${item.salarioDevengado === 0 && item.auxilioTransporte === 0 ? 'bg-yellow-100' : ''}`} key={item?.id || `row-${item?.conductor?.cc}`}>
+              <TableRow className={`${item.salarioDevengado === 0 && item.auxilioTransporte === 0 ? 'bg-warning-50' : 'bg-success-50'}`} key={item?.id || `row-${item?.conductor?.cc}`}>
                 <TableCell className="text-tiny">{item?.id}</TableCell>
                 <TableCell className="text-tiny">
                   {formatDate(item?.periodoStart)} -{" "}
@@ -327,6 +324,6 @@ export default function LiquidacionesList() {
           </TableBody>
         </Table>
       )}
-    </div>
+    </>
   );
 }

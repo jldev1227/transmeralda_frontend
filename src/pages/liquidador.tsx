@@ -5,18 +5,24 @@ import ModalConfiguracionLiquidador from "@/components/ModalConfiguracionLiquida
 import { Button } from "@nextui-org/button";
 import { Tooltip } from "@nextui-org/tooltip";
 import useLiquidacion from "@/hooks/useLiquidacion";
+import { Tabs, Tab } from "@nextui-org/tabs";
+import FiltrarLiquidaciones from "@/components/FiltrarLiquidaciones";
 
 export default function Liquidador() {
-
-  const { dispatch } = useLiquidacion()
+  const { dispatch } = useLiquidacion();
   return (
     <div className="flex flex-col">
-      <Tooltip color="primary" content='Configuración'>
-        <Button onPress={()=>{
-          dispatch({
-            type: 'SET_MODAL_CONFIGURACION'
-          })
-        }} color="primary" className="ml-auto" isIconOnly>
+      <Tooltip color="primary" content="Configuración">
+        <Button
+          onPress={() => {
+            dispatch({
+              type: "SET_MODAL_CONFIGURACION",
+            });
+          }}
+          color="primary"
+          className="ml-auto"
+          isIconOnly
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -42,8 +48,15 @@ export default function Liquidador() {
         Liquidador de Conductores
       </h1>
       <section className="flex flex-col gap-8 py-8 md:py-10">
-        <Formulario />
-        <LiquidacionesList />
+        <Tabs className="mx-auto" aria-label="Options">
+          <Tab key="registros" title="Registros">
+            <Formulario />
+            <LiquidacionesList />
+          </Tab>
+          <Tab key="filtrar" title="Filtrar">
+            <FiltrarLiquidaciones/>
+          </Tab>
+        </Tabs>
         <AlertaModal />
         <ModalConfiguracionLiquidador />
       </section>
