@@ -75,6 +75,7 @@ export default function LiquidacionesList() {
         <Accordion variant="splitted">
           {state.liquidaciones.map((item, index) => (
             <AccordionItem
+            className={`${item.salarioDevengado === 0 && item.auxilioTransporte === 0 ? "bg-warning-50" : ""}`}
               key={item.id || `liquidacion-${index}`} // Agregamos el textValue para mejorar la accesibilidad
               textValue={`${item.conductor?.nombre} ${item.conductor?.apellido} - ${item.conductor?.cc}`}
               // Personalizar el título del acordeón con la información deseada
@@ -176,6 +177,7 @@ export default function LiquidacionesList() {
         // Tabla para pantallas grandes
         <Table
           aria-label="liquidaciones"
+          isStriped
           cellSpacing={2}
           bottomContent={
             <div className="flex w-full justify-center">
@@ -242,7 +244,7 @@ export default function LiquidacionesList() {
           >
             {(item: Liquidacion) => (
               <TableRow
-                className={`${item.salarioDevengado === 0 && item.auxilioTransporte === 0 ? "bg-warning-50" : "bg-success-50"}`}
+                className={`${item.salarioDevengado === 0 && item.auxilioTransporte === 0 ? "bg-warning-50" : ""}`}
                 key={item?.id || `row-${item?.conductor?.cc}`}
               >
                 <TableCell className="text-tiny">{item?.id}</TableCell>
