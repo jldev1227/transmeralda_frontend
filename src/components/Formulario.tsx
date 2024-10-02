@@ -36,7 +36,7 @@ import useLiquidacion from "@/hooks/useLiquidacion";
 import { parseDate } from "@internationalized/date";
 import PdfMaker from "./pdfMaker";
 import { selectStyles } from "@/styles/selectStyles";
-import Anticipos from "./anticipos";
+import Anticipos from '@/components/Anticipos'
 
 // Componente Formulario
 export default function Formulario() {
