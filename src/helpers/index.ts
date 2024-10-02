@@ -29,6 +29,12 @@ export function formatDate(dateString: string | undefined): string {
     throw new Error('Fecha no válida.');
   }
 
+  // Establecer la hora a medianoche para evitar problemas de zona horaria
+  date.setHours(0, 0, 0, 0);
+
+  // Sumar 1 al día
+  date.setDate(date.getDate() + 1);
+
   // Definir opciones para el formato de fecha con tipos correctos
   const options: Intl.DateTimeFormatOptions = {
     day: '2-digit',
@@ -39,6 +45,7 @@ export function formatDate(dateString: string | undefined): string {
   // Convertir la fecha al formato deseado utilizando la configuración regional 'es-ES'
   return date.toLocaleDateString('es-ES', options).toUpperCase();
 }
+
 
 export const formatDateValue = (dateValue: DateValue | null): string => {
   if (dateValue) {
