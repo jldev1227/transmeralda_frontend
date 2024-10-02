@@ -84,11 +84,18 @@ export type Vehiculo = {
 };
 
 export type Empresa = {
-  id: string,
+  id?: string,
   NIT: string,
   Nombre: string,
   __typename?: string;
 };
+
+export type Anticipo = {
+  id?: string;  // Marcamos 'id' como opcional
+  liquidacionId: string | undefined;
+  valor: number;
+};
+
 
 // Detalles del vehículo, incluyendo Bonificaciones, Pernotes y Recargos
 export type DetalleVehiculo = {
@@ -113,6 +120,7 @@ type BaseLiquidacion = {
   bonificaciones?: Bono[];              // Bonificaciones opcionales
   pernotes?: Pernote[];                 // Pernotes opcionales
   recargos?: Recargo[];                 // Recargos opcionales
+  anticipos?: Anticipo[];                 // Recargos opcionales
 };
 
 // LiquidacionInput: utiliza `DateValue | null` para las fechas

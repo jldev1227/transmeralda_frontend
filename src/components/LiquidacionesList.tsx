@@ -19,8 +19,7 @@ export default function LiquidacionesList() {
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
 
-  const { state, dispatch, loadingLiquidaciones } =
-    useLiquidacion();
+  const { state, dispatch, loadingLiquidaciones } = useLiquidacion();
 
   const pages = Math.ceil(state.liquidaciones.length / rowsPerPage);
 
@@ -67,8 +66,10 @@ export default function LiquidacionesList() {
   }
 
   return (
-    <>
-     
+    <div className="space-y-5">
+      <h2 className="font-bold text-2xl text-green-700">
+        Historial
+      </h2>
       {isMobile ? (
         // Acordeón para dispositivos móviles
         <Accordion variant="splitted">
@@ -98,7 +99,8 @@ export default function LiquidacionesList() {
                     <strong>Días trabajados:</strong> {item.diasLaborados}
                   </span>
                   <span>
-                    <strong>Días trabajados villanueva:</strong> {item.diasLaboradosVillanueva}
+                    <strong>Días trabajados villanueva:</strong>{" "}
+                    {item.diasLaboradosVillanueva}
                   </span>
                   <span>
                     <strong>Salario total:</strong>{" "}
@@ -194,26 +196,55 @@ export default function LiquidacionesList() {
         >
           <TableHeader>
             <TableColumn className="bg-green-700 text-white">#</TableColumn>
-            <TableColumn className="bg-green-700 text-white">Periodo</TableColumn>
-            <TableColumn className="bg-green-700 text-white">Nombre</TableColumn>
-            <TableColumn className="bg-green-700 text-white">Salario básico</TableColumn>
-            <TableColumn className="bg-green-700 text-white">Salario devengado</TableColumn>
-            <TableColumn className="bg-green-700 text-white">Auxilio transporte</TableColumn>
-            <TableColumn className="bg-green-700 text-white">Días laborados</TableColumn>
-            <TableColumn className="bg-green-700 text-white">Días laborados Villanueva</TableColumn>
-            <TableColumn className="bg-green-700 text-white">Bonificaciones</TableColumn>
-            <TableColumn className="bg-green-700 text-white">Pernotes</TableColumn>
-            <TableColumn className="bg-green-700 text-white">Recargos</TableColumn>
-            <TableColumn className="bg-green-700 text-white">Bonificación villanueva</TableColumn>
-            <TableColumn className="bg-green-700 text-white">Salario total</TableColumn>
-            <TableColumn className="bg-green-700 text-white">Acciones</TableColumn>
+            <TableColumn className="bg-green-700 text-white">
+              Periodo
+            </TableColumn>
+            <TableColumn className="bg-green-700 text-white">
+              Nombre
+            </TableColumn>
+            <TableColumn className="bg-green-700 text-white">
+              Salario básico
+            </TableColumn>
+            <TableColumn className="bg-green-700 text-white">
+              Salario devengado
+            </TableColumn>
+            <TableColumn className="bg-green-700 text-white">
+              Auxilio transporte
+            </TableColumn>
+            <TableColumn className="bg-green-700 text-white">
+              Días laborados
+            </TableColumn>
+            <TableColumn className="bg-green-700 text-white">
+              Días laborados Villanueva
+            </TableColumn>
+            <TableColumn className="bg-green-700 text-white">
+              Bonificaciones
+            </TableColumn>
+            <TableColumn className="bg-green-700 text-white">
+              Pernotes
+            </TableColumn>
+            <TableColumn className="bg-green-700 text-white">
+              Recargos
+            </TableColumn>
+            <TableColumn className="bg-green-700 text-white">
+              Bonificación villanueva
+            </TableColumn>
+            <TableColumn className="bg-green-700 text-white">
+              Salario total
+            </TableColumn>
+            <TableColumn className="bg-green-700 text-white">
+              Acciones
+            </TableColumn>
           </TableHeader>
           <TableBody
             emptyContent={"No hay liquidaciones registradas."}
             items={items}
           >
             {(item: Liquidacion) => (
-              <TableRow className={`${item.salarioDevengado === 0 && item.auxilioTransporte === 0 ? 'bg-warning-50' : 'bg-success-50'}`} key={item?.id || `row-${item?.conductor?.cc}`}>
+              <TableRow
+                className={`${item.salarioDevengado === 0 && item.auxilioTransporte === 0 ? "bg-warning-50" : "bg-success-50"}`}
+                key={item?.id || `row-${item?.conductor?.cc}`}
+              >
                 <TableCell className="text-tiny">{item?.id}</TableCell>
                 <TableCell className="text-tiny">
                   {formatDate(item?.periodoStart)} -{" "}
@@ -284,7 +315,7 @@ export default function LiquidacionesList() {
                   </Tooltip>
                   <Tooltip content="Consultar" color="secondary">
                     <Button
-                       onPress={() =>
+                      onPress={() =>
                         dispatch({
                           type: "SET_LIQUIDACION",
                           payload: {
@@ -324,6 +355,6 @@ export default function LiquidacionesList() {
           </TableBody>
         </Table>
       )}
-    </>
+    </div>
   );
 }

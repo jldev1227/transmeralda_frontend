@@ -47,7 +47,6 @@ export default function FiltrarLiquidaciones() {
     // Convertir el valor de mesSelected a un número
     const selectedMonth = mesSelected ? Number(mesSelected) + 1 : null;
 
-    console.log(selectedMonth);
     const conductores = state.liquidaciones.filter((liquidacion) => {
       // Extraer el mes de periodoStart y periodoEnd
       const mesStart = new Date(liquidacion.periodoStart).getMonth() + 1; // getMonth() devuelve 0-11
@@ -70,7 +69,6 @@ export default function FiltrarLiquidaciones() {
     });
 
     // Hacer algo con 'conductores', como almacenarlos o mostrarlos
-    console.log(conductores);
   }, [state.liquidaciones, vehiculoSelected, mesSelected]);
 
   // Ejecutar handleFilter cuando cambien vehiculoSelected o dateSelected
