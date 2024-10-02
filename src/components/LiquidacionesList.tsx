@@ -138,6 +138,18 @@ export default function LiquidacionesList() {
                     <strong>Ajuste salarial Villanueva:</strong>{" "}
                     {formatToCOP(item.ajusteSalarial)}
                   </p>
+                  <p className="flex justify-between">
+                    <strong>Salud:</strong>{" "}
+                    {formatToCOP(item.salud)}
+                  </p>
+                  <p className="flex justify-between">
+                    <strong>Pension:</strong>{" "}
+                    {formatToCOP(item.pension)}
+                  </p>
+                  <p className="flex justify-between">
+                    <strong>Anticipos:</strong>{" "}
+                    {formatToCOP(item.pension)}
+                  </p>
                 </div>
                 <div className="grid grid-cols-2 gap-6 mt-10">
                   <Button
@@ -232,6 +244,15 @@ export default function LiquidacionesList() {
               Bonificación villanueva
             </TableColumn>
             <TableColumn className="bg-green-700 text-white">
+              Salud
+            </TableColumn>
+            <TableColumn className="bg-green-700 text-white">
+              Pensión
+            </TableColumn>
+            <TableColumn className="bg-green-700 text-white">
+              Anticipos
+            </TableColumn>
+            <TableColumn className="bg-green-700 text-white">
               Salario total
             </TableColumn>
             <TableColumn className="bg-green-700 text-white">
@@ -281,76 +302,87 @@ export default function LiquidacionesList() {
                   {formatToCOP(item?.ajusteSalarial)}
                 </TableCell>
                 <TableCell className="text-tiny">
+                  {formatToCOP(item?.salud)}
+                </TableCell>
+                <TableCell className="text-tiny">
+                  {formatToCOP(item?.pension)}
+                </TableCell>
+                <TableCell className="text-tiny">
+                  {formatToCOP(item?.totalAnticipos)}
+                </TableCell>
+                <TableCell className="text-tiny">
                   {formatToCOP(item?.sueldoTotal)}
                 </TableCell>
-                <TableCell className="flex gap-2">
-                  <Tooltip content="Editar" color="primary">
-                    <Button
-                      onPress={() =>
-                        dispatch({
-                          type: "SET_LIQUIDACION",
-                          payload: {
-                            allowEdit: true,
-                            liquidacion: item,
-                          },
-                        })
-                      }
-                      color="primary"
-                      className="h-9"
-                      isIconOnly
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        className="size-5"
+                <TableCell className="">
+                  <div className="flex justify-between gap-2">
+                    <Tooltip content="Editar" color="primary">
+                      <Button
+                        onPress={() =>
+                          dispatch({
+                            type: "SET_LIQUIDACION",
+                            payload: {
+                              allowEdit: true,
+                              liquidacion: item,
+                            },
+                          })
+                        }
+                        color="primary"
+                        className="h-9"
+                        isIconOnly
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-                        />
-                      </svg>
-                    </Button>
-                  </Tooltip>
-                  <Tooltip content="Consultar" color="secondary">
-                    <Button
-                      onPress={() =>
-                        dispatch({
-                          type: "SET_LIQUIDACION",
-                          payload: {
-                            allowEdit: false,
-                            liquidacion: item,
-                          },
-                        })
-                      }
-                      color="secondary"
-                      className="h-9"
-                      isIconOnly
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        className="size-6"
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="size-5"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                          />
+                        </svg>
+                      </Button>
+                    </Tooltip>
+                    <Tooltip content="Consultar" color="secondary">
+                      <Button
+                        onPress={() =>
+                          dispatch({
+                            type: "SET_LIQUIDACION",
+                            payload: {
+                              allowEdit: false,
+                              liquidacion: item,
+                            },
+                          })
+                        }
+                        color="secondary"
+                        className="h-9"
+                        isIconOnly
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                        />
-                      </svg>
-                    </Button>
-                  </Tooltip>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="size-6"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                          />
+                        </svg>
+                      </Button>
+                    </Tooltip>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
