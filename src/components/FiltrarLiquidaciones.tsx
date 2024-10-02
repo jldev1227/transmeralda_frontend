@@ -68,6 +68,8 @@ export default function FiltrarLiquidaciones() {
       return monthCondition && vehicleCondition;
     });
 
+    console.log(conductores)
+
     // Hacer algo con 'conductores', como almacenarlos o mostrarlos
   }, [state.liquidaciones, vehiculoSelected, mesSelected]);
 
@@ -102,7 +104,7 @@ export default function FiltrarLiquidaciones() {
       </div>
       {vehiculoSelected && mesSelected && (
         <div>
-          <h2>Vehiculo {vehiculoSelected}</h2>
+          <h2>Vehiculo {vehiculoSelected.label}</h2>
           <table className="table-auto w-full text-sm mb-5">
             <thead className="bg-yellow-500 text-white">
               <tr>
