@@ -52,6 +52,10 @@ query Liquidaciones {
             mes
             vehiculoId
         }
+        anticipos {
+            id
+            valor
+        }
     }
 }
 `;

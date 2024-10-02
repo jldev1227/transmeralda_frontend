@@ -266,7 +266,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
 
           {item?.pernotes?.map((pernote) => (
             <View key={pernote.id} style={[styles.cardRow]}>
-              <Text style={[styles.label, { flex: 2 }]}>Pernote</Text>
+              <Text style={[styles.label, { flex: 2 }]}>Pernotes</Text>
               <Text
                 style={[styles.textValue, { flex: 1, textAlign: "center", fontSize: 10 }]}
               >
@@ -288,7 +288,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
           <View style={[styles.cardRow, {
             borderBottom: 0
           }]}>
-            <Text style={[styles.label, { flex: 2 }]}>Recargo</Text>
+            <Text style={[styles.label, { flex: 2 }]}>Recargos</Text>
             <Text style={[styles.textValue, { flex: 1, textAlign: "center" }]}>
             <Text></Text>
             </Text>
