@@ -114,9 +114,12 @@ type BaseLiquidacion = {
   totalPernotes: number;
   totalBonificaciones: number;
   totalRecargos: number;
+  totalAnticipos: number;
   diasLaborados: number;
   diasLaboradosVillanueva: number;
   ajusteSalarial: number;
+  salud: number;
+  pension: number;
   bonificaciones?: Bono[];              // Bonificaciones opcionales
   pernotes?: Pernote[];                 // Pernotes opcionales
   recargos?: Recargo[];                 // Recargos opcionales

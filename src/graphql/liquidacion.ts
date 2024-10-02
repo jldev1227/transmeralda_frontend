@@ -19,9 +19,12 @@ query Liquidaciones {
         totalPernotes
         totalBonificaciones
         totalRecargos
+        totalAnticipos
         diasLaborados
         diasLaboradosVillanueva
         ajusteSalarial
+        salud
+        pension
         vehiculos {
             id
             placa
@@ -71,6 +74,7 @@ export const CREAR_LIQUIDACION = gql`
     $totalPernotes: Float!
     $totalBonificaciones: Float!
     $totalRecargos: Float!
+    $totalAnticipos: Float!
     $diasLaborados: Int!
     $diasLaboradosVillanueva: Int!
     $ajusteSalarial: Float!
@@ -89,9 +93,12 @@ export const CREAR_LIQUIDACION = gql`
       totalPernotes: $totalPernotes
       totalBonificaciones: $totalBonificaciones
       totalRecargos: $totalRecargos
+      totalAnticipos: $totalAnticipos
       diasLaborados: $diasLaborados
       diasLaboradosVillanueva: $diasLaboradosVillanueva
       ajusteSalarial: $ajusteSalarial
+      salud: $salud
+      pension: $pension
       vehiculos: $vehiculos
       bonificaciones: $bonificaciones
       pernotes: $pernotes
@@ -113,9 +120,12 @@ export const CREAR_LIQUIDACION = gql`
         totalPernotes
         totalBonificaciones
         totalRecargos
+        totalAnticipos
         diasLaborados
         diasLaboradosVillanueva
         ajusteSalarial
+        salud
+        pension
         vehiculos {
             id
             placa
@@ -162,9 +172,12 @@ export const EDITAR_LIQUIDACION = gql`
     $totalPernotes: Float!
     $totalBonificaciones: Float!
     $totalRecargos: Float!
+    $totalAnticipos: Float!
     $diasLaborados: Int!
     $diasLaboradosVillanueva: Int!
     $ajusteSalarial: Float!
+    $salud: Float!
+    $pension: Float!
     $vehiculos: [ID!]!
     $bonificaciones: [BonificacionInput!]! 
     $pernotes: [PernoteInput!]!
@@ -181,9 +194,12 @@ export const EDITAR_LIQUIDACION = gql`
         totalPernotes: $totalPernotes
         totalBonificaciones: $totalBonificaciones
         totalRecargos: $totalRecargos
+        totalAnticipos: $totalAnticipos
         diasLaborados: $diasLaborados
         diasLaboradosVillanueva: $diasLaboradosVillanueva
         ajusteSalarial: $ajusteSalarial
+        salud: $salud
+        pension: $pension
         vehiculos: $vehiculos
         bonificaciones: $bonificaciones
         pernotes: $pernotes
@@ -205,9 +221,12 @@ export const EDITAR_LIQUIDACION = gql`
         totalPernotes
         totalBonificaciones
         totalRecargos
+        totalAnticipos
         diasLaborados
         diasLaboradosVillanueva
         ajusteSalarial
+        salud
+        pension
         vehiculos {
             id
             placa
