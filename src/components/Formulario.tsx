@@ -554,7 +554,9 @@ export default function Formulario() {
 
         const pernotes = item.pernotes.reduce(
           (total, pernote) => {
-            return total + pernote.valor * pernote.cantidad;
+            const configPernote = state.configuracion?.find(config => config.nombre == 'Pernote')
+
+            return total + ((configPernote?.valor || 0) * pernote.cantidad)
           }, // Puedes ajustar el valor de pernote si es una constante
           0
         );
