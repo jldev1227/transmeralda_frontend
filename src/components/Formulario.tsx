@@ -5,8 +5,10 @@ import {
   DateValue,
   RangeValue,
 } from "@nextui-org/react";
+import { Tabs, Tab } from "@nextui-org/tabs";
 import SelectReact, { MultiValue, SingleValue } from "react-select";
 import { Select, SelectItem } from "@nextui-org/select";
+import { Tooltip } from "@nextui-org/tooltip";
 import { Divider } from "@nextui-org/divider";
 import { Checkbox } from "@nextui-org/checkbox";
 import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/card";
@@ -33,6 +35,8 @@ import {
 import useLiquidacion from "@/hooks/useLiquidacion";
 import { parseDate } from "@internationalized/date";
 import PdfMaker from "./pdfMaker";
+import { selectStyles } from "@/styles/selectStyles";
+import Anticipos from "@/components/Anticipos";
 
 // Componente Formulario
 export default function Formulario() {
@@ -536,9 +540,12 @@ export default function Formulario() {
     auxilioTransporte,
     sueldoTotal,
     salarioDevengado,
+    salud,
+    pension,
     totalPernotes,
     totalBonificaciones,
     totalRecargos,
+    totalAnticipos,
   } = useMemo(() => {
     const total = detallesVehiculos.reduce(
       (acc, item) => {
@@ -554,9 +561,11 @@ export default function Formulario() {
 
         const pernotes = item.pernotes.reduce(
           (total, pernote) => {
-            const configPernote = state.configuracion?.find(config => config.nombre == 'Pernote')
+            const configPernote = state.configuracion?.find(
+              (config) => config.nombre == "Pernote"
+            );
 
-            return total + ((configPernote?.valor || 0) * pernote.cantidad)
+            return total + (configPernote?.valor || 0) * pernote.cantidad;
           }, // Puedes ajustar el valor de pernote si es una constante
           0
         );
@@ -595,18 +604,39 @@ export default function Formulario() {
       )?.valor || 0) /
         30) *
       diasLaborados;
+
+    const saludConfig =
+      state.configuracion?.find((config) => config.nombre === "Salud")?.valor ??
+      0; // Asumir que cada config tiene una propiedad 'valor'
+    const pensionConfig =
+      state.configuracion?.find((config) => config.nombre === "Pensión")
+        ?.valor ?? 0; // Asumir que cada config tiene una propiedad 'valor'
+
+    const salud = ((salarioDevengado * saludConfig) / 100 / 30) * diasLaborados;
+    const pension =
+      ((salarioDevengado * pensionConfig) / 100 / 30) * diasLaborados;
+
+    const totalAnticipos =
+      state.liquidacion?.anticipos?.reduce((total, anticipo) => {
+        return total + (anticipo.valor || 0); // Asegúrate de que anticipo.valor no sea undefined
+      }, 0) || 0; // Si el resultado es undefined, establece en 0
+
     return {
       auxilioTransporte,
+      salud,
+      pension,
       salarioBaseConductor,
       totalBonificaciones: total.totalBonos,
       totalPernotes: total.totalPernotes,
       totalRecargos: total.totalRecargos,
+      totalAnticipos,
       salarioDevengado,
       sueldoTotal:
         total.totalSubtotales +
-        bonificacionVillanueva + // Incluye la bonificación si aplica
+        bonificacionVillanueva +
         salarioDevengado +
-        auxilioTransporte,
+        auxilioTransporte -
+        (salud + pension) - totalAnticipos
     };
   }, [
     detallesVehiculos,
@@ -669,11 +699,16 @@ export default function Formulario() {
       totalPernotes: totalPernotes || 0,
       totalBonificaciones: totalBonificaciones || 0,
       totalRecargos: totalRecargos || 0,
+      totalAnticipos: totalAnticipos || 0,
       diasLaborados: diasLaborados || 0,
       diasLaboradosVillanueva: diasLaboradosVillanueva || 0,
       ajusteSalarial: bonificacionVillanueva || 0, // Usa bonificacionVillanueva o 0
+      salud: salud || 0, // Usa bonificacionVillanueva o 0
+      pension: pension || 0, // Usa bonificacionVillanueva o 0
       vehiculos: detallesVehiculos.map((detalle) => detalle.vehiculo.value),
     };
+
+    console.log(nuevaLiquidacion)
 
     // Actualizar el estado de `liquidacion`
     setLiquidacion(nuevaLiquidacion);
@@ -686,6 +721,7 @@ export default function Formulario() {
     dateSelected,
     vehiculosSelected, // Ahora también dependemos de cambios en `vehiculosSelected`
     totalRecargos,
+    totalAnticipos,
     conductorSelected, // Dependemos de cambios en `conductorSelected`
     detallesVehiculos,
     state.conductores,
@@ -694,44 +730,6 @@ export default function Formulario() {
     diasLaboradosVillanueva,
     bonificacionVillanueva, // Ajuste salarial
   ]);
-
-  const customStyles = {
-    control: (provided: any) => ({
-      ...provided,
-      backgroundColor: "#f4f4f5",
-      border: "none",
-      borderRadius: "12px",
-      padding: "11px",
-      boxShadow: "none",
-      "&:hover": {
-        backgroundColor: "#e4e4e7",
-      },
-    }),
-    option: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: state.isSelected ? "#D1F4E0" : "white",
-      color: state.isSelected ? "black" : "black",
-      "&:hover": {
-        backgroundColor: "#e6f7ff",
-      },
-      opacity: 1,
-      zIndex: 10,
-    }),
-    menu: (provided: any) => ({
-      ...provided,
-      borderRadius: "8px",
-      marginTop: "4px",
-      zIndex: 100,
-    }),
-    singleValue: (provided: any) => ({
-      ...provided,
-      color: "#333",
-    }),
-    placeholder: (provided: any) => ({
-      ...provided,
-      color: "#999",
-    }),
-  };
 
   // Función para agregar la liquidación
   const handleSubmit = async () => {
@@ -761,9 +759,12 @@ export default function Formulario() {
           totalPernotes: liquidacion.totalPernotes || 0,
           totalBonificaciones: liquidacion.totalBonificaciones || 0,
           totalRecargos: liquidacion.totalRecargos || 0,
+          totalAnticipos: liquidacion.totalAnticipos || 0,
           diasLaborados: liquidacion.diasLaborados || 0,
           diasLaboradosVillanueva: liquidacion.diasLaboradosVillanueva || 0,
           ajusteSalarial: liquidacion.ajusteSalarial || 0,
+          salud: liquidacion.salud || 0,
+          pension: liquidacion.pension || 0,
           vehiculos: liquidacion.vehiculos, // Mapeamos los valores correctos de los vehículos
           bonificaciones: bonificacionesFiltradas, // Enviamos las bonificaciones filtradas
           pernotes: pernotesFiltrados, // Enviamos los pernotes filtrados
@@ -789,6 +790,45 @@ export default function Formulario() {
       <div
         className={`grid ${state.allowEdit || state.allowEdit == null ? "xl:grid-cols-2" : "lg:grid-cols-1"} gap-10`}
       >
+        <div className="xl:col-span-2 space-y-3">
+          <div className="flex justify-end">
+            <Tooltip color="primary" content="Configuración">
+              <Button
+                onPress={() => {
+                  dispatch({
+                    type: "SET_MODAL_CONFIGURACION",
+                  });
+                }}
+                color="primary"
+                className="right-0"
+                isIconOnly
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="size-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                  />
+                </svg>
+              </Button>
+            </Tooltip>
+          </div>
+          <h1 className="flex-1 text-green-700 font-black text-2xl lg:text-4xl text-center">
+            Liquidador de Conductores
+          </h1>
+        </div>
         {(stateLiquidacion || stateLiquidacion === null) &&
           (state.allowEdit || state.allowEdit === null) && (
             <form className="w-full flex flex-col">
@@ -804,7 +844,7 @@ export default function Formulario() {
                       onChange={setConductorSelected}
                       placeholder="Seleccione un conductor"
                       isSearchable
-                      styles={customStyles}
+                      styles={selectStyles}
                     />
                     <SelectReact
                       options={vehiculosOptions}
@@ -815,7 +855,7 @@ export default function Formulario() {
                       placeholder="Seleccione una o más placas"
                       isMulti
                       isSearchable
-                      styles={customStyles}
+                      styles={selectStyles}
                     />
                     <DateRangePicker
                       onChange={handleDateChange}
@@ -899,7 +939,7 @@ export default function Formulario() {
                               }
                               placeholder="Selecciona una empresa"
                               isSearchable
-                              styles={customStyles}
+                              styles={selectStyles}
                               className="col-span-3"
                             />
 
@@ -1066,7 +1106,7 @@ export default function Formulario() {
                               }
                               placeholder="Selecciona una empresa"
                               isSearchable
-                              styles={customStyles}
+                              styles={selectStyles}
                               className="col-span-4 sm:col-span-3"
                             />
 
@@ -1155,7 +1195,7 @@ export default function Formulario() {
             </form>
           )}
         <div
-          className={`${state.allowEdit || state.allowEdit == null ? "w-full" : "lg:w-1/2 lg:mx-auto"}`}
+          className={`${state.allowEdit || state.allowEdit == null ? "" : "lg:w-2/3 xl:w-1/2 md:mx-auto"}`}
         >
           {conductorSelected &&
             vehiculosSelected.length > 0 &&
@@ -1169,221 +1209,316 @@ export default function Formulario() {
                   }
                   dateSelected={dateSelected}
                 />
-                {detallesVehiculos?.map((detalle, index) => (
-                  <CardLiquidacion
-                    key={index}
-                    detalleVehiculo={detalle}
-                    empresas={state.empresas}
-                  />
-                ))}
+
+                <div className="w-full flex flex-col space-y-2">
+                  <Tabs className="mx-auto" color="primary">
+                    <Tab key={"liquidación"} title="Liquidación">
+                      {detallesVehiculos?.map((detalle, index) => (
+                        <CardLiquidacion
+                          key={index}
+                          detalleVehiculo={detalle}
+                          empresas={state.empresas}
+                        />
+                      ))}
+                      {conductorSelected &&
+                        detallesVehiculos.length > 0 &&
+                        dateSelected &&
+                        state.vehiculos && (
+                          <Card>
+                            <CardHeader>
+                              <p className="text-xl font-semibold">Resumen</p>
+                            </CardHeader>
+                            <Divider />
+                            <CardBody className="space-y-4">
+                              <Input
+                                isDisabled={
+                                  state.allowEdit || state.allowEdit == null
+                                    ? false
+                                    : true
+                                }
+                                value={diasLaborados.toString()}
+                                onChange={(e) =>
+                                  setDiasLaborados(+e.target.value)
+                                }
+                                type="number"
+                                label="Cantidad días laborados"
+                                placeholder="Ingresa la cantidad de días laborados"
+                                className="max-w-xs"
+                              />
+                              <Checkbox
+                                isDisabled={
+                                  state.allowEdit || state.allowEdit == null
+                                    ? false
+                                    : true
+                                }
+                                isSelected={isCheckedAjuste}
+                                onChange={(e) =>
+                                  setIsCheckedAjuste(e.target.checked)
+                                }
+                              >
+                                Bonificación Villanueva
+                              </Checkbox>
+                              {isCheckedAjuste && (
+                                <>
+                                  <Input
+                                    isDisabled={
+                                      state.allowEdit || state.allowEdit == null
+                                        ? false
+                                        : true
+                                    }
+                                    value={diasLaboradosVillanueva.toString()}
+                                    onChange={(e) =>
+                                      setDiasLaboradosVillanueva(
+                                        +e.target.value
+                                      )
+                                    }
+                                    type="number"
+                                    label="Cantidad días laborados Villanueva"
+                                    placeholder="Ingresa la cantidad de días laborados en villanueva"
+                                    className="max-w-xs"
+                                  />
+                                  <div>
+                                    <p>Bonificación villanueva</p>
+                                    <p className="text-xl text-orange-400">
+                                      {formatToCOP(bonificacionVillanueva)}
+                                    </p>
+                                  </div>
+                                </>
+                              )}
+
+                              <table className="table-auto w-full text-md mb-5">
+                                <thead className="bg-black text-white">
+                                  <tr>
+                                    <th className="px-4 py-2 text-left">
+                                      Concepto
+                                    </th>
+                                    <th className="px-4 py-2 text-left">
+                                      Valor
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr>
+                                    <td className="border px-4 py-2">
+                                      Salario devengado
+                                    </td>
+                                    <td className="border px-4 py-2">
+                                      {formatToCOP(salarioDevengado)}
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="border px-4 py-2">
+                                      Ajuste villanueva
+                                    </td>
+                                    <td className="border px-4 py-2">
+                                      {formatToCOP(bonificacionVillanueva)}
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="border px-4 py-2">
+                                      Auxilio de transporte
+                                    </td>
+                                    <td className="border px-4 py-2">
+                                      {formatToCOP(auxilioTransporte)}
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="border px-4 py-2">
+                                      Bonificaciones
+                                    </td>
+                                    <td className="border px-4 py-2">
+                                      {formatToCOP(totalBonificaciones)}
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="border px-4 py-2">
+                                      Pernotes
+                                    </td>
+                                    <td className="border px-4 py-2">
+                                      {formatToCOP(totalPernotes)}
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="border px-4 py-2">
+                                      Recargos
+                                    </td>
+                                    <td className="border px-4 py-2">
+                                      {formatToCOP(totalRecargos)}
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="border px-4 py-2">
+                                      Salud (
+                                      {state.configuracion?.find(
+                                        (config) => config.nombre == "Salud"
+                                      )?.valor || 0}
+                                      %)
+                                    </td>
+                                    <td className="border px-4 py-2">
+                                      {formatToCOP(salud)}
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="border px-4 py-2">
+                                      Pensión (
+                                      {state.configuracion?.find(
+                                        (config) => config.nombre == "Pensión"
+                                      )?.valor || 0}
+                                      %)
+                                    </td>
+                                    <td className="border px-4 py-2">
+                                      {formatToCOP(pension)}
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="border px-4 py-2 bg-red-500 text-white">
+                                      Anticipos
+                                    </td>
+                                    <td className="border px-4 py-2 bg-red-500 text-white">
+                                      {formatToCOP(totalAnticipos)}
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td className="border px-4 py-2 bg-green-500 text-white text-xl">
+                                      Sueldo total
+                                    </td>
+                                    <td className="border px-4 py-2 bg-green-500 text-white text-xl">
+                                      {formatToCOP(sueldoTotal)}
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+
+                              {!state.allowEdit && state?.liquidacion?.id && (
+                                <div className="grid md:grid-cols-3 gap-5">
+                                  <div className="col-span-2">
+                                    <PdfMaker item={state.liquidacion}>
+                                      <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={1.5}
+                                        stroke="currentColor"
+                                        className="size-6"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+                                        />
+                                      </svg>
+                                      <p className="ml-2">
+                                        Desprendible de nomina
+                                      </p>
+                                    </PdfMaker>
+                                  </div>
+                                  <Button
+                                    className="col-span-2 md:col-span-1 bg-red-600 text-white"
+                                    onPress={() => {
+                                      // Cancelar y limpiar los estados
+                                      dispatch({
+                                        type: "SET_LIQUIDACION",
+                                        payload: {
+                                          allowEdit: null,
+                                          liquidacion: null,
+                                        },
+                                      });
+
+                                      limpiarStates();
+                                    }}
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      strokeWidth={1.5}
+                                      stroke="currentColor"
+                                      className="size-5 text-white"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M6 18 18 6M6 6l12 12"
+                                      />
+                                    </svg>
+                                    <p>
+                                      {" "}
+                                      Cancelar{" "}
+                                      {stateLiquidacion?.id && state.allowEdit
+                                        ? "edición"
+                                        : stateLiquidacion?.id &&
+                                            !state.allowEdit
+                                          ? "consulta"
+                                          : "creación"}
+                                    </p>
+                                  </Button>
+                                </div>
+                              )}
+                            </CardBody>
+                            {(state.allowEdit || state.allowEdit === null) && (
+                              <>
+                                <Divider />
+                                <CardFooter className="grid grid-cols-1 md:grid-cols-5 gap-5">
+                                  <Button
+                                    onPress={handleSubmit}
+                                    className="col-span-1 md:col-span-3 bg-green-700 text-white"
+                                  >
+                                    {stateLiquidacion?.id
+                                      ? "Editar liquidación"
+                                      : "Agregar liquidación"}
+                                  </Button>
+                                  <Button
+                                    className="md:col-span-2 bg-red-600 text-white"
+                                    onPress={() => {
+                                      // Cancelar y limpiar los estados
+                                      dispatch({
+                                        type: "SET_LIQUIDACION",
+                                        payload: {
+                                          allowEdit: null,
+                                          liquidacion: null,
+                                        },
+                                      });
+
+                                      limpiarStates();
+                                    }}
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      strokeWidth={1.5}
+                                      stroke="currentColor"
+                                      className="size-5 text-white"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M6 18 18 6M6 6l12 12"
+                                      />
+                                    </svg>
+                                    Cancelar{" "}
+                                    {stateLiquidacion?.id && state.allowEdit
+                                      ? "edición"
+                                      : stateLiquidacion?.id && !state.allowEdit
+                                        ? "consulta"
+                                        : "creación"}
+                                  </Button>
+                                </CardFooter>
+                              </>
+                            )}
+                          </Card>
+                        )}
+                    </Tab>
+                    <Tab
+                      className="w-full lg:w-2/3 mx-auto"
+                      key={"anticipos"}
+                      title="Anticipos"
+                    >
+                      <Anticipos />
+                    </Tab>
+                  </Tabs>
+                </div>
               </>
-            )}
-          {conductorSelected &&
-            detallesVehiculos.length > 0 &&
-            dateSelected &&
-            state.vehiculos && (
-              <Card className="max-h-full">
-                <CardHeader>
-                  <p className="text-xl font-semibold">Resumen</p>
-                </CardHeader>
-                <Divider />
-                <CardBody className="space-y-4">
-                  <Input
-                    isDisabled={
-                      state.allowEdit || state.allowEdit == null ? false : true
-                    }
-                    value={diasLaborados.toString()}
-                    onChange={(e) => setDiasLaborados(+e.target.value)}
-                    type="number"
-                    label="Cantidad días laborados"
-                    placeholder="Ingresa la cantidad de días laborados"
-                    className="max-w-xs"
-                  />
-                  <Checkbox
-                    isDisabled={
-                      state.allowEdit || state.allowEdit == null ? false : true
-                    }
-                    isSelected={isCheckedAjuste}
-                    onChange={(e) => setIsCheckedAjuste(e.target.checked)}
-                  >
-                    Bonificación Villanueva
-                  </Checkbox>
-                  {isCheckedAjuste && (
-                    <>
-                      <Input
-                        isDisabled={
-                          state.allowEdit || state.allowEdit == null
-                            ? false
-                            : true
-                        }
-                        value={diasLaboradosVillanueva.toString()}
-                        onChange={(e) =>
-                          setDiasLaboradosVillanueva(+e.target.value)
-                        }
-                        type="number"
-                        label="Cantidad días laborados Villanueva"
-                        placeholder="Ingresa la cantidad de días laborados en villanueva"
-                        className="max-w-xs"
-                      />
-                      <div>
-                        <p>Bonificación villanueva</p>
-                        <p className="text-xl text-orange-400">
-                          {formatToCOP(bonificacionVillanueva)}
-                        </p>
-                      </div>
-                    </>
-                  )}
-                  <div>
-                    <p>Salario devengado:</p>
-                    <p className="text-xl text-primary-400">
-                      {formatToCOP(salarioDevengado)}
-                    </p>
-                  </div>
-                  <div>
-                    <p>Auxilio transporte:</p>
-                    <p className="text-xl text-yellow-500">
-                      {formatToCOP(auxilioTransporte)}
-                    </p>
-                  </div>
-                  <div>
-                    <p>Total bonificacaciones:</p>
-                    <p className="text-xl text-secondary-500">
-                      {formatToCOP(totalBonificaciones)}
-                    </p>
-                  </div>
-                  <div>
-                    <p>Total pernotes:</p>
-                    <p className="text-xl text-foreground-500">
-                      {formatToCOP(totalPernotes)}
-                    </p>
-                  </div>
-                  <div>
-                    <p>Total recargos:</p>
-                    <p className="text-xl text-red-600">
-                      {formatToCOP(totalRecargos)}
-                    </p>
-                  </div>
-                  <div>
-                    <p>Salario total:</p>
-                    <p className="text-2xl text-green-500">
-                      {formatToCOP(sueldoTotal)}
-                    </p>
-                  </div>
-                  {!state.allowEdit && state?.liquidacion?.id && (
-                    <div className="grid md:grid-cols-3 gap-5">
-                      <div className="col-span-2">
-                        <PdfMaker item={state.liquidacion}>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="size-6"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
-                            />
-                          </svg>
-                          <p className="ml-2">Desprendible de nomina</p>
-                        </PdfMaker>
-                      </div>
-                      <Button
-                        className="col-span-2 md:col-span-1 bg-red-600 text-white"
-                        onPress={() => {
-                          // Cancelar y limpiar los estados
-                          dispatch({
-                            type: "SET_LIQUIDACION",
-                            payload: {
-                              allowEdit: null,
-                              liquidacion: null,
-                            },
-                          });
-
-                          limpiarStates();
-                        }}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
-                          className="size-5 text-white"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M6 18 18 6M6 6l12 12"
-                          />
-                        </svg>
-                        <p>
-                          {" "}
-                          Cancelar{" "}
-                          {stateLiquidacion?.id && state.allowEdit
-                            ? "edición"
-                            : stateLiquidacion?.id && !state.allowEdit
-                              ? "consulta"
-                              : "creación"}
-                        </p>
-                      </Button>
-                    </div>
-                  )}
-                </CardBody>
-                {(state.allowEdit || state.allowEdit === null) && (
-                  <>
-                    <Divider />
-                    <CardFooter className="grid grid-cols-1 md:grid-cols-5 gap-5">
-                      <Button
-                        onPress={handleSubmit}
-                        className="col-span-1 md:col-span-3 bg-green-700 text-white"
-                      >
-                        {stateLiquidacion?.id
-                          ? "Editar liquidación"
-                          : "Agregar liquidación"}
-                      </Button>
-                      <Button
-                        className="md:col-span-2 bg-red-600 text-white"
-                        onPress={() => {
-                          // Cancelar y limpiar los estados
-                          dispatch({
-                            type: "SET_LIQUIDACION",
-                            payload: {
-                              allowEdit: null,
-                              liquidacion: null,
-                            },
-                          });
-
-                          limpiarStates();
-                        }}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
-                          className="size-5 text-white"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M6 18 18 6M6 6l12 12"
-                          />
-                        </svg>
-                        Cancelar{" "}
-                        {stateLiquidacion?.id && state.allowEdit
-                          ? "edición"
-                          : stateLiquidacion?.id && !state.allowEdit
-                            ? "consulta"
-                            : "creación"}
-                      </Button>
-                    </CardFooter>
-                  </>
-                )}
-              </Card>
             )}
         </div>
       </div>
@@ -1460,7 +1595,7 @@ const CardLiquidacion = ({
   const subtotal = totalBonos + totalPernotes + totalRecargos;
 
   return (
-    <Card className="w-full mb-5">
+    <Card className="mb-5">
       <CardHeader className="flex gap-3">
         <div className="flex flex-col">
           <p className="text-md text-foreground-500">
