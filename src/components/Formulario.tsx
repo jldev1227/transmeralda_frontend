@@ -708,6 +708,8 @@ export default function Formulario() {
       vehiculos: detallesVehiculos.map((detalle) => detalle.vehiculo.value),
     };
 
+    console.log(nuevaLiquidacion)
+
     // Actualizar el estado de `liquidacion`
     setLiquidacion(nuevaLiquidacion);
   }, [

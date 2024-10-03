@@ -12,7 +12,7 @@ export type LiquidacionActions =
   | { type: 'SET_CONFIGURACION'; payload: ConfiguracionLiquidacion[] }
   | { type: 'UPDATE_CONFIGURACION'; payload: ConfiguracionLiquidacion[] }
   | { type: 'AGREGAR_ANTICIPOS'; payload: Anticipo[] }
-  | { type: 'ELIMINAR_ANTICIPO'; payload: { liquidacionId: Liquidacion['id'], anticipoId: Anticipo['id']}}
+  | { type: 'ELIMINAR_ANTICIPO'; payload: { liquidacionId: Liquidacion['id'], anticipoId: Anticipo['id'] } }
   | { type: 'SET_MODAL_CONFIGURACION'; }
   | { type: 'SET_ERROR'; payload: { error: boolean; mensaje: string } }
   | { type: 'RESET_ALERTA' };
@@ -143,12 +143,22 @@ export function LiquidacionReducer(
       // Obtenemos los anticipos del payload
       const nuevosAnticipos = action.payload;
 
+      // Sumar los valores de los anticipos existentes en la liquidación
+      const anticiposExistentes = state.liquidacion?.anticipos || [];
+
+      // Sumar los valores de los anticipos existentes y los nuevos
+      const totalAnticipos =
+        [...anticiposExistentes, ...nuevosAnticipos].reduce((total, anticipo) => {
+          return total + (anticipo.valor || 0); // Asegurarte de que anticipo.valor no sea undefined
+        }, 0) || 0; // Si el resultado es undefined, establecer en 0
+
       if (state.liquidacion) {
         const liquidacionActualizada = {
           ...state.liquidacion,
+          totalAnticipos, // Actualizamos totalAnticipos con la suma de los nuevos y existentes
           anticipos: [
-            ...(state.liquidacion.anticipos || []), // Asegurarse de que anticipos sea un array
-            ...nuevosAnticipos,
+            ...anticiposExistentes, // Mantener los anticipos existentes
+            ...nuevosAnticipos,     // Agregar los nuevos anticipos
           ]
         };
 
@@ -165,7 +175,12 @@ export function LiquidacionReducer(
             if (anticiposParaLiquidacion.length > 0) {
               return {
                 ...liquidacion,
-                anticipos: [...liquidacion.anticipos ?? [], ...anticiposParaLiquidacion],
+                totalAnticipos,
+                sueldoTotal: liquidacion.sueldoTotal - totalAnticipos,
+                anticipos: [
+                  ...(liquidacion.anticipos ?? []),
+                  ...anticiposParaLiquidacion
+                ],
               };
             }
 
@@ -179,26 +194,44 @@ export function LiquidacionReducer(
         return state;
       };
     case "ELIMINAR_ANTICIPO":
-      const { anticipoId, liquidacionId } = action.payload; // Desestructurar el payload
+      const { anticipoId, liquidacionId } = action.payload;
 
       // Actualizar liquidaciones
       return {
         ...state,
         liquidaciones: state.liquidaciones.map((liquidacion) => {
-          // Verificar si la liquidación coincide con el liquidacionId
           if (liquidacion.id === liquidacionId) {
             // Filtrar los anticipos para eliminar el anticipo específico
+            const anticiposActualizados = liquidacion?.anticipos?.filter(
+              (anticipo) => anticipo.id !== anticipoId
+            ) || [];
+
+            // Recalcular el totalAnticipos para esta liquidación
+            const totalAnticipos = anticiposActualizados.reduce((total, anticipo) => {
+              return total + (anticipo.valor || 0);
+            }, 0);
+
             return {
               ...liquidacion,
-              anticipos: liquidacion?.anticipos?.filter((anticipo) => anticipo.id !== anticipoId),
+              sueldoTotal: (liquidacion.sueldoTotal + liquidacion.totalAnticipos) - totalAnticipos,
+              anticipos: anticiposActualizados,
+              totalAnticipos, // Actualizamos el total de anticipos
             };
           }
           return liquidacion; // Retornar la liquidación sin cambios si no coincide
         }),
-        liquidacion: state.liquidacion ? {
-          ...state.liquidacion,
-          anticipos: state.liquidacion.anticipos?.filter((anticipo) => anticipo.id !== anticipoId) || [], // Proporcionar un array vacío si anticipos es undefined
-        } : null // Si state.liquidacion es null, mantenerlo como null
+        liquidacion: state.liquidacion
+          ? {
+            ...state.liquidacion,
+            anticipos: state.liquidacion.anticipos?.filter(
+              (anticipo) => anticipo.id !== anticipoId
+            ) || [],
+            // Recalcular el totalAnticipos en la liquidación activa
+            totalAnticipos: state.liquidacion.anticipos
+              ?.filter((anticipo) => anticipo.id !== anticipoId)
+              .reduce((total, anticipo) => total + (anticipo.valor || 0), 0) || 0,
+          }
+          : null, // Si no hay liquidación activa, mantenerla como null
       };
     case 'SET_MODAL_CONFIGURACION':
       return {

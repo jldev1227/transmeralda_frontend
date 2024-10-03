@@ -148,7 +148,7 @@ export default function LiquidacionesList() {
                   </p>
                   <p className="flex justify-between">
                     <strong>Anticipos:</strong>{" "}
-                    {formatToCOP(item.pension)}
+                    {formatToCOP(item.totalAnticipos)}
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-6 mt-10">
