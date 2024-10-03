@@ -156,7 +156,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
             <Text style={styles.textValue}>{item?.diasLaborados}</Text>
           </View>
           <View style={styles.cardRow}>
-            <Text style={styles.label}>Salario básico</Text>
+            <Text style={styles.label}>Salario devengado</Text>
             <Text
               style={[
                 styles.textValue,
@@ -169,7 +169,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
                 },
               ]}
             >
-              {formatToCOP(item?.conductor?.salarioBase)}
+              {formatToCOP(item?.salarioDevengado)}
             </Text>
           </View>
           <View style={styles.cardRow}>
