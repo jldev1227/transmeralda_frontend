@@ -89,7 +89,7 @@ export default function Anticipos() {
                     type="text"
                     label={"Valor"}
                     placeholder="$0"
-                    className="max-w-md"
+                    className="w-full"
                     value={
                       anticipo.valor !== 0 ? formatCurrency(anticipo.valor) : ""
                     } // Muestra el valor solo cuando pagCliente es false

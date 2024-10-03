@@ -104,7 +104,10 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
         }}>
           <Text style={styles.header}>TRANSPORTES Y SERVICIOS ESMERALSA S.A.S ZOMAC</Text>
           <Text style={{
-            
+            fontSize: 10,
+          }}>NIT: 901528440</Text>
+          <Text style={{
+            marginTop: 15
           }}>Comprobante de nomina</Text>
         </View>
         <Image
@@ -120,7 +123,8 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
       </View>
 
       <View style={{
-        gap: 20
+        gap: 20,
+        marginTop: -20
       }}>
         <View style={styles.card}>
           <View style={styles.cardRow}>
