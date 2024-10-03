@@ -107,7 +107,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
           }}
         >
           <Text style={styles.header}>
-            TRANSPORTES Y SERVICIOS ESMERALSA S.A.S ZOMAC
+            TRANSPORTES Y SERVICIOS ESMERALDA S.A.S ZOMAC
           </Text>
           <Text
             style={{
