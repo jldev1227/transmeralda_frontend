@@ -156,6 +156,10 @@ export const CREAR_LIQUIDACION = gql`
             mes
             vehiculoId
         }
+        anticipos {
+            id
+            valor
+        }   
     }
 }
 `;
@@ -256,6 +260,10 @@ export const EDITAR_LIQUIDACION = gql`
             pagCliente
             mes
             vehiculoId
+        }
+        anticipos {
+            id
+            valor
         }
     }
 }

@@ -7,7 +7,8 @@ import {
   pdf,
   Image,
 } from "@react-pdf/renderer";
-import { Button } from "@nextui-org/react";
+import { Button } from "@nextui-org/button";
+import { Divider } from "@nextui-org/divider";
 import { BonificacionesAcc, Bono, Liquidacion } from "@/types/index";
 import { formatDate, formatToCOP } from "@/helpers";
 import { Font } from "@react-pdf/renderer";
@@ -29,7 +30,7 @@ Font.register({
 // Estilos para el PDF
 const styles = StyleSheet.create({
   page: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 100,
     paddingVertical: 60,
     backgroundColor: "#FFF", // Fondo gris claro para el PDF}
     fontFamily: "Roboto", // Usa una fuente predeterminada
@@ -39,9 +40,9 @@ const styles = StyleSheet.create({
   header: {
     fontFamily: "Roboto", // Usa la fuente registrada
     fontWeight: "bold", // Aplica el peso
-    fontSize: 24,
+    fontSize: 14,
+    maxWidth: 300,
     marginBottom: 2,
-    textAlign: "center",
     color: "#2E8B57", // Verde para el título principal
   },
   title: {
@@ -94,27 +95,33 @@ type LiquidacionPDFProps = {
 const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
   <Document>
     <Page size="A4" style={styles.page}>
-      <View>
-        <View
-          style={{
-            alignItems: "flex-end",
-            justifyContent: "center",
-          }}
-        >
-          <Image
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center'
+      }}>
+        <View style={{
+          gap: 2
+        }}>
+          <Text style={styles.header}>TRANSPORTES Y SERVICIOS ESMERALSA S.A.S ZOMAC</Text>
+          <Text style={{
+            
+          }}>Comprobante de nomina</Text>
+        </View>
+        <Image
             style={{
               width: 150,
               position: "absolute",
               height: 90,
+              right: -45,
               objectFit: "cover",
             }}
             source={"/codi.png"}
           />
-        </View>
-        <Text style={styles.header}>LIQUIDACION #{item?.id}</Text>
       </View>
 
-      <View style={{ paddingHorizontal: 65, gap: 20 }}>
+      <View style={{
+        gap: 20
+      }}>
         <View style={styles.card}>
           <View style={styles.cardRow}>
             <Text style={styles.label}>Nombre</Text>
@@ -166,9 +173,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
           </View>
           <View style={[styles.cardRow, { borderBottom: 0 }]}>
             <Text style={styles.label}>Ajuste villanueva</Text>
-            <Text>
-              {item?.diasLaboradosVillanueva}{' '}días
-            </Text>
+            <Text>{item?.diasLaboradosVillanueva} días</Text>
             <Text
               style={[
                 styles.textValue,
@@ -264,39 +269,133 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
               </View>
             ))}
 
-          {item?.pernotes?.map((pernote) => (
-            <View key={pernote.id} style={[styles.cardRow]}>
-              <Text style={[styles.label, { flex: 2 }]}>Pernotes</Text>
+          {item?.pernotes && item.pernotes?.length > 0 ? (
+            item?.pernotes?.map((pernote) => (
+              <View key={pernote.id} style={[styles.cardRow]}>
+                <Text style={[styles.label, { flex: 2 }]}>Pernotes</Text>
+                <Text
+                  style={[
+                    styles.textValue,
+                    { flex: 1, textAlign: "center", fontSize: 10 },
+                  ]}
+                >
+                  {pernote.fechas.join(" ")}
+                </Text>
+                <Text
+                  style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+                >
+                  {pernote.fechas?.length}
+                </Text>
+                <Text
+                  style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+                >
+                  {formatToCOP(item.totalPernotes)}
+                </Text>
+              </View>
+            ))
+          ) : (
+            <View style={[styles.cardRow]}>
+              <Text style={[styles.label, { flex: 3 }]}>Pernotes</Text>
               <Text
-                style={[styles.textValue, { flex: 1, textAlign: "center", fontSize: 10 }]}
+                style={[styles.textValue, { flex: 1, textAlign: "center" }]}
               >
-                {pernote.fechas.join(' ')}
+                0
               </Text>
               <Text
                 style={[styles.textValue, { flex: 1, textAlign: "center" }]}
               >
-                {pernote.fechas?.length}
-              </Text>
-              <Text
-                style={[styles.textValue, { flex: 1, textAlign: "center" }]}
-              >
-                {formatToCOP(item.totalPernotes)}
+                {formatToCOP(0)}
               </Text>
             </View>
-          ))}
+          )}
 
-          <View style={[styles.cardRow, {
-            borderBottom: 0
-          }]}>
+          <View
+            style={[
+              styles.cardRow,
+              {
+                borderBottom: 0,
+              },
+            ]}
+          >
             <Text style={[styles.label, { flex: 2 }]}>Recargos</Text>
             <Text style={[styles.textValue, { flex: 1, textAlign: "center" }]}>
-            <Text></Text>
+              <Text></Text>
             </Text>
             <Text style={[styles.textValue, { flex: 1, textAlign: "center" }]}>
               {item?.recargos?.length}
             </Text>
             <Text style={[styles.textValue, { flex: 1, textAlign: "center" }]}>
               {formatToCOP(item?.totalRecargos)}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.card}>
+          <View style={[styles.cardRow, { borderBottom: 0 }]}>
+            <Text style={styles.label}>Salud</Text>
+            <Text
+              style={[
+                styles.textValue,
+                {
+                  color: "#e60f0f",
+                  backgroundColor: "#e60f0f1e",
+                  padding: 3,
+                  borderRadius: 5,
+                  fontSize: 14,
+                },
+              ]}
+            >
+              {formatToCOP(item?.salud)}
+            </Text>
+          </View>
+
+          <Divider
+            style={{
+              height: 1,
+              backgroundColor: "#e6e6e6",
+            }}
+          />
+
+          <View style={[styles.cardRow, { borderBottom: 0 }]}>
+            <Text style={styles.label}>Pensión</Text>
+            <Text
+              style={[
+                styles.textValue,
+                {
+                  color: "#e60f0f",
+                  backgroundColor: "#e60f0f1e",
+                  padding: 3,
+                  borderRadius: 5,
+                  fontSize: 14,
+                },
+              ]}
+            >
+              {formatToCOP(item?.pension)}
+            </Text>
+          </View>
+
+          <Divider
+            style={{
+              height: 1,
+              backgroundColor: "#e6e6e6",
+            }}
+          />
+
+          <View style={[styles.cardRow, { borderBottom: 0 }]}>
+            <Text style={styles.label}>Anticipos</Text>
+            <Text
+              style={[
+                styles.textValue,
+                {
+                  color: "#e60f0f",
+                  backgroundColor: "#e60f0f1e",
+                  padding: 3,
+                  borderRadius: 5,
+                  fontSize: 14,
+                },
+              ]}
+            >
+              {formatToCOP(item?.totalAnticipos)}
             </Text>
           </View>
         </View>
