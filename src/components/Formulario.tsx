@@ -612,9 +612,11 @@ export default function Formulario() {
       state.configuracion?.find((config) => config.nombre === "Pensión")
         ?.valor ?? 0; // Asumir que cada config tiene una propiedad 'valor'
 
-    const salud = ((salarioDevengado * saludConfig) / 100 / 30) * diasLaborados;
+    const salud = ((salarioDevengado * saludConfig) / 100 );
+
+    console.log(salud)
     const pension =
-      ((salarioDevengado * pensionConfig) / 100 / 30) * diasLaborados;
+      ((salarioDevengado * pensionConfig) / 100 );
 
     const totalAnticipos =
       state.liquidacion?.anticipos?.reduce((total, anticipo) => {
