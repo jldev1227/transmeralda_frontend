@@ -95,37 +95,51 @@ type LiquidacionPDFProps = {
 const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
   <Document>
     <Page size="A4" style={styles.page}>
-      <View style={{
-        flexDirection: 'row',
-        alignItems: 'center'
-      }}>
-        <View style={{
-          gap: 2
-        }}>
-          <Text style={styles.header}>TRANSPORTES Y SERVICIOS ESMERALSA S.A.S ZOMAC</Text>
-          <Text style={{
-            fontSize: 10,
-          }}>NIT: 901528440</Text>
-          <Text style={{
-            marginTop: 15
-          }}>Comprobante de nomina</Text>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+      >
+        <View
+          style={{
+            gap: 2,
+          }}
+        >
+          <Text style={styles.header}>
+            TRANSPORTES Y SERVICIOS ESMERALSA S.A.S ZOMAC
+          </Text>
+          <Text
+            style={{
+              fontSize: 10,
+              fontFamily: "Roboto", // Usa la fuente registrada
+              fontWeight: "semibold", // Aplica el peso,
+            }}
+          >
+            NIT: 901528440
+          </Text>
+          <Text style={[styles.label, { marginTop: 15, color: "#2E8B57" }]}>
+            Comprobante de nomina
+          </Text>
         </View>
         <Image
-            style={{
-              width: 150,
-              position: "absolute",
-              height: 90,
-              right: -45,
-              objectFit: "cover",
-            }}
-            source={"/codi.png"}
-          />
+          style={{
+            width: 150,
+            position: "absolute",
+            height: 90,
+            right: -45,
+            objectFit: "cover",
+          }}
+          source={"/codi.png"}
+        />
       </View>
 
-      <View style={{
-        gap: 20,
-        marginTop: -20
-      }}>
+      <View
+        style={{
+          gap: 20,
+          marginTop: -20,
+        }}
+      >
         <View style={styles.card}>
           <View style={styles.cardRow}>
             <Text style={styles.label}>Nombre</Text>
