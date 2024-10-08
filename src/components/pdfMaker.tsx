@@ -7,7 +7,6 @@ import {
   pdf,
   Image,
 } from "@react-pdf/renderer";
-import { Button } from "@nextui-org/button";
 import { Divider } from "@nextui-org/divider";
 import { BonificacionesAcc, Bono, Liquidacion } from "@/types/index";
 import { formatDate, formatToCOP } from "@/helpers";
@@ -449,24 +448,4 @@ const handleGeneratePDF = async (item: Liquidacion | null): Promise<void> => {
   window.open(url); // Abre el PDF en una nueva pestaña
 };
 
-type PdfMakerProps = {
-  children: React.ReactNode; // Tipado de children como nodo React
-  item: Liquidacion | null; // Tipo de item basado en LiquidacionInput
-  hasTooltip?: boolean; // Tooltip es opcional
-};
-
-// Componente que renderiza el botón y genera el PDF
-const PdfMaker = ({ children, item }: PdfMakerProps) => {
-  return (
-    <Button
-      color="secondary"
-      className="h-10 w-full"
-      isIconOnly
-      onPress={() => handleGeneratePDF(item)}
-    >
-      {children}
-    </Button>
-  );
-};
-
-export default PdfMaker;
+export default handleGeneratePDF;
