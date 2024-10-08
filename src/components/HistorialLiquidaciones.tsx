@@ -15,7 +15,6 @@ import {
   Chip,
 } from "@nextui-org/react";
 import { VerticalDotsIcon } from "./VerticalDotsIcon";
-import { SearchIcon } from "./SearchIcon";
 import { ChevronDownIcon } from "./ChevronDownIcon";
 import { columns, statusOptions } from "./dataTableLiquidaciones";
 import { capitalize } from "./utils";
@@ -98,7 +97,6 @@ export default function App() {
     }
 
     if (statusFilter.size > 0 && statusFilter.size !== statusOptions.length) {
-
       // statusFilter ahora es un Set, por lo que usamos has
       filteredLiquidaciones = filteredLiquidaciones.filter((liquidacion) =>
         statusFilter.has(liquidacion?.estado)
@@ -315,7 +313,32 @@ export default function App() {
             isClearable
             className="w-full sm:max-w-[44%]"
             placeholder="Buscar por conductor..."
-            startContent={<SearchIcon />}
+            startContent={
+              <svg
+                aria-hidden="true"
+                fill="none"
+                focusable="false"
+                height="1em"
+                role="presentation"
+                viewBox="0 0 24 24"
+                width="1em"
+              >
+                <path
+                  d="M11.5 21C16.7467 21 21 16.7467 21 11.5C21 6.25329 16.7467 2 11.5 2C6.25329 2 2 6.25329 2 11.5C2 16.7467 6.25329 21 11.5 21Z"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M22 22L20 20"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                />
+              </svg>
+            }
             value={filterValue}
             onClear={() => onClear()}
             onValueChange={onSearchChange}
