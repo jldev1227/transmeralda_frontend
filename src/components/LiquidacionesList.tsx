@@ -46,7 +46,7 @@ export default function LiquidacionesList() {
 
   return (
     <div className="space-y-5">
-      <h2 className="font-bold text-2xl text-green-700">Historial</h2>
+      <h2 className="font-bold text-2xl text-green-700">Historial de Liquidaciones</h2>
       {isMobile ? (
         // Acordeón para dispositivos móviles
         <Accordion variant="splitted">

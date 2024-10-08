@@ -1,16 +1,37 @@
 import { mesesDelAño } from "@/data/meses";
 import useLiquidacion from "@/hooks/useLiquidacion";
 import { selectStyles } from "@/styles/selectStyles";
-import { VehiculoOption } from "@/types";
+import { Bono, Conductor, VehiculoOption } from "@/types";
 import { Select, SelectItem } from "@nextui-org/select";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SelectReact, { SingleValue } from "react-select";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableRow,
+} from "@nextui-org/table";
+
+interface Resultado {
+  conductor: Conductor;
+  bonosFiltrados: Bono[];
+}
+
+interface TotalesBonos {
+  bonoAlimentacion: number;
+  bonoTrabajado: number;
+  bonoTrabajadoDoble: number;
+}
 
 export default function FiltrarLiquidaciones() {
   const { state } = useLiquidacion();
   const [vehiculoSelected, setVehiculoSelected] =
     useState<SingleValue<VehiculoOption>>(null);
-  const [mesSelected, setMesSelected] = useState<SingleValue<string>>(null);
+  const [mesSelected, setMesSelected] =
+    useState<SingleValue<string | null>>(null);
+  const [resultados, setResultados] = useState<Resultado[]>([]);
 
   const vehiculosOptions = useMemo(
     () =>
@@ -68,9 +89,40 @@ export default function FiltrarLiquidaciones() {
       return monthCondition && vehicleCondition;
     });
 
-    console.log(conductores)
+    if (mesSelected !== null && vehiculoSelected?.value) {
+      const resultadosFiltrados = conductores?.map((liquidacion) => {
+        const bonosFiltrados = liquidacion?.bonificaciones
+          ?.flatMap((bono) => {
+            // Filtrar solo aquellos bonos que coincidan con el vehiculoSelected.value
+            if (bono.vehiculoId === vehiculoSelected.value) {
+              const valuesFiltrados = bono.values.filter(
+                (value) => value.mes === mesesDelAño[Number(mesSelected)]?.label
+              );
 
-    // Hacer algo con 'conductores', como almacenarlos o mostrarlos
+              if (valuesFiltrados.length > 0) {
+                return {
+                  id: bono.id ?? "",
+                  name: bono.name,
+                  value: bono.value,
+                  values: valuesFiltrados,
+                };
+              }
+            }
+
+            return undefined; // Retornamos undefined si no pasa el filtro de vehiculoId
+          })
+          ?.filter(Boolean) as Bono[]; // Filtramos los undefined y garantizamos que sea Bono[]
+
+        // Retornar el objeto con conductor y bonos filtrados
+        return {
+          conductor: liquidacion.conductor, // O la información relevante del conductor
+          bonosFiltrados,
+        };
+      });
+
+      // Actualizamos el estado con el array de resultados filtrados
+      setResultados(resultadosFiltrados);
+    }
   }, [state.liquidaciones, vehiculoSelected, mesSelected]);
 
   // Ejecutar handleFilter cuando cambien vehiculoSelected o dateSelected
@@ -78,43 +130,190 @@ export default function FiltrarLiquidaciones() {
     handleFilter();
   }, [handleFilter]);
 
+  const unificarConductores = (resultados: any[]) => {
+    return resultados.reduce((acc, resultado) => {
+      const conductorKey = `${resultado.conductor.nombre} ${resultado.conductor.apellido}`;
+
+      if (!acc[conductorKey]) {
+        acc[conductorKey] = {
+          conductor: resultado.conductor,
+          bonos: {},
+        };
+      }
+
+      resultado.bonosFiltrados.forEach((bonificacion: Bono) => {
+        const totalQuantity = bonificacion.values.reduce(
+          (sum, val) => sum + (val.quantity || 0),
+          0
+        );
+
+        if (acc[conductorKey].bonos[bonificacion.name]) {
+          // Sumar la cantidad y el valor total si el bono ya existe
+          acc[conductorKey].bonos[bonificacion.name].quantity += totalQuantity;
+          acc[conductorKey].bonos[bonificacion.name].totalValue +=
+            totalQuantity * bonificacion.value;
+        } else {
+          // Si no existe, se agrega el bono
+          acc[conductorKey].bonos[bonificacion.name] = {
+            name: bonificacion.name,
+            quantity: totalQuantity,
+            totalValue: totalQuantity * bonificacion.value,
+          };
+        }
+      });
+
+      return acc;
+    }, {});
+  };
+
+  // Utilizamos la función para unificar los conductores
+  const resultadosUnificados = Object.values(unificarConductores(resultados));
+
+  const totalBonos = resultadosUnificados.reduce(
+    (totals: TotalesBonos, resultado: any) => {
+      const bonoAlimentacion = resultado.bonos["Bono de alimentación"] || {
+        quantity: 0,
+      };
+      const bonoTrabajado = resultado.bonos["Bono día trabajado"] || {
+        quantity: 0,
+      };
+      const bonoTrabajadoDoble = resultado.bonos[
+        "Bono día trabajado doble"
+      ] || { quantity: 0 };
+
+      // Acumular los totales
+      totals.bonoAlimentacion += bonoAlimentacion.quantity;
+      totals.bonoTrabajado += bonoTrabajado.quantity;
+      totals.bonoTrabajadoDoble += bonoTrabajadoDoble.quantity;
+
+      return totals;
+    },
+    {
+      bonoAlimentacion: 0,
+      bonoTrabajado: 0,
+      bonoTrabajadoDoble: 0,
+    } as TotalesBonos // Inicialización de los totales
+  );
+
   return (
-    <div className="space-y-20 grid grid-cols-1 place-items-center">
-      <div className="flex flex-col items-center w-full space-y-3">
-        <SelectReact
-          className="max-w-xs w-full"
-          options={vehiculosOptions}
-          value={vehiculoSelected}
-          onChange={(selectedOption) => handleVehiculoSelect(selectedOption)}
-          placeholder="Seleccione la placa"
-          isSearchable
-          styles={selectStyles}
-        />
-        <Select
-          label="Selecciona un mes"
-          className="max-w-xs"
-          onChange={(e) => setMesSelected(e.target.value)}
-        >
-          {mesesDelAño.map((mes) => (
-            <SelectItem key={mes.value} value={mes.value}>
-              {mes.label}
-            </SelectItem>
-          ))}
-        </Select>
+    <div className="w-2/3 mx-auto flex flex-col gap-10">
+      <div className="space-y-5">
+        <h2 className="font-bold text-2xl text-green-700">
+          Filtrar Liquidaciones
+        </h2>
+        <div className="space-y-3">
+          <SelectReact
+            options={vehiculosOptions}
+            value={vehiculoSelected}
+            onChange={(selectedOption) => handleVehiculoSelect(selectedOption)}
+            placeholder="Seleccione la placa"
+            isSearchable
+            styles={selectStyles}
+          />
+          <Select
+            label="Selecciona un mes"
+            onChange={(e) => setMesSelected(e.target.value)}
+          >
+            {mesesDelAño.map((mes) => (
+              <SelectItem key={mes.value} value={mes.value}>
+                {mes.label}
+              </SelectItem>
+            ))}
+          </Select>
+        </div>
       </div>
       {vehiculoSelected && mesSelected && (
-        <div>
-          <h2>Vehiculo {vehiculoSelected.label}</h2>
-          <table className="table-auto w-full text-sm mb-5">
-            <thead className="bg-yellow-500 text-white">
-              <tr>
-                <th className="px-4 py-2 text-left">Conductor</th>
-                <th className="px-4 py-2 text-center">Total</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+        <>
+          <div className="mx-auto text-center">
+            <h2 className="text-xl font-bold">{vehiculoSelected.label}</h2>
+            <h3 className="text-xl font-bold text-foreground-400">
+              {mesesDelAño[Number(mesSelected)]?.label}
+            </h3>
+          </div>
+          <Table className="-mt-5" aria-label="Example static collection table">
+            <TableHeader>
+              <TableColumn className="bg-green-700 text-white uppercase">
+                Conductor
+              </TableColumn>
+              <TableColumn className="bg-green-700 text-white uppercase">
+                Bono de alimentación
+              </TableColumn>
+              <TableColumn className="bg-green-700 text-white uppercase">
+                Bono día trabajado
+              </TableColumn>
+              <TableColumn className="bg-green-700 text-white uppercase">
+                Bono día trabajado doble
+              </TableColumn>
+            </TableHeader>
+            <TableBody emptyContent={"No hay resultados por mostrar."}>
+              {[
+                ...resultadosUnificados
+                  ?.filter((resultado: any) => {
+                    const bonoAlimentacion = resultado.bonos[
+                      "Bono de alimentación"
+                    ] || { quantity: 0 };
+                    const bonoTrabajado = resultado.bonos[
+                      "Bono día trabajado"
+                    ] || { quantity: 0 };
+                    const bonoTrabajadoDoble = resultado.bonos[
+                      "Bono día trabajado doble"
+                    ] || { quantity: 0 };
+
+                    // Filtrar aquellos cuyo quantity sea mayor que 0
+                    return (
+                      bonoAlimentacion.quantity > 0 ||
+                      bonoTrabajado.quantity > 0 ||
+                      bonoTrabajadoDoble.quantity > 0
+                    );
+                  })
+                  ?.map((resultado: any, index: number) => {
+                    const bonoAlimentacion = resultado.bonos[
+                      "Bono de alimentación"
+                    ] || { quantity: 0 };
+                    const bonoTrabajado = resultado.bonos[
+                      "Bono día trabajado"
+                    ] || { quantity: 0 };
+                    const bonoTrabajadoDoble = resultado.bonos[
+                      "Bono día trabajado doble"
+                    ] || { quantity: 0 };
+
+                    return (
+                      <TableRow
+                        className={`${index % 2 === 0 ? "" : "bg-default-100"}`}
+                        key={index}
+                      >
+                        <TableCell>{`${resultado.conductor.nombre} ${resultado.conductor.apellido}`}</TableCell>
+                        <TableCell className="text-center">
+                          {bonoAlimentacion.quantity}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {bonoTrabajado.quantity}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {bonoTrabajadoDoble.quantity}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }),
+                // Pie de tabla con los totales
+                <TableRow className="uppercase bg-green-100" key="totals">
+                  <TableCell>
+                    <strong>Total</strong>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <strong>{totalBonos.bonoAlimentacion}</strong>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <strong>{totalBonos.bonoTrabajado}</strong>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <strong>{totalBonos.bonoTrabajadoDoble}</strong>
+                  </TableCell>
+                </TableRow>,
+              ]}
+            </TableBody>
+          </Table>
+        </>
       )}
     </div>
   );

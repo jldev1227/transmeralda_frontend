@@ -399,6 +399,7 @@ export default function App() {
     <Table
       aria-label="Example table with custom cells, pagination and sorting"
       isHeaderSticky
+      isStriped
       selectedKeys={selectedKeys}
       sortDescriptor={sortDescriptor}
       topContent={topContent}
@@ -419,7 +420,7 @@ export default function App() {
       <TableHeader columns={headerColumns}>
         {(column) => (
           <TableColumn
-            className="bg-green-700 text-white"
+            className="bg-green-700 text-white uppercase"
             key={column.uid}
             align={column.uid === "actions" ? "center" : "start"}
             allowsSorting={column.sortable}
@@ -428,7 +429,7 @@ export default function App() {
           </TableColumn>
         )}
       </TableHeader>
-      <TableBody emptyContent={"No users found"} items={sortedItems}>
+      <TableBody emptyContent={"No hay liquidaciones realizadas"} items={sortedItems}>
         {(item) => (
           <TableRow key={item.id}>
             {(columnKey) => (
