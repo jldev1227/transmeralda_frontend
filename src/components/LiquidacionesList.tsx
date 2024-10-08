@@ -4,6 +4,7 @@ import { formatDate, formatToCOP } from "@/helpers";
 import { Button } from "@nextui-org/button";
 import { Accordion, AccordionItem } from "@nextui-org/accordion";
 import HistorialLiquidaciones from "./HistorialLiquidaciones";
+import handleGeneratePDF from "./pdfMaker";
 
 export default function LiquidacionesList() {
   const { state, dispatch, loadingLiquidaciones } = useLiquidacion();
@@ -156,7 +157,7 @@ export default function LiquidacionesList() {
                   >
                     Ver
                   </Button>
-                  <Button className="bg-black text-white" isIconOnly>
+                  <Button onPress={() => handleGeneratePDF(item)} className="bg-black text-white" isIconOnly>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
