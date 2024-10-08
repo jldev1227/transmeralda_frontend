@@ -16,6 +16,6 @@ export const columns = [
 ];
 
 export const statusOptions = [
-  {name: "Pendiente", uid: "pendiente"},
-  {name: "Liquidado", uid: "liquidado"},
+  {name: "Pendiente", uid: "Pendiente"},
+  {name: "Liquidado", uid: "Liquidado"},
 ];
