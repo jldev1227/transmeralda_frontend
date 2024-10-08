@@ -79,8 +79,8 @@ export const CREAR_LIQUIDACION = gql`
     $diasLaborados: Int!
     $diasLaboradosVillanueva: Int!
     $ajusteSalarial: Float!
-    $salud: String!
-    $pension: String!
+    $salud: Float!
+    $pension: Float!
     $estado: String!
     $vehiculos: [ID!]!
     $bonificaciones: [BonificacionInput!]! 

@@ -34,7 +34,6 @@ import {
 } from "@/types/index";
 import useLiquidacion from "@/hooks/useLiquidacion";
 import { parseDate } from "@internationalized/date";
-import PdfMaker from "./pdfMaker";
 import { selectStyles } from "@/styles/selectStyles";
 import Anticipos from "@/components/Anticipos";
 
@@ -706,10 +705,9 @@ export default function Formulario() {
       ajusteSalarial: bonificacionVillanueva || 0, // Usa bonificacionVillanueva o 0
       salud: salud || 0, // Usa bonificacionVillanueva o 0
       pension: pension || 0, // Usa bonificacionVillanueva o 0
+      estado:  salud > 0 && pension > 0 && totalBonificaciones > 0 ? 'Liquidado' : 'Pendiente' , // Usa bonificacionVillanueva o 0
       vehiculos: detallesVehiculos.map((detalle) => detalle.vehiculo.value),
     };
-
-    console.log(nuevaLiquidacion);
 
     // Actualizar el estado de `liquidacion`
     setLiquidacion(nuevaLiquidacion);
@@ -766,6 +764,7 @@ export default function Formulario() {
           ajusteSalarial: liquidacion.ajusteSalarial || 0,
           salud: liquidacion.salud || 0,
           pension: liquidacion.pension || 0,
+          estado: liquidacion.estado,
           vehiculos: liquidacion.vehiculos, // Mapeamos los valores correctos de los vehículos
           bonificaciones: bonificacionesFiltradas, // Enviamos las bonificaciones filtradas
           pernotes: pernotesFiltrados, // Enviamos los pernotes filtrados
