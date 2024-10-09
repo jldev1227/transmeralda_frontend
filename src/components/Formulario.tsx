@@ -875,7 +875,7 @@ export default function Formulario() {
                       className="space-y-5 flex flex-col p-6"
                     >
                       <h2 className="text-xl font-semibold mb-3">
-                        Vehículo: <b>{detalleVehiculo.vehiculo.label}</b>
+                        Vehículo: <b className="text-green-700">{detalleVehiculo.vehiculo.label}</b>
                       </h2>
                       <h3 className="font-semibold text-xl mb-2">
                         Bonificaciones
@@ -1574,8 +1574,8 @@ const CardLiquidacion = ({
     <Card className="mb-5">
       <CardHeader className="flex gap-3">
         <div className="flex flex-col">
-          <p className="text-md text-foreground-500">
-            Vehículo: {detalleVehiculo.vehiculo.label}
+          <p className="text-xl font-semibold">
+            Vehículo: <b className="text-green-700">{detalleVehiculo.vehiculo.label}</b>
           </p>
         </div>
       </CardHeader>
