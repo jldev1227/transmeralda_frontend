@@ -25,6 +25,7 @@ query Liquidaciones {
         ajusteSalarial
         salud
         pension
+        estado
         vehiculos {
             id
             placa
@@ -78,6 +79,9 @@ export const CREAR_LIQUIDACION = gql`
     $diasLaborados: Int!
     $diasLaboradosVillanueva: Int!
     $ajusteSalarial: Float!
+    $salud: Float!
+    $pension: Float!
+    $estado: String!
     $vehiculos: [ID!]!
     $bonificaciones: [BonificacionInput!]! 
     $pernotes: [PernoteInput!]!
@@ -99,6 +103,7 @@ export const CREAR_LIQUIDACION = gql`
       ajusteSalarial: $ajusteSalarial
       salud: $salud
       pension: $pension
+      estado: $estado
       vehiculos: $vehiculos
       bonificaciones: $bonificaciones
       pernotes: $pernotes
@@ -126,6 +131,7 @@ export const CREAR_LIQUIDACION = gql`
         ajusteSalarial
         salud
         pension
+        estado
         vehiculos {
             id
             placa
@@ -182,6 +188,7 @@ export const EDITAR_LIQUIDACION = gql`
     $ajusteSalarial: Float!
     $salud: Float!
     $pension: Float!
+    $estado: String!
     $vehiculos: [ID!]!
     $bonificaciones: [BonificacionInput!]! 
     $pernotes: [PernoteInput!]!
@@ -204,6 +211,7 @@ export const EDITAR_LIQUIDACION = gql`
         ajusteSalarial: $ajusteSalarial
         salud: $salud
         pension: $pension
+        estado: $estado
         vehiculos: $vehiculos
         bonificaciones: $bonificaciones
         pernotes: $pernotes
@@ -231,6 +239,7 @@ export const EDITAR_LIQUIDACION = gql`
         ajusteSalarial
         salud
         pension
+        estado
         vehiculos {
             id
             placa

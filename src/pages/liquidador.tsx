@@ -2,18 +2,25 @@ import Formulario from "@/components/Formulario";
 import LiquidacionesList from "@/components/LiquidacionesList";
 import AlertaModal from "@/components/AlertaModal";
 import ModalConfiguracionLiquidador from "@/components/ModalConfiguracionLiquidador";
-// import FiltrarLiquidaciones from "@/components/FiltrarLiquidaciones";
+import FiltrarLiquidaciones from "@/components/FiltrarLiquidaciones";
+import { Tabs, Tab } from "@nextui-org/tabs";
 
 export default function Liquidador() {
   return (
-    <div className="flex flex-col">
-      <section className="flex flex-col md:gap-8 py-8 md:py-10">
-        <Formulario />
-        <LiquidacionesList />
-        {/* <FiltrarLiquidaciones /> */}
-        <AlertaModal />
-        <ModalConfiguracionLiquidador />
-      </section>
+    <div className="space-y-8">
+      <div className="flex flex-col space-y-4">
+        <Tabs className="mx-auto" color="primary" aria-label="Sections">
+          <Tab key="liquidar" title="Liquidar">
+            <Formulario />
+            <LiquidacionesList />
+          </Tab>
+          <Tab key="filtrar" title="Filtrar">
+            <FiltrarLiquidaciones />
+          </Tab>
+        </Tabs>
+      </div>
+      <AlertaModal />
+      <ModalConfiguracionLiquidador />
     </div>
   );
 }

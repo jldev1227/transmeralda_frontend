@@ -105,6 +105,9 @@ export type DetalleVehiculo = {
   recargos: Recargo[];
 };
 
+type Estado = "Pendiente" | "Liquidado"; // Los posibles valores de `estado`
+
+
 // Tipo base para propiedades comunes entre Liquidacion y LiquidacionInput
 type BaseLiquidacion = {
   conductorId?: Conductor['id'] | null;
@@ -124,6 +127,9 @@ type BaseLiquidacion = {
   pernotes?: Pernote[];                 // Pernotes opcionales
   recargos?: Recargo[];                 // Recargos opcionales
   anticipos?: Anticipo[];                 // Recargos opcionales
+  estado: Estado; // Asegura que `estado` solo puede ser "pendiente" o "liquidado"
+  acciones?: any;  // Agrega 'acciones' como un campo válido
+  [key: string]: any; // Opción flexible para indexar propiedades adicionales si no tienes un conjunto fijo
 };
 
 // LiquidacionInput: utiliza `DateValue | null` para las fechas

@@ -34,7 +34,6 @@ import {
 } from "@/types/index";
 import useLiquidacion from "@/hooks/useLiquidacion";
 import { parseDate } from "@internationalized/date";
-import PdfMaker from "./pdfMaker";
 import { selectStyles } from "@/styles/selectStyles";
 import Anticipos from "@/components/Anticipos";
 
@@ -612,11 +611,9 @@ export default function Formulario() {
       state.configuracion?.find((config) => config.nombre === "Pensión")
         ?.valor ?? 0; // Asumir que cada config tiene una propiedad 'valor'
 
-    const salud = ((salarioDevengado * saludConfig) / 100 );
+    const salud = (salarioDevengado * saludConfig) / 100;
 
-    console.log(salud)
-    const pension =
-      ((salarioDevengado * pensionConfig) / 100 );
+    const pension = (salarioDevengado * pensionConfig) / 100;
 
     const totalAnticipos =
       state.liquidacion?.anticipos?.reduce((total, anticipo) => {
@@ -638,7 +635,8 @@ export default function Formulario() {
         bonificacionVillanueva +
         salarioDevengado +
         auxilioTransporte -
-        (salud + pension) - totalAnticipos
+        (salud + pension) -
+        totalAnticipos,
     };
   }, [
     detallesVehiculos,
@@ -707,10 +705,9 @@ export default function Formulario() {
       ajusteSalarial: bonificacionVillanueva || 0, // Usa bonificacionVillanueva o 0
       salud: salud || 0, // Usa bonificacionVillanueva o 0
       pension: pension || 0, // Usa bonificacionVillanueva o 0
+      estado:  salud > 0 && pension > 0 && totalBonificaciones > 0 ? 'Liquidado' : 'Pendiente' , // Usa bonificacionVillanueva o 0
       vehiculos: detallesVehiculos.map((detalle) => detalle.vehiculo.value),
     };
-
-    console.log(nuevaLiquidacion)
 
     // Actualizar el estado de `liquidacion`
     setLiquidacion(nuevaLiquidacion);
@@ -767,6 +764,7 @@ export default function Formulario() {
           ajusteSalarial: liquidacion.ajusteSalarial || 0,
           salud: liquidacion.salud || 0,
           pension: liquidacion.pension || 0,
+          estado: liquidacion.estado,
           vehiculos: liquidacion.vehiculos, // Mapeamos los valores correctos de los vehículos
           bonificaciones: bonificacionesFiltradas, // Enviamos las bonificaciones filtradas
           pernotes: pernotesFiltrados, // Enviamos los pernotes filtrados
@@ -877,7 +875,7 @@ export default function Formulario() {
                       className="space-y-5 flex flex-col p-6"
                     >
                       <h2 className="text-xl font-semibold mb-3">
-                        Vehículo: <b>{detalleVehiculo.vehiculo.label}</b>
+                        Vehículo: <b className="text-green-700">{detalleVehiculo.vehiculo.label}</b>
                       </h2>
                       <h3 className="font-semibold text-xl mb-2">
                         Bonificaciones
@@ -1392,69 +1390,45 @@ export default function Formulario() {
                               </table>
 
                               {!state.allowEdit && state?.liquidacion?.id && (
-                                <div className="grid md:grid-cols-3 gap-5">
-                                  <div className="col-span-2">
-                                    <PdfMaker item={state.liquidacion}>
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={1.5}
-                                        stroke="currentColor"
-                                        className="size-6"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
-                                        />
-                                      </svg>
-                                      <p className="ml-2">
-                                        Desprendible de nomina
-                                      </p>
-                                    </PdfMaker>
-                                  </div>
-                                  <Button
-                                    className="col-span-2 md:col-span-1 bg-red-600 text-white"
-                                    onPress={() => {
-                                      // Cancelar y limpiar los estados
-                                      dispatch({
-                                        type: "SET_LIQUIDACION",
-                                        payload: {
-                                          allowEdit: null,
-                                          liquidacion: null,
-                                        },
-                                      });
+                                <Button
+                                  className="col-span-2 md:col-span-1 bg-red-600 text-white"
+                                  onPress={() => {
+                                    // Cancelar y limpiar los estados
+                                    dispatch({
+                                      type: "SET_LIQUIDACION",
+                                      payload: {
+                                        allowEdit: null,
+                                        liquidacion: null,
+                                      },
+                                    });
 
-                                      limpiarStates();
-                                    }}
+                                    limpiarStates();
+                                  }}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={1.5}
+                                    stroke="currentColor"
+                                    className="size-5 text-white"
                                   >
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      strokeWidth={1.5}
-                                      stroke="currentColor"
-                                      className="size-5 text-white"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M6 18 18 6M6 6l12 12"
-                                      />
-                                    </svg>
-                                    <p>
-                                      {" "}
-                                      Cancelar{" "}
-                                      {stateLiquidacion?.id && state.allowEdit
-                                        ? "edición"
-                                        : stateLiquidacion?.id &&
-                                            !state.allowEdit
-                                          ? "consulta"
-                                          : "creación"}
-                                    </p>
-                                  </Button>
-                                </div>
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M6 18 18 6M6 6l12 12"
+                                    />
+                                  </svg>
+                                  <p>
+                                    {" "}
+                                    Cancelar{" "}
+                                    {stateLiquidacion?.id && state.allowEdit
+                                      ? "edición"
+                                      : stateLiquidacion?.id && !state.allowEdit
+                                        ? "consulta"
+                                        : "creación"}
+                                  </p>
+                                </Button>
                               )}
                             </CardBody>
                             {(state.allowEdit || state.allowEdit === null) && (
@@ -1600,8 +1574,8 @@ const CardLiquidacion = ({
     <Card className="mb-5">
       <CardHeader className="flex gap-3">
         <div className="flex flex-col">
-          <p className="text-md text-foreground-500">
-            Vehículo: {detalleVehiculo.vehiculo.label}
+          <p className="text-xl font-semibold">
+            Vehículo: <b className="text-green-700">{detalleVehiculo.vehiculo.label}</b>
           </p>
         </div>
       </CardHeader>
