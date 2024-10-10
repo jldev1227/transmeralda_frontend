@@ -13,7 +13,9 @@ import {
   TableColumn,
   TableRow,
 } from "@nextui-org/table";
-
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { Card, CardHeader, CardBody } from "@nextui-org/card";
+import { Divider } from "@nextui-org/divider";
 interface Resultado {
   conductor: Conductor;
   bonosFiltrados: Bono[];
@@ -195,14 +197,57 @@ export default function FiltrarLiquidaciones() {
     } as TotalesBonos // Inicialización de los totales
   );
 
+  const filtrarResultadosConBonos = (resultadosUnificados: any) => {
+    return resultadosUnificados
+      ?.filter((resultado: any) => {
+        const bonoAlimentacion = resultado.bonos["Bono de alimentación"] || {
+          quantity: 0,
+        };
+        const bonoTrabajado = resultado.bonos["Bono día trabajado"] || {
+          quantity: 0,
+        };
+        const bonoTrabajadoDoble = resultado.bonos[
+          "Bono día trabajado doble"
+        ] || { quantity: 0 };
+
+        // Filtrar aquellos cuyo quantity sea mayor que 0
+        return (
+          bonoAlimentacion.quantity > 0 ||
+          bonoTrabajado.quantity > 0 ||
+          bonoTrabajadoDoble.quantity > 0
+        );
+      })
+      ?.map((resultado: any) => {
+        const bonoAlimentacion = resultado.bonos["Bono de alimentación"] || {
+          quantity: 0,
+        };
+        const bonoTrabajado = resultado.bonos["Bono día trabajado"] || {
+          quantity: 0,
+        };
+        const bonoTrabajadoDoble = resultado.bonos[
+          "Bono día trabajado doble"
+        ] || { quantity: 0 };
+
+        return {
+          conductor: `${resultado.conductor.nombre} ${resultado.conductor.apellido}`,
+          bonoAlimentacion: bonoAlimentacion.quantity,
+          bonoTrabajado: bonoTrabajado.quantity,
+          bonoTrabajadoDoble: bonoTrabajadoDoble.quantity,
+        };
+      });
+  };
+
+  const isMobile = useMediaQuery("(max-width: 960px)"); // Tailwind `sm` breakpoint
+
   return (
-    <div className="w-2/3 mx-auto flex flex-col gap-10">
-      <div className="space-y-5">
+    <div className="max-md:px-3 xl:w-2/3 mx-auto flex flex-col gap-10">
+      <div className="space-y-5 flex flex-col items-center w-full">
         <h2 className="font-bold text-2xl text-green-700">
           Filtrar Liquidaciones
         </h2>
-        <div className="space-y-3">
+        <div className="space-y-3 w-full md:w-1/2 flex flex-col items-center">
           <SelectReact
+            className="w-full"
             options={vehiculosOptions}
             value={vehiculoSelected}
             onChange={(selectedOption) => handleVehiculoSelect(selectedOption)}
@@ -222,99 +267,211 @@ export default function FiltrarLiquidaciones() {
           </Select>
         </div>
       </div>
-      {vehiculoSelected && mesSelected && (
-        <>
-          <div className="mx-auto text-center">
-            <h2 className="text-xl font-bold">{vehiculoSelected.label}</h2>
-            <h3 className="text-xl font-bold text-foreground-400">
-              {mesesDelAño[Number(mesSelected)]?.label}
-            </h3>
-          </div>
-          <Table className="-mt-5" aria-label="Example static collection table">
-            <TableHeader>
-              <TableColumn className="bg-green-700 text-white uppercase">
-                Conductor
-              </TableColumn>
-              <TableColumn className="bg-green-700 text-white uppercase">
-                Bono de alimentación
-              </TableColumn>
-              <TableColumn className="bg-green-700 text-white uppercase">
-                Bono día trabajado
-              </TableColumn>
-              <TableColumn className="bg-green-700 text-white uppercase">
-                Bono día trabajado doble
-              </TableColumn>
-            </TableHeader>
-            <TableBody emptyContent={"No hay resultados por mostrar."}>
-              {[
-                ...resultadosUnificados
-                  ?.filter((resultado: any) => {
-                    const bonoAlimentacion = resultado.bonos[
-                      "Bono de alimentación"
-                    ] || { quantity: 0 };
-                    const bonoTrabajado = resultado.bonos[
-                      "Bono día trabajado"
-                    ] || { quantity: 0 };
-                    const bonoTrabajadoDoble = resultado.bonos[
-                      "Bono día trabajado doble"
-                    ] || { quantity: 0 };
+      {vehiculoSelected &&
+        mesSelected &&
+        (isMobile ? (
+          // Acordeón para dispositivos móviles
+          <Card>
+            <CardHeader className="flex gap-3">
+              <div className="flex flex-col">
+                <p className="text-xl text-green-700 font-bold">
+                  {vehiculoSelected.label}
+                </p>
+                <p className="text-md text-default-500">
+                  {mesesDelAño[Number(mesSelected)]?.label}
+                </p>
+              </div>
+            </CardHeader>
+            <Divider />
+            <CardBody>
+              {(() => {
+                const resultadosFiltrados =
+                  filtrarResultadosConBonos(resultadosUnificados);
 
-                    // Filtrar aquellos cuyo quantity sea mayor que 0
-                    return (
-                      bonoAlimentacion.quantity > 0 ||
-                      bonoTrabajado.quantity > 0 ||
-                      bonoTrabajadoDoble.quantity > 0
-                    );
-                  })
-                  ?.map((resultado: any, index: number) => {
-                    const bonoAlimentacion = resultado.bonos[
-                      "Bono de alimentación"
-                    ] || { quantity: 0 };
-                    const bonoTrabajado = resultado.bonos[
-                      "Bono día trabajado"
-                    ] || { quantity: 0 };
-                    const bonoTrabajadoDoble = resultado.bonos[
-                      "Bono día trabajado doble"
-                    ] || { quantity: 0 };
-
-                    return (
-                      <TableRow
-                        className={`${index % 2 === 0 ? "" : "bg-default-100"}`}
-                        key={index}
+                if (resultadosFiltrados.length > 0) {
+                  return (
+                    <div className="space-y-5">
+                      {resultadosFiltrados.map(
+                        (resultado: any, index: number) => (
+                          <div
+                            className={`${index % 2 === 0 ? "" : "bg-default-100"} p-3 rounded-xl shadow-md`}
+                            key={index}
+                          >
+                            <p className="text-sm md:text-medium font-bold">
+                              {resultado.conductor}
+                            </p>
+                            <div className="flex justify-between items-center">
+                              <p>Bono de alimentación</p>
+                              <p className="text-center">
+                                {resultado.bonoAlimentacion}
+                              </p>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <p>Bono de día trabajado</p>
+                              <p className="text-center">
+                                {resultado.bonoTrabajado}
+                              </p>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <p>Bono de día trabajado doble</p>
+                              <p className="text-center">
+                                {resultado.bonoTrabajadoDoble}
+                              </p>
+                            </div>
+                          </div>
+                        )
+                      )}
+                      <Divider />
+                      <div
+                        className="bg-green-700 p-3 rounded-xl text-white"
+                        key="totals"
                       >
-                        <TableCell>{`${resultado.conductor.nombre} ${resultado.conductor.apellido}`}</TableCell>
-                        <TableCell className="text-center">
-                          {bonoAlimentacion.quantity}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {bonoTrabajado.quantity}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {bonoTrabajadoDoble.quantity}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  }),
-                // Pie de tabla con los totales
-                <TableRow className="uppercase bg-green-100" key="totals">
-                  <TableCell>
-                    <strong>Total</strong>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <strong>{totalBonos.bonoAlimentacion}</strong>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <strong>{totalBonos.bonoTrabajado}</strong>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <strong>{totalBonos.bonoTrabajadoDoble}</strong>
-                  </TableCell>
-                </TableRow>,
-              ]}
-            </TableBody>
-          </Table>
-        </>
-      )}
+                        <p>
+                          <strong>Total</strong>
+                        </p>
+                        <div className="flex justify-between items-center">
+                          <p>Bono de alimentación</p>
+                          <p className="text-center">
+                            <strong>
+                              {resultadosFiltrados?.reduce(
+                                (total: number, resultado: any) =>
+                                  total + resultado.bonoAlimentacion,
+                                0
+                              )}
+                            </strong>
+                          </p>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <p>Bono de día trabajado</p>
+                          <p className="text-center">
+                            <strong>
+                              {resultadosFiltrados?.reduce(
+                                (total: number, resultado: any) =>
+                                  total + resultado.bonoTrabajado,
+                                0
+                              )}
+                            </strong>
+                          </p>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <p>Bono de día trabajado doble</p>
+                          <p className="text-center">
+                            <strong>
+                              {resultadosFiltrados.reduce(
+                                (total: number, resultado: any) =>
+                                  total + resultado.bonoTrabajadoDoble,
+                                0
+                              )}
+                            </strong>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <p>No hay resultados</p>
+                  )
+                }
+              })()}
+            </CardBody>
+          </Card>
+        ) : (
+          <>
+            <div className="mx-auto text-center">
+              <h2 className="text-xl font-bold">{vehiculoSelected.label}</h2>
+              <h3 className="text-xl text-default-500">
+                {mesesDelAño[Number(mesSelected)]?.label}
+              </h3>
+            </div>
+            <Table
+              className="-mt-5"
+              aria-label="Liquidaciones filtradas"
+            >
+              <TableHeader>
+                <TableColumn className="bg-green-700 text-white uppercase">
+                  Conductor
+                </TableColumn>
+                <TableColumn className="bg-green-700 text-white uppercase">
+                  Bono de alimentación
+                </TableColumn>
+                <TableColumn className="bg-green-700 text-white uppercase">
+                  Bono día trabajado
+                </TableColumn>
+                <TableColumn className="bg-green-700 text-white uppercase">
+                  Bono día trabajado doble
+                </TableColumn>
+              </TableHeader>
+              <TableBody emptyContent={"No hay resultados por mostrar."}>
+                {[
+                  ...resultadosUnificados
+                    ?.filter((resultado: any) => {
+                      const bonoAlimentacion = resultado.bonos[
+                        "Bono de alimentación"
+                      ] || { quantity: 0 };
+                      const bonoTrabajado = resultado.bonos[
+                        "Bono día trabajado"
+                      ] || { quantity: 0 };
+                      const bonoTrabajadoDoble = resultado.bonos[
+                        "Bono día trabajado doble"
+                      ] || { quantity: 0 };
+
+                      // Filtrar aquellos cuyo quantity sea mayor que 0
+                      return (
+                        bonoAlimentacion.quantity > 0 ||
+                        bonoTrabajado.quantity > 0 ||
+                        bonoTrabajadoDoble.quantity > 0
+                      );
+                    })
+                    ?.map((resultado: any, index: number) => {
+                      const bonoAlimentacion = resultado.bonos[
+                        "Bono de alimentación"
+                      ] || { quantity: 0 };
+                      const bonoTrabajado = resultado.bonos[
+                        "Bono día trabajado"
+                      ] || { quantity: 0 };
+                      const bonoTrabajadoDoble = resultado.bonos[
+                        "Bono día trabajado doble"
+                      ] || { quantity: 0 };
+
+                      return (
+                        <TableRow
+                          className={`${index % 2 === 0 ? "" : "bg-default-100"}`}
+                          key={index}
+                        >
+                          <TableCell>{`${resultado.conductor.nombre} ${resultado.conductor.apellido}`}</TableCell>
+                          <TableCell className="text-center">
+                            {bonoAlimentacion.quantity}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {bonoTrabajado.quantity}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {bonoTrabajadoDoble.quantity}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    }),
+                  // Pie de tabla con los totales
+                  <TableRow className="uppercase" key="totals">
+                    <TableCell>
+                      <strong>Total</strong>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <strong>{totalBonos.bonoAlimentacion}</strong>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <strong>{totalBonos.bonoTrabajado}</strong>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <strong>{totalBonos.bonoTrabajadoDoble}</strong>
+                    </TableCell>
+                  </TableRow>,
+                ]}
+              </TableBody>
+            </Table>
+          </>
+        ))}
     </div>
   );
 }

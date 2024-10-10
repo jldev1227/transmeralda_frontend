@@ -29,7 +29,7 @@ Font.register({
 // Estilos para el PDF
 const styles = StyleSheet.create({
   page: {
-    paddingHorizontal: 100,
+    paddingHorizontal: 85,
     paddingVertical: 60,
     backgroundColor: "#FFF", // Fondo gris claro para el PDF}
     fontFamily: "Roboto", // Usa una fuente predeterminada
@@ -129,7 +129,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
             right: -45,
             objectFit: "cover",
           }}
-          source={"/codi.png"}
+          source={"/assets/codi.png"}
         />
       </View>
 
@@ -224,16 +224,16 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
               },
             ]}
           >
-            <Text style={[styles.label, { flex: 2, textAlign: "left" }]}>
+            <Text style={[styles.label, { flex: 3, textAlign: "left" }]}>
               Concepto
             </Text>
-            <Text style={[styles.label, { flex: 1, textAlign: "center" }]}>
+            <Text style={[styles.label, { flex: 2, textAlign: "center" }]}>
               Observación
             </Text>
             <Text style={[styles.label, { flex: 1, textAlign: "center" }]}>
               Cantidad
             </Text>
-            <Text style={[styles.label, { flex: 1, textAlign: "center" }]}>
+            <Text style={[styles.label, { flex: 2, textAlign: "center" }]}>
               Valor
             </Text>
           </View>
@@ -267,11 +267,11 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
               )
             ).map((bono: any) => (
               <View key={bono.name} style={[styles.cardRow]}>
-                <Text style={[styles.label, { flex: 2, textAlign: "left" }]}>
+                <Text style={[styles.label, { flex: 3, textAlign: "left" }]}>
                   {bono.name || ""}
                 </Text>
                 <Text
-                  style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+                  style={[styles.textValue, { flex: 2, textAlign: "center" }]}
                 ></Text>
                 <Text
                   style={[styles.textValue, { flex: 1, textAlign: "center" }]}
@@ -279,72 +279,75 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
                   {bono.quantity}
                 </Text>
                 <Text
-                  style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+                  style={[styles.textValue, { flex: 2, textAlign: "center" }]}
                 >
                   {formatToCOP(bono.totalValue)}
                 </Text>
               </View>
             ))}
 
+          <View style={styles.cardRow}>
+            <Text style={[styles.label, { flex: 3 }]}>Recargos</Text>
+            <Text style={[styles.textValue, { flex: 2, textAlign: "center" }]}>
+              <Text></Text>
+            </Text>
+            <Text style={[styles.textValue, { flex: 1, textAlign: "center" }]}>
+              {item?.recargos?.length}
+            </Text>
+            <Text style={[styles.textValue, { flex: 2, textAlign: "center" }]}>
+              {formatToCOP(item?.totalRecargos)}
+            </Text>
+          </View>
+
           {item?.pernotes && item.pernotes?.length > 0 ? (
-            item?.pernotes?.map((pernote) => (
-              <View key={pernote.id} style={[styles.cardRow]}>
-                <Text style={[styles.label, { flex: 2 }]}>Pernotes</Text>
-                <Text
-                  style={[
-                    styles.textValue,
-                    { flex: 1, textAlign: "center", fontSize: 10 },
-                  ]}
-                >
-                  {pernote.fechas.join(" ")}
-                </Text>
-                <Text
-                  style={[styles.textValue, { flex: 1, textAlign: "center" }]}
-                >
-                  {pernote.fechas?.length}
-                </Text>
-                <Text
-                  style={[styles.textValue, { flex: 1, textAlign: "center" }]}
-                >
-                  {formatToCOP(item.totalPernotes)}
-                </Text>
-              </View>
-            ))
-          ) : (
-            <View style={[styles.cardRow]}>
+            <View style={[styles.cardRow, { borderBottom: 0 }]}>
               <Text style={[styles.label, { flex: 3 }]}>Pernotes</Text>
+              <Text
+                style={[
+                  styles.textValue,
+                  { flex: 2, textAlign: "center", fontSize: 9 },
+                ]}
+              >
+                {item?.pernotes?.map((pernote) =>
+                  pernote.fechas?.map((fecha) => {
+                    const fechaSeparada = formatDate(fecha).split(' ');
+                    return `${fechaSeparada[0]}-${fechaSeparada[1]}`; // Verificamos que haya al menos 3 elementos
+                  }).join(", ")
+                )}
+              </Text>
+              <Text
+                style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+              >
+                {item?.pernotes?.map((pernote) => pernote.fechas?.length)}
+              </Text>
+              <Text
+                style={[styles.textValue, { flex: 2, textAlign: "center" }]}
+              >
+                {formatToCOP(item.totalPernotes)}
+              </Text>
+            </View>
+          ) : (
+            <View
+              style={[
+                styles.cardRow,
+                {
+                  borderBottom: 0,
+                },
+              ]}
+            >
+              <Text style={[styles.label, { flex: 5 }]}>Pernotes</Text>
               <Text
                 style={[styles.textValue, { flex: 1, textAlign: "center" }]}
               >
                 0
               </Text>
               <Text
-                style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+                style={[styles.textValue, { flex: 2, textAlign: "center" }]}
               >
                 {formatToCOP(0)}
               </Text>
             </View>
           )}
-
-          <View
-            style={[
-              styles.cardRow,
-              {
-                borderBottom: 0,
-              },
-            ]}
-          >
-            <Text style={[styles.label, { flex: 2 }]}>Recargos</Text>
-            <Text style={[styles.textValue, { flex: 1, textAlign: "center" }]}>
-              <Text></Text>
-            </Text>
-            <Text style={[styles.textValue, { flex: 1, textAlign: "center" }]}>
-              {item?.recargos?.length}
-            </Text>
-            <Text style={[styles.textValue, { flex: 1, textAlign: "center" }]}>
-              {formatToCOP(item?.totalRecargos)}
-            </Text>
-          </View>
         </View>
 
         <View style={styles.card}>
