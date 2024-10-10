@@ -1,40 +1,13 @@
-import { useEffect, useState } from "react";
 import useLiquidacion from "@/hooks/useLiquidacion";
 import { formatDate, formatToCOP } from "@/helpers";
 import { Button } from "@nextui-org/button";
 import { Accordion, AccordionItem } from "@nextui-org/accordion";
-import HistorialLiquidaciones from "./HistorialLiquidaciones";
+import HistorialLiquidaciones from "./TableHistorialLiquidaciones";
 import handleGeneratePDF from "./pdfMaker";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export default function LiquidacionesList() {
   const { state, dispatch, loadingLiquidaciones } = useLiquidacion();
-
-  function useMediaQuery(query: string) {
-    const [matches, setMatches] = useState(false);
-
-    useEffect(() => {
-      const media = window.matchMedia(query);
-
-      // Verifica si la consulta media coincide
-      if (media.matches !== matches) {
-        setMatches(media.matches);
-      }
-
-      const listener = (event: MediaQueryListEvent) => {
-        setMatches(event.matches);
-      };
-
-      // Usar `addEventListener` en lugar de `addListener`
-      media.addEventListener("change", listener);
-
-      return () => {
-        // Usar `removeEventListener` en lugar de `removeListener`
-        media.removeEventListener("change", listener);
-      };
-    }, [matches, query]);
-
-    return matches;
-  }
 
   const isMobile = useMediaQuery("(max-width: 1080px)"); // Tailwind `sm` breakpoint
 
@@ -45,8 +18,10 @@ export default function LiquidacionesList() {
   }
 
   return (
-    <div className="space-y-5">
-      <h2 className="font-bold text-2xl text-green-700">Historial de Liquidaciones</h2>
+    <div className="space-y-7 mt-5">
+      <h2 className="max-sm:text-center font-bold text-2xl text-green-700">
+        Historial de Liquidaciones
+      </h2>
       {isMobile ? (
         // Acordeón para dispositivos móviles
         <Accordion variant="splitted">
@@ -128,7 +103,7 @@ export default function LiquidacionesList() {
                 </div>
                 <div className="flex justify-between gap-2">
                   <Button
-                  className="w-full"
+                    className="w-full"
                     onPress={() =>
                       dispatch({
                         type: "SET_LIQUIDACION",
@@ -141,9 +116,23 @@ export default function LiquidacionesList() {
                     color="primary"
                   >
                     Editar
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="size-4"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+                      />
+                    </svg>
                   </Button>
                   <Button
-                  className="w-full"
+                    className="w-full"
                     onPress={() => {
                       dispatch({
                         type: "SET_LIQUIDACION",
@@ -156,8 +145,31 @@ export default function LiquidacionesList() {
                     color="secondary"
                   >
                     Ver
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="size-4"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                      />
+                    </svg>
                   </Button>
-                  <Button onPress={() => handleGeneratePDF(item)} className="bg-black text-white" isIconOnly>
+                  <Button
+                    onPress={() => handleGeneratePDF(item)}
+                    className="bg-black text-white"
+                    isIconOnly
+                  >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"

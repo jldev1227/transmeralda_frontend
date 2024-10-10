@@ -11,7 +11,7 @@ import {
 } from "@nextui-org/react";
 import { Button } from "@nextui-org/button";
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import {
   Dropdown,
   DropdownTrigger,
@@ -22,6 +22,7 @@ import {
 export default function DefaultLayout() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { state, cerrarSesion } = useUsuario();
+  const navigate = useNavigate(); // Para navegar a una nueva ruta
 
   const menuItems = [
     {
@@ -34,9 +35,15 @@ export default function DefaultLayout() {
     },
   ];
 
+  // Función para manejar la navegación y cerrar el menú
+  const handleNavigation = (href: string) => {
+    navigate(href);  // Navegar a la nueva ruta
+    setIsMenuOpen(false);  // Cerrar el menú
+  };
+
   return (
     <div className="relative flex flex-col h-screen">
-      <Navbar onMenuOpenChange={setIsMenuOpen}>
+      <Navbar isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
         <NavbarContent>
           <NavbarMenuToggle
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
@@ -81,7 +88,7 @@ export default function DefaultLayout() {
             </Dropdown>
           </NavbarItem>
         </NavbarContent>
-        <NavbarMenu className="pb-8">
+        <NavbarMenu>
           {menuItems.map((item, index) => (
             <NavbarMenuItem key={`${item}-${index}`}>
               <Link
@@ -89,18 +96,19 @@ export default function DefaultLayout() {
                 className="w-full"
                 href={item.href}
                 size="lg"
+                onClick={() => handleNavigation(item.href)} // Cerrar el menú al navegar
               >
                 {item.name}
               </Link>
             </NavbarMenuItem>
           ))}
-          <Button onPress={cerrarSesion} className="bg-red-500 text-white mt-auto">
+          <Button onPress={cerrarSesion} className="bg-red-500 text-white mt-5">
             Cerrar sesión
           </Button>
         </NavbarMenu>
       </Navbar>
 
-      <main className="w-full mx-auto px-6 md:px-20 flex-grow pt-16">
+      <main className="w-full mx-auto sm:px-20 flex-grow pt-10 md:pt-16">
         <Outlet />
       </main>
     </div>
