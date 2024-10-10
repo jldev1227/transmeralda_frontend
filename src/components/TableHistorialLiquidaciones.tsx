@@ -90,15 +90,18 @@ export default function App() {
     let filteredLiquidaciones = [...state.liquidaciones];
 
     if (hasSearchFilter) {
-      filteredLiquidaciones = filteredLiquidaciones.filter((liquidacion) =>
-        liquidacion.conductor.nombre
-          .toLowerCase()
-          .includes(filterValue.toLowerCase())
+      filteredLiquidaciones = filteredLiquidaciones.filter(
+        (liquidacion) =>
+          liquidacion.conductor.nombre
+            .toLowerCase()
+            .includes(filterValue.toLowerCase()) ||
+          liquidacion.conductor.apellido
+            .toLowerCase()
+            .includes(filterValue.toLowerCase())
       );
     }
 
     if (statusFilter.size > 0 && statusFilter.size !== statusOptions.length) {
-
       // statusFilter ahora es un Set, por lo que usamos has
       filteredLiquidaciones = filteredLiquidaciones.filter((liquidacion) =>
         statusFilter.has(liquidacion?.estado)
@@ -256,6 +259,28 @@ export default function App() {
                 </DropdownTrigger>
                 <DropdownMenu>
                   <DropdownItem
+                    className="flex gap-2 items-center"
+                    startContent={
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="size-6"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                        />
+                      </svg>
+                    }
                     onPress={() => {
                       dispatch({
                         type: "SET_LIQUIDACION",
@@ -268,10 +293,46 @@ export default function App() {
                   >
                     Ver
                   </DropdownItem>
-                  <DropdownItem onPress={() => handleGeneratePDF(liquidacion)}>
+                  <DropdownItem
+                    className="flex gap-2 items-center"
+                    startContent={
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="size-6"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+                        />
+                      </svg>
+                    }
+                    onPress={() => handleGeneratePDF(liquidacion)}
+                  >
                     Desprendible
                   </DropdownItem>
                   <DropdownItem
+                    className="flex gap-2 items-center"
+                    startContent={
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="size-6"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                        />
+                      </svg>
+                    }
                     onPress={() =>
                       dispatch({
                         type: "SET_LIQUIDACION",
@@ -429,7 +490,10 @@ export default function App() {
           </TableColumn>
         )}
       </TableHeader>
-      <TableBody emptyContent={"No hay liquidaciones realizadas"} items={sortedItems}>
+      <TableBody
+        emptyContent={"No hay liquidaciones realizadas"}
+        items={sortedItems}
+      >
         {(item) => (
           <TableRow key={item.id}>
             {(columnKey) => (

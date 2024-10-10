@@ -36,6 +36,15 @@ import useLiquidacion from "@/hooks/useLiquidacion";
 import { parseDate } from "@internationalized/date";
 import { selectStyles } from "@/styles/selectStyles";
 import Anticipos from "@/components/Anticipos";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import {
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@nextui-org/table";
 
 // Componente Formulario
 export default function Formulario() {
@@ -524,6 +533,8 @@ export default function Formulario() {
               (config) => config.nombre == "Ajuste villanueva"
             )?.valor || 0) * diasLaboradosVillanueva
         : 0;
+    }else{
+      setDiasLaboradosVillanueva(0)
     }
 
     return 0;
@@ -705,7 +716,10 @@ export default function Formulario() {
       ajusteSalarial: bonificacionVillanueva || 0, // Usa bonificacionVillanueva o 0
       salud: salud || 0, // Usa bonificacionVillanueva o 0
       pension: pension || 0, // Usa bonificacionVillanueva o 0
-      estado:  salud > 0 && pension > 0 && totalBonificaciones > 0 ? 'Liquidado' : 'Pendiente' , // Usa bonificacionVillanueva o 0
+      estado:
+        salud > 0 && pension > 0 && totalBonificaciones > 0
+          ? "Liquidado"
+          : "Pendiente", // Usa bonificacionVillanueva o 0
       vehiculos: detallesVehiculos.map((detalle) => detalle.vehiculo.value),
     };
 
@@ -788,7 +802,7 @@ export default function Formulario() {
   return (
     <>
       <div
-        className={`grid ${state.allowEdit || state.allowEdit == null ? "xl:grid-cols-2" : "lg:grid-cols-1"} gap-10`}
+        className={`grid ${state.allowEdit || state.allowEdit == null ? "xl:grid-cols-2" : "lg:grid-cols-1"} gap-10 max-md:px-3`}
       >
         <div className="xl:col-span-2 space-y-3">
           <div className="flex justify-end">
@@ -870,337 +884,347 @@ export default function Formulario() {
                   vehiculosSelected &&
                   dateSelected &&
                   detallesVehiculos?.map((detalleVehiculo) => (
-                    <Card
-                      key={detalleVehiculo.vehiculo.value}
-                      className="space-y-5 flex flex-col p-6"
-                    >
-                      <h2 className="text-xl font-semibold mb-3">
-                        Vehículo: <b className="text-green-700">{detalleVehiculo.vehiculo.label}</b>
-                      </h2>
-                      <h3 className="font-semibold text-xl mb-2">
-                        Bonificaciones
-                      </h3>
-                      {detalleVehiculo.bonos.map((bono) => (
-                        <div
-                          key={bono.name} // Usa 'name' como clave, o cualquier identificador único
-                          className="flex flex-col md:flex-row md:justify-between md:items-center gap-5 shadow-md rounded-xl px-5 py-4 md:py-2"
-                        >
-                          <p className="flex-1 font-semibold">{bono.name}</p>
-                          {mesesRange.map((mes) => {
-                            const bonoMes = bono.values.find(
-                              (val) => val.mes === mes
-                            );
+                    <Card key={detalleVehiculo.vehiculo.value}>
+                      <CardHeader>
+                        <p className="text-xl font-bold">
+                          Vehículo:{" "}
+                          <b className="text-green-700">
+                            {detalleVehiculo.vehiculo.label}
+                          </b>
+                        </p>
+                      </CardHeader>
+                      <Divider />
+                      <CardBody className="space-y-5">
+                        <h3 className="font-bold text-xl">Bonificaciones</h3>
+                        {detalleVehiculo.bonos.map((bono) => (
+                          <Card
+                            key={bono.name} // Usa 'name' como clave, o cualquier identificador único
+                          >
+                            <CardBody className="max-md:gap-3 md:flex-row justify-between items-center">
+                              <p className="font-semibold">{bono.name}</p>
+                              <div className="flex gap-5 max-md:w-full">
+                                {mesesRange.map((mes) => {
+                                  const bonoMes = bono.values.find(
+                                    (val) => val.mes === mes
+                                  );
 
-                            return (
-                              <Input
-                                key={mes} // 'mes' debería ser único aquí
-                                type="number"
-                                label={mes}
-                                className="md:w-24"
-                                placeholder={`Ingresa la cantidad de ${bono.name.toLowerCase()}`}
+                                  return (
+                                    <Input
+                                      key={mes} // 'mes' debería ser único aquí
+                                      type="number"
+                                      label={mes}
+                                      className="md:w-24"
+                                      placeholder={`Ingresa la cantidad de ${bono.name.toLowerCase()}`}
+                                      value={
+                                        bonoMes
+                                          ? bonoMes.quantity.toString()
+                                          : "0"
+                                      }
+                                      onChange={(e) =>
+                                        handleBonoChange(
+                                          detalleVehiculo.vehiculo.value,
+                                          bono.name,
+                                          mes,
+                                          +e.target.value
+                                        )
+                                      }
+                                    />
+                                  );
+                                })}
+                              </div>
+                            </CardBody>
+                          </Card>
+                        ))}
+                        <Divider />
+                        <h3 className="font-bold text-xl mb-2">Pernotes</h3>
+                        {detalleVehiculo.pernotes?.map(
+                          (pernote, pernoteIndex) => (
+                            <div
+                              key={`${pernote.empresa}-${pernoteIndex}`} // Combina la empresa y el índice para asegurarte de tener una clave única
+                              className="grid sm:grid-cols-5 gap-4"
+                            >
+                              <SelectReact
+                                options={empresasOptions}
                                 value={
-                                  bonoMes ? bonoMes.quantity.toString() : "0"
+                                  empresasOptions.find(
+                                    (option) => option.value === pernote.empresa
+                                  ) || null
                                 }
-                                onChange={(e) =>
-                                  handleBonoChange(
+                                onChange={(selectedOption) =>
+                                  handlePernoteChange(
                                     detalleVehiculo.vehiculo.value,
-                                    bono.name,
-                                    mes,
-                                    +e.target.value
+                                    pernoteIndex,
+                                    "empresa",
+                                    selectedOption?.value || ""
                                   )
                                 }
+                                placeholder="Selecciona una empresa"
+                                isSearchable
+                                styles={selectStyles}
+                                className="col-span-3"
                               />
-                            );
-                          })}
-                        </div>
-                      ))}
-                      <Divider />
-                      <h3 className="font-semibold text-xl mb-2">Pernotes</h3>
-                      {detalleVehiculo.pernotes?.map(
-                        (pernote, pernoteIndex) => (
-                          <div
-                            key={`${pernote.empresa}-${pernoteIndex}`} // Combina la empresa y el índice para asegurarte de tener una clave única
-                            className="grid sm:grid-cols-5 gap-4"
-                          >
-                            <SelectReact
-                              options={empresasOptions}
-                              value={
-                                empresasOptions.find(
-                                  (option) => option.value === pernote.empresa
-                                ) || null
-                              }
-                              onChange={(selectedOption) =>
-                                handlePernoteChange(
-                                  detalleVehiculo.vehiculo.value,
-                                  pernoteIndex,
-                                  "empresa",
-                                  selectedOption?.value || ""
-                                )
-                              }
-                              placeholder="Selecciona una empresa"
-                              isSearchable
-                              styles={selectStyles}
-                              className="col-span-3"
-                            />
 
-                            <Input
-                              type="number"
-                              label="Cantidad"
-                              placeholder="0"
-                              className="col-span-2"
-                              value={pernote.cantidad.toString()}
-                              onChange={(e) => {
-                                const newCantidad = +e.target.value;
-                                let newFechas = [...pernote.fechas];
-                                if (newCantidad > pernote.fechas.length) {
-                                  newFechas = [
-                                    ...newFechas,
-                                    ...Array(
-                                      newCantidad - pernote.fechas.length
-                                    ).fill(null),
-                                  ];
-                                } else if (
-                                  newCantidad < pernote.fechas.length
-                                ) {
-                                  newFechas = newFechas.slice(0, newCantidad);
-                                }
-                                handlePernoteChange(
-                                  detalleVehiculo.vehiculo.value,
-                                  pernoteIndex,
-                                  "fechas",
-                                  newFechas
-                                );
-                                handlePernoteChange(
-                                  detalleVehiculo.vehiculo.value,
-                                  pernoteIndex,
-                                  "cantidad",
-                                  newCantidad
-                                );
-                              }}
-                            />
-
-                            {pernote.fechas?.map((fecha, dateIndex) => (
-                              <DatePicker
-                                key={`${pernote.empresa}-${dateIndex}`} // Combina la empresa y el índice para asegurar una clave única
-                                label={`Fecha ${dateIndex + 1}`}
-                                className="col-span-5"
-                                value={fecha ? parseDate(fecha) : null}
-                                onChange={(newDate: DateValue | null) => {
-                                  if (newDate) {
-                                    const jsDate = new Date(
-                                      newDate.year,
-                                      newDate.month - 1,
-                                      newDate.day
-                                    );
-                                    const startDate = new Date(
-                                      dateSelected.start.year,
-                                      dateSelected.start.month - 1,
-                                      dateSelected.start.day
-                                    );
-                                    const endDate = new Date(
-                                      dateSelected.end.year,
-                                      dateSelected.end.month - 1,
-                                      dateSelected.end.day
-                                    );
-                                    if (
-                                      jsDate >= startDate &&
-                                      jsDate <= endDate
-                                    ) {
-                                      const newFecha = dateToDateValue(jsDate);
-                                      const newFechas = [...pernote.fechas];
-                                      newFechas[dateIndex] = newFecha;
-                                      handlePernoteChange(
-                                        detalleVehiculo.vehiculo.value,
-                                        pernoteIndex,
-                                        "fechas",
-                                        newFechas
-                                      );
-                                    } else {
-                                      alert(
-                                        "La fecha seleccionada no está dentro del rango permitido"
-                                      );
-                                      const newFechas = [...pernote.fechas];
-                                      newFechas[dateIndex] = "";
-                                      handlePernoteChange(
-                                        detalleVehiculo.vehiculo.value,
-                                        pernoteIndex,
-                                        "fechas",
-                                        newFechas
-                                      );
-                                    }
+                              <Input
+                                type="number"
+                                label="Cantidad"
+                                placeholder="0"
+                                className="col-span-2"
+                                value={pernote.cantidad.toString()}
+                                onChange={(e) => {
+                                  const newCantidad = +e.target.value;
+                                  let newFechas = [...pernote.fechas];
+                                  if (newCantidad > pernote.fechas.length) {
+                                    newFechas = [
+                                      ...newFechas,
+                                      ...Array(
+                                        newCantidad - pernote.fechas.length
+                                      ).fill(null),
+                                    ];
+                                  } else if (
+                                    newCantidad < pernote.fechas.length
+                                  ) {
+                                    newFechas = newFechas.slice(0, newCantidad);
                                   }
+                                  handlePernoteChange(
+                                    detalleVehiculo.vehiculo.value,
+                                    pernoteIndex,
+                                    "fechas",
+                                    newFechas
+                                  );
+                                  handlePernoteChange(
+                                    detalleVehiculo.vehiculo.value,
+                                    pernoteIndex,
+                                    "cantidad",
+                                    newCantidad
+                                  );
                                 }}
                               />
-                            ))}
 
-                            <Button
-                              onClick={() =>
-                                handleRemovePernote(
-                                  detalleVehiculo.vehiculo.value,
-                                  pernoteIndex
-                                )
-                              }
-                              className="w-full col-span-5 bg-red-600 text-white"
-                            >
-                              X
-                            </Button>
-                          </div>
-                        )
-                      )}
-
-                      <Button
-                        onClick={() =>
-                          handleAddPernote(detalleVehiculo.vehiculo.value)
-                        }
-                        className="w-full col-span-6 bg-primary-700 text-white"
-                      >
-                        Añadir pernote
-                      </Button>
-
-                      <Divider />
-
-                      <h3 className="font-semibold text-xl">Recargos</h3>
-                      {detalleVehiculo.recargos?.map(
-                        (recargo, recargoIndex) => (
-                          <div
-                            key={`${recargo.mes}-${recargo.empresa}-${recargoIndex}`} // Combina mes, empresa, e índice para asegurar clave única
-                            className="grid grid-cols-4 gap-4 items-center"
-                          >
-                            <Select
-                              label="Mes"
-                              className="col-span-4 sm:col-span-1"
-                              defaultSelectedKeys={
-                                recargo.mes ? [recargo.mes] : ""
-                              }
-                              onSelectionChange={(selected) => {
-                                const mes = Array.from(selected)[0];
-                                handleRecargoChange(
-                                  detalleVehiculo.vehiculo.value,
-                                  recargoIndex,
-                                  "mes",
-                                  mes
-                                );
-                              }}
-                            >
-                              {mesesRange?.map((mes) => (
-                                <SelectItem key={mes} value={mes}>
-                                  {mes}
-                                </SelectItem>
+                              {pernote.fechas?.map((fecha, dateIndex) => (
+                                <DatePicker
+                                  key={`${pernote.empresa}-${dateIndex}`} // Combina la empresa y el índice para asegurar una clave única
+                                  label={`Fecha ${dateIndex + 1}`}
+                                  className="col-span-5"
+                                  value={fecha ? parseDate(fecha) : null}
+                                  onChange={(newDate: DateValue | null) => {
+                                    if (newDate) {
+                                      const jsDate = new Date(
+                                        newDate.year,
+                                        newDate.month - 1,
+                                        newDate.day
+                                      );
+                                      const startDate = new Date(
+                                        dateSelected.start.year,
+                                        dateSelected.start.month - 1,
+                                        dateSelected.start.day
+                                      );
+                                      const endDate = new Date(
+                                        dateSelected.end.year,
+                                        dateSelected.end.month - 1,
+                                        dateSelected.end.day
+                                      );
+                                      if (
+                                        jsDate >= startDate &&
+                                        jsDate <= endDate
+                                      ) {
+                                        const newFecha =
+                                          dateToDateValue(jsDate);
+                                        const newFechas = [...pernote.fechas];
+                                        newFechas[dateIndex] = newFecha;
+                                        handlePernoteChange(
+                                          detalleVehiculo.vehiculo.value,
+                                          pernoteIndex,
+                                          "fechas",
+                                          newFechas
+                                        );
+                                      } else {
+                                        alert(
+                                          "La fecha seleccionada no está dentro del rango permitido"
+                                        );
+                                        const newFechas = [...pernote.fechas];
+                                        newFechas[dateIndex] = "";
+                                        handlePernoteChange(
+                                          detalleVehiculo.vehiculo.value,
+                                          pernoteIndex,
+                                          "fechas",
+                                          newFechas
+                                        );
+                                      }
+                                    }
+                                  }}
+                                />
                               ))}
-                            </Select>
 
-                            <SelectReact
-                              options={empresasOptions}
-                              value={
-                                empresasOptions.find(
-                                  (option) => option.value === recargo.empresa
-                                ) || null
-                              }
-                              onChange={(selectedOption) =>
-                                handleRecargoChange(
-                                  detalleVehiculo.vehiculo.value,
-                                  recargoIndex,
-                                  "empresa",
-                                  selectedOption?.value || ""
-                                )
-                              }
-                              placeholder="Selecciona una empresa"
-                              isSearchable
-                              styles={selectStyles}
-                              className="col-span-4 sm:col-span-3"
-                            />
+                              <Button
+                                onClick={() =>
+                                  handleRemovePernote(
+                                    detalleVehiculo.vehiculo.value,
+                                    pernoteIndex
+                                  )
+                                }
+                                className="w-full col-span-5 bg-red-600 text-white"
+                              >
+                                X
+                              </Button>
+                            </div>
+                          )
+                        )}
 
-                            <Input
-                              type="text" // Mantiene el tipo de 'text' para mostrar el formato con símbolos de moneda
-                              label="Paga propietario"
-                              placeholder="$0"
-                              className="col-span-2"
-                              value={
-                                !recargo.pagCliente && recargo.valor !== 0
-                                  ? formatCurrency(recargo.valor)
-                                  : ""
-                              } // Muestra el valor solo cuando pagCliente es false
-                              onChange={(e) => {
-                                const inputVal = e.target.value.replace(
-                                  /[^\d]/g,
-                                  ""
-                                ); // Quitamos caracteres no numéricos
-                                const numericValue = +inputVal; // Convertimos el string limpio a número
+                        <Button
+                          onClick={() =>
+                            handleAddPernote(detalleVehiculo.vehiculo.value)
+                          }
+                          className="w-full col-span-6 bg-primary-700 text-white"
+                        >
+                          Añadir pernote
+                        </Button>
 
-                                // Llamamos a handleRecargoChange con pagaCliente como false
-                                handleRecargoChange(
-                                  detalleVehiculo.vehiculo.value,
-                                  recargoIndex,
-                                  "valor",
-                                  numericValue,
-                                  false // Aquí especificamos que pagaCliente es false
-                                );
-                              }}
-                            />
+                        <Divider />
 
-                            <Input
-                              type="text" // Mantiene el tipo de 'text' para mostrar el formato con símbolos de moneda
-                              label="Paga cliente"
-                              placeholder="$0"
-                              className="col-span-2"
-                              value={
-                                recargo.pagCliente && recargo.valor !== 0
-                                  ? formatCurrency(recargo.valor)
-                                  : ""
-                              } // Muestra el valor solo cuando pagCliente es true
-                              onChange={(e) => {
-                                const inputVal = e.target.value.replace(
-                                  /[^\d]/g,
-                                  ""
-                                ); // Quitamos caracteres no numéricos
-                                const numericValue = +inputVal; // Convertimos el string limpio a número
-
-                                // Llamamos a handleRecargoChange con pagaCliente como true
-                                handleRecargoChange(
-                                  detalleVehiculo.vehiculo.value,
-                                  recargoIndex,
-                                  "valor",
-                                  numericValue,
-                                  true // Aquí especificamos que pagaCliente es true
-                                );
-                              }}
-                            />
-
-                            <Button
-                              onClick={() =>
-                                handleRemoveRecargo(
-                                  detalleVehiculo.vehiculo.value,
-                                  recargoIndex
-                                )
-                              }
-                              className="col-span-4 bg-red-600 text-white"
+                        <h3 className="font-bold text-xl">Recargos</h3>
+                        {detalleVehiculo.recargos?.map(
+                          (recargo, recargoIndex) => (
+                            <div
+                              key={`${recargo.mes}-${recargo.empresa}-${recargoIndex}`} // Combina mes, empresa, e índice para asegurar clave única
+                              className="grid grid-cols-4 gap-4 items-center"
                             >
-                              X
-                            </Button>
-                          </div>
-                        )
-                      )}
+                              <Select
+                                label="Mes"
+                                className="col-span-4 sm:col-span-1"
+                                defaultSelectedKeys={
+                                  recargo.mes ? [recargo.mes] : ""
+                                }
+                                onSelectionChange={(selected) => {
+                                  const mes = Array.from(selected)[0];
+                                  handleRecargoChange(
+                                    detalleVehiculo.vehiculo.value,
+                                    recargoIndex,
+                                    "mes",
+                                    mes
+                                  );
+                                }}
+                              >
+                                {mesesRange?.map((mes) => (
+                                  <SelectItem key={mes} value={mes}>
+                                    {mes}
+                                  </SelectItem>
+                                ))}
+                              </Select>
 
-                      <Button
-                        onClick={() =>
-                          handleAddRecargo(detalleVehiculo.vehiculo.value)
-                        }
-                        className="bg-primary-700 text-white"
-                      >
-                        Añadir recargo
-                      </Button>
+                              <SelectReact
+                                options={empresasOptions}
+                                value={
+                                  empresasOptions.find(
+                                    (option) => option.value === recargo.empresa
+                                  ) || null
+                                }
+                                onChange={(selectedOption) =>
+                                  handleRecargoChange(
+                                    detalleVehiculo.vehiculo.value,
+                                    recargoIndex,
+                                    "empresa",
+                                    selectedOption?.value || ""
+                                  )
+                                }
+                                placeholder="Selecciona una empresa"
+                                isSearchable
+                                styles={selectStyles}
+                                className="col-span-4 sm:col-span-3"
+                              />
+
+                              <Input
+                                type="text" // Mantiene el tipo de 'text' para mostrar el formato con símbolos de moneda
+                                label="Paga propietario"
+                                placeholder="$0"
+                                className="col-span-2"
+                                value={
+                                  !recargo.pagCliente && recargo.valor !== 0
+                                    ? formatCurrency(recargo.valor)
+                                    : ""
+                                } // Muestra el valor solo cuando pagCliente es false
+                                onChange={(e) => {
+                                  const inputVal = e.target.value.replace(
+                                    /[^\d]/g,
+                                    ""
+                                  ); // Quitamos caracteres no numéricos
+                                  const numericValue = +inputVal; // Convertimos el string limpio a número
+
+                                  // Llamamos a handleRecargoChange con pagaCliente como false
+                                  handleRecargoChange(
+                                    detalleVehiculo.vehiculo.value,
+                                    recargoIndex,
+                                    "valor",
+                                    numericValue,
+                                    false // Aquí especificamos que pagaCliente es false
+                                  );
+                                }}
+                              />
+
+                              <Input
+                                type="text" // Mantiene el tipo de 'text' para mostrar el formato con símbolos de moneda
+                                label="Paga cliente"
+                                placeholder="$0"
+                                className="col-span-2"
+                                value={
+                                  recargo.pagCliente && recargo.valor !== 0
+                                    ? formatCurrency(recargo.valor)
+                                    : ""
+                                } // Muestra el valor solo cuando pagCliente es true
+                                onChange={(e) => {
+                                  const inputVal = e.target.value.replace(
+                                    /[^\d]/g,
+                                    ""
+                                  ); // Quitamos caracteres no numéricos
+                                  const numericValue = +inputVal; // Convertimos el string limpio a número
+
+                                  // Llamamos a handleRecargoChange con pagaCliente como true
+                                  handleRecargoChange(
+                                    detalleVehiculo.vehiculo.value,
+                                    recargoIndex,
+                                    "valor",
+                                    numericValue,
+                                    true // Aquí especificamos que pagaCliente es true
+                                  );
+                                }}
+                              />
+
+                              <Button
+                                onClick={() =>
+                                  handleRemoveRecargo(
+                                    detalleVehiculo.vehiculo.value,
+                                    recargoIndex
+                                  )
+                                }
+                                className="col-span-4 bg-red-600 text-white"
+                              >
+                                X
+                              </Button>
+                            </div>
+                          )
+                        )}
+
+                        <Button
+                          onClick={() =>
+                            handleAddRecargo(detalleVehiculo.vehiculo.value)
+                          }
+                          className="bg-primary-700 text-white"
+                        >
+                          Añadir recargo
+                        </Button>
+                      </CardBody>
                     </Card>
                   ))}
               </div>
             </form>
           )}
-        <div
-          className={`${state.allowEdit || state.allowEdit == null ? "" : "lg:w-2/3 xl:w-1/2 md:mx-auto"}`}
-        >
+
+        <>
           {conductorSelected &&
             vehiculosSelected.length > 0 &&
             dateSelected && (
-              <>
+              <div
+                className={`${state.allowEdit || state.allowEdit == null ? "" : "lg:w-2/3 xl:w-1/2 md:mx-auto"}`}
+              >
                 <ConductorInfo
                   conductor={
                     state.conductores.find(
@@ -1286,108 +1310,82 @@ export default function Formulario() {
                                 </>
                               )}
 
-                              <table className="table-auto w-full text-md mb-5">
-                                <thead className="bg-black text-white">
-                                  <tr>
-                                    <th className="px-4 py-2 text-left">
-                                      Concepto
-                                    </th>
-                                    <th className="px-4 py-2 text-left">
-                                      Valor
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  <tr>
-                                    <td className="border px-4 py-2">
-                                      Salario devengado
-                                    </td>
-                                    <td className="border px-4 py-2">
+                              <Table shadow="none" aria-label="Resumen">
+                                <TableHeader>
+                                  <TableColumn className="bg-black text-white">CONCEPTO</TableColumn>
+                                  <TableColumn className="bg-black text-white">VALOR</TableColumn>
+                                </TableHeader>
+                                <TableBody>
+                                  <TableRow className="border-1">
+                                    <TableCell>Salario devengado</TableCell>
+                                    <TableCell>
                                       {formatToCOP(salarioDevengado)}
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td className="border px-4 py-2">
-                                      Ajuste villanueva
-                                    </td>
-                                    <td className="border px-4 py-2">
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1">
+                                    <TableCell>Ajuste Villanueva</TableCell>
+                                    <TableCell>
                                       {formatToCOP(bonificacionVillanueva)}
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td className="border px-4 py-2">
-                                      Auxilio de transporte
-                                    </td>
-                                    <td className="border px-4 py-2">
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1">
+                                    <TableCell>Auxilio de transporte</TableCell>
+                                    <TableCell>
                                       {formatToCOP(auxilioTransporte)}
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td className="border px-4 py-2">
-                                      Bonificaciones
-                                    </td>
-                                    <td className="border px-4 py-2">
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1">
+                                    <TableCell>Bonificaciones</TableCell>
+                                    <TableCell>
                                       {formatToCOP(totalBonificaciones)}
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td className="border px-4 py-2">
-                                      Pernotes
-                                    </td>
-                                    <td className="border px-4 py-2">
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1">
+                                    <TableCell>Pernotes</TableCell>
+                                    <TableCell>
                                       {formatToCOP(totalPernotes)}
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td className="border px-4 py-2">
-                                      Recargos
-                                    </td>
-                                    <td className="border px-4 py-2">
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1">
+                                    <TableCell>Recargos</TableCell>
+                                    <TableCell>
                                       {formatToCOP(totalRecargos)}
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td className="border px-4 py-2">
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1">
+                                    <TableCell>
                                       Salud (
                                       {state.configuracion?.find(
                                         (config) => config.nombre == "Salud"
                                       )?.valor || 0}
                                       %)
-                                    </td>
-                                    <td className="border px-4 py-2">
-                                      {formatToCOP(salud)}
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td className="border px-4 py-2">
+                                    </TableCell>
+                                    <TableCell>{formatToCOP(salud)}</TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1">
+                                    <TableCell>
                                       Pensión (
                                       {state.configuracion?.find(
                                         (config) => config.nombre == "Pensión"
                                       )?.valor || 0}
                                       %)
-                                    </td>
-                                    <td className="border px-4 py-2">
-                                      {formatToCOP(pension)}
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td className="border px-4 py-2 bg-red-500 text-white">
-                                      Anticipos
-                                    </td>
-                                    <td className="border px-4 py-2 bg-red-500 text-white">
+                                    </TableCell>
+                                    <TableCell>{formatToCOP(pension)}</TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1 bg-red-600 text-white">
+                                    <TableCell>Anticipos</TableCell>
+                                    <TableCell>
                                       {formatToCOP(totalAnticipos)}
-                                    </td>
-                                  </tr>
-                                  <tr>
-                                    <td className="border px-4 py-2 bg-green-500 text-white text-xl">
-                                      Sueldo total
-                                    </td>
-                                    <td className="border px-4 py-2 bg-green-500 text-white text-xl">
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1 bg-green-700 text-white">
+                                    <TableCell className="text-xl">Sueldo total</TableCell>
+                                    <TableCell className="text-xl">
                                       {formatToCOP(sueldoTotal)}
-                                    </td>
-                                  </tr>
-                                </tbody>
-                              </table>
+                                    </TableCell>
+                                  </TableRow>
+                                </TableBody>
+                              </Table>
 
                               {!state.allowEdit && state?.liquidacion?.id && (
                                 <Button
@@ -1494,9 +1492,9 @@ export default function Formulario() {
                     </Tab>
                   </Tabs>
                 </div>
-              </>
+              </div>
             )}
-        </div>
+        </>
       </div>
     </>
   );
@@ -1527,8 +1525,8 @@ interface ListSectionProps<T> {
 }
 
 const ListSection = <T,>({ title, items, formatFn }: ListSectionProps<T>) => (
-  <div className="space-y-2">
-    <h3 className="text-xl font-semibold">{title}</h3>
+  <div className="space-y-3 mt-2">
+    <h3 className="text-xl font-bold">{title}</h3>
     <div>{formatFn(items)}</div>
   </div>
 );
@@ -1573,11 +1571,10 @@ const CardLiquidacion = ({
   return (
     <Card className="mb-5">
       <CardHeader className="flex gap-3">
-        <div className="flex flex-col">
-          <p className="text-xl font-semibold">
-            Vehículo: <b className="text-green-700">{detalleVehiculo.vehiculo.label}</b>
-          </p>
-        </div>
+        <p className="text-xl font-bold">
+          Vehículo:{" "}
+          <b className="text-green-700">{detalleVehiculo.vehiculo.label}</b>
+        </p>
       </CardHeader>
       <Divider />
       <CardBody className="gap-5 text-sm">
@@ -1585,86 +1582,41 @@ const CardLiquidacion = ({
           title="Bonificaciones"
           items={detalleVehiculo?.bonos}
           formatFn={() => {
-            return (
-              <table className="table-auto w-full text-sm mb-5">
-                <thead className="bg-yellow-500 text-white">
-                  <tr>
-                    <th className="px-4 py-2 text-left">Nombre del bono</th>
-                    {detalleVehiculo.bonos[0]?.values.map((val, index) => (
-                      <th key={index} className="px-4 py-2 text-center">
-                        {val.mes}
-                      </th>
-                    ))}
-                    <th className="px-4 py-2 text-center">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {detalleVehiculo.bonos.map((bono, index) => {
-                    const total = bono.values.reduce(
-                      (sum, val) => sum + val.quantity * bono.value,
-                      0
-                    );
-                    return (
-                      <tr key={index}>
-                        <td className="border px-4 py-2">{bono.name}</td>
-                        {bono.values.map((val, index) => (
-                          <td
-                            key={index}
-                            className="border px-4 py-2 text-center"
-                          >
-                            {val.quantity}
-                          </td>
-                        ))}
-                        <td className="border px-4 py-2 text-center text-green-500">
-                          {formatToCOP(total)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            );
-          }}
-        />
+            const isMobile = useMediaQuery("(max-width: 650px)"); // Tailwind `sm` breakpoint
 
-        <ListSection
-          title="Pernotes"
-          items={detalleVehiculo.pernotes}
-          formatFn={(pernotes) => {
-            if (Array.isArray(pernotes)) {
-              // Generar una tabla general con los rows por cada pernote
+            if (!isMobile) {
               return (
                 <table className="table-auto w-full text-sm mb-5">
-                  <thead className="bg-blue-500 text-white">
+                  <thead className="bg-yellow-500 text-white">
                     <tr>
-                      <th className="px-4 py-2 text-left">Empresa</th>
-                      <th className="px-4 py-2 text-center">Fechas</th>
+                      <th className="px-4 py-2 text-left">Nombre del bono</th>
+                      {detalleVehiculo.bonos[0]?.values.map((val, index) => (
+                        <th key={index} className="px-4 py-2 text-center">
+                          {val.mes}
+                        </th>
+                      ))}
                       <th className="px-4 py-2 text-center">Total</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {pernotes.map((pernote, index) => {
-                      const empresa = empresas.find(
-                        (empresa) => empresa.NIT === pernote.empresa
+                    {detalleVehiculo.bonos.map((bono, index) => {
+                      const total = bono.values.reduce(
+                        (sum, val) => sum + val.quantity * bono.value,
+                        0
                       );
-
                       return (
                         <tr key={index}>
-                          <td className="border px-4 py-2">
-                            {empresa ? empresa.Nombre : "Empresa no encontrada"}
-                          </td>
-                          <td className="border text-center text-primary-500">
-                            {pernote?.fechas
-                              ?.sort(
-                                (a: string, b: string) =>
-                                  new Date(a).getTime() - new Date(b).getTime()
-                              ) // Ordenar las fechas
-                              .map((fecha: any, index) => (
-                                <p key={index}>{fecha}</p>
-                              ))}
-                          </td>
+                          <td className="border px-4 py-2">{bono.name}</td>
+                          {bono.values.map((val, index) => (
+                            <td
+                              key={index}
+                              className="border px-4 py-2 text-center"
+                            >
+                              {val.quantity}
+                            </td>
+                          ))}
                           <td className="border px-4 py-2 text-center text-green-500">
-                            {formatToCOP(pernote.cantidad * pernote.valor || 0)}
+                            {formatToCOP(total)}
                           </td>
                         </tr>
                       );
@@ -1672,6 +1624,146 @@ const CardLiquidacion = ({
                   </tbody>
                 </table>
               );
+            } else {
+              return (
+                <div className="space-y-5">
+                  {detalleVehiculo?.bonos.map((bono, index) => {
+                    const total = bono.values.reduce(
+                      (sum, val) => sum + val.quantity * bono.value,
+                      0
+                    );
+                    return (
+                      <Card key={index}>
+                        <CardHeader className="font-bold">
+                          {bono.name}
+                        </CardHeader>
+                        <Divider />
+                        <CardBody className="">
+                          {bono.values.map((val, idx) => (
+                            <div
+                              key={idx}
+                              className="flex justify-between items-center"
+                            >
+                              <p>{val.mes}</p>
+                              <p>{val.quantity}</p>
+                            </div>
+                          ))}
+                        </CardBody>
+                        <Divider />
+                        <CardFooter className="flex justify-between">
+                          <p className="font-bold">Total</p>
+                          <p className="text-green-700 font-bold">
+                            {formatToCOP(total)}
+                          </p>
+                        </CardFooter>
+                      </Card>
+                    );
+                  })}
+                </div>
+              );
+            }
+          }}
+        />
+
+        <ListSection
+          title="Pernotes"
+          items={detalleVehiculo.pernotes}
+          formatFn={(pernotes) => {
+            const isMobile = useMediaQuery("(max-width: 650px)"); // Tailwind `sm` breakpoint
+
+            if (Array.isArray(pernotes)) {
+              // Generar una tabla general con los rows por cada pernote
+              if(pernotes.length > 0){
+                if (!isMobile) {
+                  return (
+                    <table className="table-auto w-full text-sm mb-5">
+                      <thead className="bg-blue-500 text-white">
+                        <tr>
+                          <th className="px-4 py-2 text-left">Empresa</th>
+                          <th className="px-4 py-2 text-center">Fechas</th>
+                          <th className="px-4 py-2 text-center">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pernotes.map((pernote, index) => {
+                          const empresa = empresas.find(
+                            (empresa) => empresa.NIT === pernote.empresa
+                          );
+  
+                          return (
+                            <tr key={index}>
+                              <td className="border px-4 py-2">
+                                {empresa
+                                  ? empresa.Nombre
+                                  : "Empresa no encontrada"}
+                              </td>
+                              <td className="border text-center text-primary-500">
+                                {pernote?.fechas
+                                  ?.sort(
+                                    (a: string, b: string) =>
+                                      new Date(a).getTime() -
+                                      new Date(b).getTime()
+                                  ) // Ordenar las fechas
+                                  .map((fecha: any, index) => (
+                                    <p key={index}>{fecha}</p>
+                                  ))}
+                              </td>
+                              <td className="border px-4 py-2 text-center text-green-500">
+                                {formatToCOP(
+                                  pernote.cantidad * pernote.valor || 0
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  );
+                } else {
+                  return (
+                    <div className="space-y-5">
+                      {pernotes.map((pernote, index) => {
+                        const empresa = empresas.find(
+                          (empresa) => empresa.NIT === pernote.empresa
+                        );
+  
+                        return (
+                          <Card key={index}>
+                            <CardHeader className="text-primary-500">
+                              {empresa ? empresa.Nombre : "Empresa no encontrada"}
+                            </CardHeader>
+                            <Divider />
+                            <CardBody>
+                              <h4 className="font-bold">Fechas:</h4>
+                              {pernote?.fechas
+                                ?.sort(
+                                  (a: string, b: string) =>
+                                    new Date(a).getTime() - new Date(b).getTime()
+                                ) // Ordenar las fechas
+                                .map((fecha: any, idx) => (
+                                  <p key={idx}>{fecha}</p>
+                                ))}
+                            </CardBody>
+                            <Divider />
+                            <CardFooter className="flex justify-between">
+                              <p className="font-bold">Total</p>
+                              <p className="text-green-700 font-bold">
+                                {formatToCOP(
+                                  pernote.cantidad * pernote.valor || 0
+                                )}
+                              </p>
+                            </CardFooter>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  );
+                }
+              }else{
+                return (
+                  <p className="text-medium">No hay pernotes</p>
+                )
+              }
             }
 
             // Si no es un array, regresamos null o algún valor por defecto
@@ -1684,41 +1776,86 @@ const CardLiquidacion = ({
           items={detalleVehiculo.recargos}
           formatFn={(recargos) => {
             // Si es un array, lo recorremos
-            if (Array.isArray(recargos)) {
-              return (
-                <table className="table-auto w-full text-sm mb-5">
-                  <thead className="bg-green-500 text-white">
-                    <tr>
-                      <th className="px-4 py-2 text-left">Empresa</th>
-                      <th className="px-4 py-2 text-left">Mes</th>
-                      <th className="px-4 py-2 text-center">Paga cliente</th>
-                      <th className="px-4 py-2 text-center">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recargos.map((recargo, index) => {
-                      const empresa = empresas.find(
-                        (empresa) => empresa.NIT === recargo.empresa
-                      );
 
-                      return (
-                        <tr key={index}>
-                          <td className="border px-4 py-2">
-                            {empresa ? empresa.Nombre : "Empresa no encontrada"}
-                          </td>
-                          <td className="border px-4 py-2">{recargo.mes}</td>
-                          <td className="border px-4 py-2 text-center">
-                            {recargo.pagCliente ? "SI" : "NO"}
-                          </td>
-                          <td className="border px-4 py-2 text-center text-green-500">
-                            {formatToCOP(recargo.valor || 0)}
-                          </td>
+            const isMobile = useMediaQuery("(max-width: 650px)"); // Tailwind `sm` breakpoint
+
+            if (Array.isArray(recargos)) {
+              if(recargos.length > 0){
+                if (!isMobile) {
+                  return (
+                    <table className="table-auto w-full text-sm mb-5">
+                      <thead className="bg-green-500 text-white">
+                        <tr>
+                          <th className="px-4 py-2 text-left">Empresa</th>
+                          <th className="px-4 py-2 text-left">Mes</th>
+                          <th className="px-4 py-2 text-center">Paga</th>
+                          <th className="px-4 py-2 text-center">Total</th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              );
+                      </thead>
+                      <tbody>
+                        {recargos.map((recargo, index) => {
+                          const empresa = empresas.find(
+                            (empresa) => empresa.NIT === recargo.empresa
+                          );
+  
+                          return (
+                            <tr key={index}>
+                              <td className="border px-4 py-2">
+                                {empresa
+                                  ? empresa.Nombre
+                                  : "Empresa no encontrada"}
+                              </td>
+                              <td className="border px-4 py-2">{recargo.mes}</td>
+                              <td className="border px-4 py-2 text-center">
+                                {recargo.pagCliente ? "Cliente" : "Propietario"}
+                              </td>
+                              <td className="border px-4 py-2 text-center text-green-500">
+                                {formatToCOP(recargo.valor || 0)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  );
+                } else {
+                  return (
+                    <div className="space-y-5">
+                      {recargos.map((recargo, index) => {
+                        const empresa = empresas.find(
+                          (empresa) => empresa.NIT === recargo.empresa
+                        );
+  
+                        return (
+                          <Card key={index}>
+                            <CardHeader className="text-primary-500">
+                              {empresa ? empresa.Nombre : "Empresa no encontrada"}
+                            </CardHeader>
+                            <Divider />
+                            <CardBody className="flex-row justify-between">
+                              <p className="font-bold">Paga:</p>
+                              <p>
+                                {recargo.pagCliente ? "Cliente" : "Propietario"}
+                              </p>
+                            </CardBody>
+                            <Divider />
+                            <CardFooter className="flex justify-between">
+                              <p className="font-bold">Total</p>
+                              <p className="text-green-700 font-bold">
+                                {formatToCOP(recargo.valor || 0)}
+                              </p>
+                            </CardFooter>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  );
+                }
+              }else{
+                return (
+                  <p className="text-medium">No hay recargos</p>
+                )
+              }
             }
 
             // Si no es un array, regresamos null o algún valor por defecto
@@ -1727,7 +1864,7 @@ const CardLiquidacion = ({
         />
       </CardBody>
       <Divider />
-      <CardFooter className="w-full space-y-1 flex flex-col">
+      <CardFooter className="w-full space-y-2 flex flex-col px-0">
         <SummaryRow
           label="Total bonificaciones"
           value={formatToCOP(totalBonos)}
@@ -1735,7 +1872,7 @@ const CardLiquidacion = ({
         <SummaryRow label="Total pernotes" value={formatToCOP(totalPernotes)} />
         <SummaryRow label="Total recargos" value={formatToCOP(totalRecargos)} />
         <Divider />
-        <div className="w-full flex justify-between text-2xl">
+        <div className="w-full flex justify-between text-2xl px-3">
           <p className="font-semibold">Subtotal: </p>
           <p className="text-secondary-500 font-semibold">
             {formatToCOP(subtotal)}
@@ -1752,7 +1889,7 @@ interface SummaryRowProps {
 }
 
 const SummaryRow = ({ label, value }: SummaryRowProps) => (
-  <div className="w-full flex justify-between">
+  <div className="w-full flex justify-between px-3">
     <p className="font-semibold">{label}: </p>
     <p className="text-yellow-500">{value}</p>
   </div>
