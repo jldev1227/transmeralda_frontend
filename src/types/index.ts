@@ -78,8 +78,27 @@ export type Vehiculo = {
   marca: string;
   linea: string;
   modelo: string;
+  color: string;
+  claseVehiculo: string;
+  tipoCarroceria: string;
+  combustible: string;
+  numeroMotor: string;
+  vin: string;
+  numeroSerie: string;
+  numeroChasis: string;
   propietarioNombre: string;
   propietarioIdentificacion: string;
+  kilometraje: string;
+  disponibilidad: string;
+  estado: string;
+  latitud: number;
+  longitud: number;
+  galeria: Array<TemplateStringsArray>;
+  propietarioId: number;
+  conductorId: number;
+  conductor?: Conductor;
+  createdAt: string;
+  updateddAt: string;
   __typename?: string;
 };
 
