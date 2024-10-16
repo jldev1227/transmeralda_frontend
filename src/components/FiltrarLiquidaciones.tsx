@@ -25,6 +25,7 @@ interface TotalesBonos {
   bonoAlimentacion: number;
   bonoTrabajado: number;
   bonoTrabajadoDoble: number;
+  total: number
 }
 
 export default function FiltrarLiquidaciones() {
@@ -187,6 +188,7 @@ export default function FiltrarLiquidaciones() {
       totals.bonoAlimentacion += bonoAlimentacion.quantity;
       totals.bonoTrabajado += bonoTrabajado.quantity;
       totals.bonoTrabajadoDoble += bonoTrabajadoDoble.quantity;
+      totals.total = totals.bonoAlimentacion + totals.bonoTrabajado + totals.bonoTrabajadoDoble
 
       return totals;
     },
@@ -194,6 +196,7 @@ export default function FiltrarLiquidaciones() {
       bonoAlimentacion: 0,
       bonoTrabajado: 0,
       bonoTrabajadoDoble: 0,
+      total: 0
     } as TotalesBonos // Inicialización de los totales
   );
 
@@ -369,9 +372,7 @@ export default function FiltrarLiquidaciones() {
                     </div>
                   );
                 } else {
-                  return (
-                    <p>No hay resultados</p>
-                  )
+                  return <p>No hay resultados</p>;
                 }
               })()}
             </CardBody>
@@ -384,22 +385,22 @@ export default function FiltrarLiquidaciones() {
                 {mesesDelAño[Number(mesSelected)]?.label}
               </h3>
             </div>
-            <Table
-              className="-mt-5"
-              aria-label="Liquidaciones filtradas"
-            >
+            <Table className="-mt-5" aria-label="Liquidaciones filtradas">
               <TableHeader>
                 <TableColumn className="bg-green-700 text-white uppercase">
                   Conductor
                 </TableColumn>
-                <TableColumn className="bg-green-700 text-white uppercase">
+                <TableColumn className="text-center bg-green-700 text-white uppercase">
                   Bono de alimentación
                 </TableColumn>
-                <TableColumn className="bg-green-700 text-white uppercase">
+                <TableColumn className="text-center bg-green-700 text-white uppercase">
                   Bono día trabajado
                 </TableColumn>
-                <TableColumn className="bg-green-700 text-white uppercase">
+                <TableColumn className="text-center bg-green-700 text-white uppercase">
                   Bono día trabajado doble
+                </TableColumn>
+                <TableColumn className="text-center bg-primary-700 text-white uppercase">
+                  Total
                 </TableColumn>
               </TableHeader>
               <TableBody emptyContent={"No hay resultados por mostrar."}>
@@ -433,10 +434,14 @@ export default function FiltrarLiquidaciones() {
                       const bonoTrabajadoDoble = resultado.bonos[
                         "Bono día trabajado doble"
                       ] || { quantity: 0 };
+                      const total =
+                        bonoAlimentacion.quantity +
+                        bonoTrabajado.quantity +
+                        bonoTrabajadoDoble.quantity;
 
                       return (
                         <TableRow
-                          className={`${index % 2 === 0 ? "" : "bg-default-100"}`}
+                          className={`${index % 2 === 0 ? "" : "bg-default-100"} border-1`}
                           key={index}
                         >
                           <TableCell>{`${resultado.conductor.nombre} ${resultado.conductor.apellido}`}</TableCell>
@@ -449,22 +454,28 @@ export default function FiltrarLiquidaciones() {
                           <TableCell className="text-center">
                             {bonoTrabajadoDoble.quantity}
                           </TableCell>
+                          <TableCell className={`text-center bg-primary-700 text-white border-1 ${index === 0 ? 'border-t-default-500' : ''}`}>
+                            {total}
+                          </TableCell>
                         </TableRow>
                       );
                     }),
                   // Pie de tabla con los totales
-                  <TableRow className="uppercase" key="totals">
-                    <TableCell>
+                  <TableRow className="uppercase bg-green-700 text-white" key="totals">
+                    <TableCell className="text-xl">
                       <strong>Total</strong>
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="text-center text-xl">
                       <strong>{totalBonos.bonoAlimentacion}</strong>
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="text-center text-xl">
                       <strong>{totalBonos.bonoTrabajado}</strong>
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="text-center text-xl">
                       <strong>{totalBonos.bonoTrabajadoDoble}</strong>
+                    </TableCell>
+                    <TableCell className="text-center text-xl bg-primary-700">
+                      <strong>{totalBonos.total}</strong>
                     </TableCell>
                   </TableRow>,
                 ]}
