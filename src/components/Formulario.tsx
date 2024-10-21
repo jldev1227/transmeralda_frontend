@@ -515,7 +515,7 @@ export default function Formulario() {
     setDiasLaboradosVillanueva(0);
   };
 
-  const bonificacionVillanueva = useMemo(() => {
+  const bonificacionVillanueva: number = useMemo(() => {
     if (diasLaboradosVillanueva > diasLaborados) {
       // Lanza el alert si diasLaboradosVillanueva es mayor que diasLaborados
       setDiasLaboradosVillanueva(0);
@@ -526,23 +526,44 @@ export default function Formulario() {
       const conductor = state.conductores.find(
         (c) => c.id === conductorSelected?.value
       );
-      return conductor
-        ? diasLaboradosVillanueva >= 17
-          ? 2101498 - conductor.salarioBase
-          : (state.configuracion?.find(
-              (config) => config.nombre == "Ajuste villanueva"
-            )?.valor || 0) * diasLaboradosVillanueva
-        : 0;
-    }else{
-      setDiasLaboradosVillanueva(0)
+
+      const ajusteVillanueva =
+        state.configuracion?.find(
+          (config) => config.nombre === "Salario villanueva"
+        )?.valor || 0;
+
+      if (conductor) {
+        const ajusteCalculado = (ajusteVillanueva - conductor.salarioBase) / 30;
+
+        // Determinar el ajuste adicional si el valor coincide con 20048 o 26715
+
+        if (diasLaboradosVillanueva >= 17) {
+          return ajusteVillanueva - conductor.salarioBase;
+        } else {
+          const ajustePorDia =
+            Number(ajusteCalculado.toFixed()) === 20048
+              ? Number(ajusteCalculado.toFixed()) + 2
+              : Number(ajusteCalculado.toFixed()) === 26715
+                ? Number(ajusteCalculado.toFixed()) + 1
+                : ajusteCalculado;
+
+          // Calcular el total ajustado multiplicado por los días trabajados en Villanueva
+          return ajustePorDia * diasLaboradosVillanueva;
+        }
+      }
+
+      return 0;
+    } else {
+      setDiasLaboradosVillanueva(0);
     }
 
     return 0;
   }, [
     isCheckedAjuste,
-    liquidacion,
     diasLaborados,
     diasLaboradosVillanueva,
+    conductorSelected,
+    state.conductores,
     state.configuracion,
   ]);
 
@@ -1312,8 +1333,12 @@ export default function Formulario() {
 
                               <Table shadow="none" aria-label="Resumen">
                                 <TableHeader>
-                                  <TableColumn className="bg-black text-white">CONCEPTO</TableColumn>
-                                  <TableColumn className="bg-black text-white">VALOR</TableColumn>
+                                  <TableColumn className="bg-black text-white">
+                                    CONCEPTO
+                                  </TableColumn>
+                                  <TableColumn className="bg-black text-white">
+                                    VALOR
+                                  </TableColumn>
                                 </TableHeader>
                                 <TableBody>
                                   <TableRow className="border-1">
@@ -1370,7 +1395,9 @@ export default function Formulario() {
                                       )?.valor || 0}
                                       %)
                                     </TableCell>
-                                    <TableCell>{formatToCOP(pension)}</TableCell>
+                                    <TableCell>
+                                      {formatToCOP(pension)}
+                                    </TableCell>
                                   </TableRow>
                                   <TableRow className="border-1 bg-red-600 text-white">
                                     <TableCell>Anticipos</TableCell>
@@ -1379,7 +1406,9 @@ export default function Formulario() {
                                     </TableCell>
                                   </TableRow>
                                   <TableRow className="border-1 bg-green-700 text-white">
-                                    <TableCell className="text-xl">Sueldo total</TableCell>
+                                    <TableCell className="text-xl">
+                                      Sueldo total
+                                    </TableCell>
                                     <TableCell className="text-xl">
                                       {formatToCOP(sueldoTotal)}
                                     </TableCell>
@@ -1673,7 +1702,7 @@ const CardLiquidacion = ({
 
             if (Array.isArray(pernotes)) {
               // Generar una tabla general con los rows por cada pernote
-              if(pernotes.length > 0){
+              if (pernotes.length > 0) {
                 if (!isMobile) {
                   return (
                     <table className="table-auto w-full text-sm mb-5">
@@ -1689,7 +1718,7 @@ const CardLiquidacion = ({
                           const empresa = empresas.find(
                             (empresa) => empresa.NIT === pernote.empresa
                           );
-  
+
                           return (
                             <tr key={index}>
                               <td className="border px-4 py-2">
@@ -1726,11 +1755,13 @@ const CardLiquidacion = ({
                         const empresa = empresas.find(
                           (empresa) => empresa.NIT === pernote.empresa
                         );
-  
+
                         return (
                           <Card key={index}>
                             <CardHeader className="text-primary-500">
-                              {empresa ? empresa.Nombre : "Empresa no encontrada"}
+                              {empresa
+                                ? empresa.Nombre
+                                : "Empresa no encontrada"}
                             </CardHeader>
                             <Divider />
                             <CardBody>
@@ -1738,7 +1769,8 @@ const CardLiquidacion = ({
                               {pernote?.fechas
                                 ?.sort(
                                   (a: string, b: string) =>
-                                    new Date(a).getTime() - new Date(b).getTime()
+                                    new Date(a).getTime() -
+                                    new Date(b).getTime()
                                 ) // Ordenar las fechas
                                 .map((fecha: any, idx) => (
                                   <p key={idx}>{fecha}</p>
@@ -1759,10 +1791,8 @@ const CardLiquidacion = ({
                     </div>
                   );
                 }
-              }else{
-                return (
-                  <p className="text-medium">No hay pernotes</p>
-                )
+              } else {
+                return <p className="text-medium">No hay pernotes</p>;
               }
             }
 
@@ -1780,7 +1810,7 @@ const CardLiquidacion = ({
             const isMobile = useMediaQuery("(max-width: 650px)"); // Tailwind `sm` breakpoint
 
             if (Array.isArray(recargos)) {
-              if(recargos.length > 0){
+              if (recargos.length > 0) {
                 if (!isMobile) {
                   return (
                     <table className="table-auto w-full text-sm mb-5">
@@ -1797,7 +1827,7 @@ const CardLiquidacion = ({
                           const empresa = empresas.find(
                             (empresa) => empresa.NIT === recargo.empresa
                           );
-  
+
                           return (
                             <tr key={index}>
                               <td className="border px-4 py-2">
@@ -1805,7 +1835,9 @@ const CardLiquidacion = ({
                                   ? empresa.Nombre
                                   : "Empresa no encontrada"}
                               </td>
-                              <td className="border px-4 py-2">{recargo.mes}</td>
+                              <td className="border px-4 py-2">
+                                {recargo.mes}
+                              </td>
                               <td className="border px-4 py-2 text-center">
                                 {recargo.pagCliente ? "Cliente" : "Propietario"}
                               </td>
@@ -1825,11 +1857,13 @@ const CardLiquidacion = ({
                         const empresa = empresas.find(
                           (empresa) => empresa.NIT === recargo.empresa
                         );
-  
+
                         return (
                           <Card key={index}>
                             <CardHeader className="text-primary-500">
-                              {empresa ? empresa.Nombre : "Empresa no encontrada"}
+                              {empresa
+                                ? empresa.Nombre
+                                : "Empresa no encontrada"}
                             </CardHeader>
                             <Divider />
                             <CardBody className="flex-row justify-between">
@@ -1851,10 +1885,8 @@ const CardLiquidacion = ({
                     </div>
                   );
                 }
-              }else{
-                return (
-                  <p className="text-medium">No hay recargos</p>
-                )
+              } else {
+                return <p className="text-medium">No hay recargos</p>;
               }
             }
 
