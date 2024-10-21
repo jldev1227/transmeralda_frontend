@@ -6,7 +6,7 @@ import { Image } from "@nextui-org/image";
 import { Button } from "@nextui-org/button";
 
 interface DropzoneProps {
-  onFileUploaded?: (file: FileDetailsVehiculos) => void; // Para subir un archivo
+  onFileUploaded?: (file: FileDetailsVehiculos, acceptedFile: File) => void; // Para subir un archivo
   onFileRemoved?: (fileId: string) => void; // Nuevo: Para eliminar un archivo
   label?: string;
 }
@@ -17,6 +17,7 @@ export type FileDetailsVehiculos = {
   size: number;
   type: string;
   category?: string; // Por ejemplo: "Tarjeta de propiedad", "SOAT", etc.
+  realFile: File; // Añadimos el archivo real aquí
 };
 
 const Dropzone: React.FC<DropzoneProps> = ({ onFileUploaded, onFileRemoved, label }) => {
@@ -38,18 +39,20 @@ const Dropzone: React.FC<DropzoneProps> = ({ onFileUploaded, onFileRemoved, labe
           size: acceptedFile.size,
           type: acceptedFile.type,
           category: label, // El label se utiliza para categorizar el archivo.
+          realFile: acceptedFile, // Aquí estamos asignando el archivo real
         };
-
+  
         setFile(newFile);
-
+  
         // Si hay un callback externo para manejar el archivo
         if (onFileUploaded) {
-          onFileUploaded(newFile);
+          onFileUploaded(newFile, acceptedFile); // Pasamos el archivo real también
         }
       }
     },
     [onFileUploaded, label]
   );
+  
 
   // Función para eliminar el archivo
   const handleRemoveFile = () => {

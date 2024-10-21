@@ -20,8 +20,11 @@ export default function ModalAddVehiculo() {
     });
   };
 
-  const handleFilesUploaded = (newFile: FileDetailsVehiculos) => {
-    setFiles((prevState) => [...prevState, newFile]);
+  const handleFilesUploaded = (fileDetails : FileDetailsVehiculos, realFile : File) => {
+    setFiles((prevFiles) => [
+      ...prevFiles,
+      { ...fileDetails, realFile }, // Guardamos tanto los detalles como el archivo real
+    ]);
   };
 
   const handleFileRemoved = (fileId: string) => {
