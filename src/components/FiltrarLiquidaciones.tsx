@@ -411,6 +411,30 @@ export default function FiltrarLiquidaciones() {
                               <p className="text-center">
                                 {resultado.bonoAlimentacion}
                               </p>
+                              <div className="flex justify-between items-center">
+                                <p>Bono de alimentación</p>
+                                <p className="text-center">
+                                  {resultado.bonoAlimentacion}
+                                </p>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <p>Bono de día trabajado</p>
+                                <p className="text-center">
+                                  {resultado.bonoTrabajado}
+                                </p>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <p>Bono de día trabajado doble</p>
+                                <p className="text-center">
+                                  {resultado.bonoTrabajadoDoble}
+                                </p>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <p>Recargos</p>
+                                <p className="text-center">
+                                  {formatToCOP(resultado.totalRecargos)}
+                                </p>
+                              </div>
                             </div>
                             <div className="flex justify-between items-center">
                               <p>Bono de día trabajado</p>
