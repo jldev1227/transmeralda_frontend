@@ -1,7 +1,7 @@
 import { mesesDelAño } from "@/data/meses";
 import useLiquidacion from "@/hooks/useLiquidacion";
 import { selectStyles } from "@/styles/selectStyles";
-import { Bono, Conductor, VehiculoOption } from "@/types";
+import { Bono, Conductor, Recargo, VehiculoOption } from "@/types";
 import { Select, SelectItem } from "@nextui-org/select";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SelectReact, { SingleValue } from "react-select";
@@ -16,6 +16,7 @@ import {
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Card, CardHeader, CardBody } from "@nextui-org/card";
 import { Divider } from "@nextui-org/divider";
+import { formatToCOP } from "@/helpers";
 interface Resultado {
   conductor: Conductor;
   bonosFiltrados: Bono[];
@@ -25,7 +26,7 @@ interface TotalesBonos {
   bonoAlimentacion: number;
   bonoTrabajado: number;
   bonoTrabajadoDoble: number;
-  total: number
+  total: number;
 }
 
 export default function FiltrarLiquidaciones() {
@@ -108,6 +109,7 @@ export default function FiltrarLiquidaciones() {
                   name: bono.name,
                   value: bono.value,
                   values: valuesFiltrados,
+                  vehiculoId: bono.vehiculoId,
                 };
               }
             }
@@ -116,10 +118,23 @@ export default function FiltrarLiquidaciones() {
           })
           ?.filter(Boolean) as Bono[]; // Filtramos los undefined y garantizamos que sea Bono[]
 
+        const recargosFiltrados = liquidacion.recargos
+          ?.flatMap((recargo) => {
+            if (recargo.vehiculoId === vehiculoSelected.value) {
+              if (recargo.mes === mesesDelAño[Number(mesSelected)]?.label && !recargo.pagCliente) {
+                return recargo;
+              }
+            }
+
+            return undefined;
+          })
+          ?.filter(Boolean) as Recargo[];
+
         // Retornar el objeto con conductor y bonos filtrados
         return {
           conductor: liquidacion.conductor, // O la información relevante del conductor
           bonosFiltrados,
+          recargosFiltrados,
         };
       });
 
@@ -141,9 +156,24 @@ export default function FiltrarLiquidaciones() {
         acc[conductorKey] = {
           conductor: resultado.conductor,
           bonos: {},
+          totalRecargos: 0, // Agregamos la propiedad para almacenar el total de recargos
         };
       }
 
+      // Calcular el total de recargos para el conductor actual
+      const totalRecargosConductor = resultado.recargosFiltrados.reduce(
+        (total: number, recargo: Recargo) => {
+          // Aquí podrías agregar una verificación si el recargo tiene un campo relacionado al conductor si fuera necesario
+          // Por ahora sumaremos todos los recargos filtrados al total del conductor
+          return total + recargo.valor;
+        },
+        0
+      );
+
+      // Agregar el total de recargos acumulado al conductor en el acumulador
+      acc[conductorKey].totalRecargos += totalRecargosConductor;
+
+      // Proceso de los bonos
       resultado.bonosFiltrados.forEach((bonificacion: Bono) => {
         const totalQuantity = bonificacion.values.reduce(
           (sum, val) => sum + (val.quantity || 0),
@@ -188,7 +218,10 @@ export default function FiltrarLiquidaciones() {
       totals.bonoAlimentacion += bonoAlimentacion.quantity;
       totals.bonoTrabajado += bonoTrabajado.quantity;
       totals.bonoTrabajadoDoble += bonoTrabajadoDoble.quantity;
-      totals.total = totals.bonoAlimentacion + totals.bonoTrabajado + totals.bonoTrabajadoDoble
+      totals.total =
+        totals.bonoAlimentacion +
+        totals.bonoTrabajado +
+        totals.bonoTrabajadoDoble;
 
       return totals;
     },
@@ -196,11 +229,16 @@ export default function FiltrarLiquidaciones() {
       bonoAlimentacion: 0,
       bonoTrabajado: 0,
       bonoTrabajadoDoble: 0,
-      total: 0
+      total: 0,
     } as TotalesBonos // Inicialización de los totales
   );
 
-  const filtrarResultadosConBonos = (resultadosUnificados: any) => {
+  const totalRecargos = resultadosUnificados?.reduce(
+    (total, recargo: any) => total + recargo.totalRecargos,
+    0
+  );
+
+  const filtrarResultados = (resultadosUnificados: any) => {
     return resultadosUnificados
       ?.filter((resultado: any) => {
         const bonoAlimentacion = resultado.bonos["Bono de alimentación"] || {
@@ -236,6 +274,7 @@ export default function FiltrarLiquidaciones() {
           bonoAlimentacion: bonoAlimentacion.quantity,
           bonoTrabajado: bonoTrabajado.quantity,
           bonoTrabajadoDoble: bonoTrabajadoDoble.quantity,
+          totalRecargos: resultado.totalRecargos
         };
       });
   };
@@ -243,7 +282,7 @@ export default function FiltrarLiquidaciones() {
   const isMobile = useMediaQuery("(max-width: 960px)"); // Tailwind `sm` breakpoint
 
   return (
-    <div className="max-md:px-3 xl:w-2/3 mx-auto flex flex-col gap-10">
+    <div className="max-md:px-3 2xl:w-2/3 mx-auto flex flex-col gap-10">
       <div className="space-y-5 flex flex-col items-center w-full">
         <h2 className="font-bold text-2xl text-green-700">
           Filtrar Liquidaciones
@@ -289,40 +328,48 @@ export default function FiltrarLiquidaciones() {
             <CardBody>
               {(() => {
                 const resultadosFiltrados =
-                  filtrarResultadosConBonos(resultadosUnificados);
+                  filtrarResultados(resultadosUnificados);
 
                 if (resultadosFiltrados.length > 0) {
                   return (
                     <div className="space-y-5">
                       {resultadosFiltrados.map(
-                        (resultado: any, index: number) => (
-                          <div
-                            className={`${index % 2 === 0 ? "" : "bg-default-100"} p-3 rounded-xl shadow-md`}
-                            key={index}
-                          >
-                            <p className="text-sm md:text-medium font-bold">
-                              {resultado.conductor}
-                            </p>
-                            <div className="flex justify-between items-center">
-                              <p>Bono de alimentación</p>
-                              <p className="text-center">
-                                {resultado.bonoAlimentacion}
+                        (resultado: any, index: number) => {
+                          return (
+                            <div
+                              className={`${index % 2 === 0 ? "" : "bg-default-100"} p-3 rounded-xl shadow-md`}
+                              key={index}
+                            >
+                              <p className="text-sm md:text-medium font-bold">
+                                {resultado.conductor}
                               </p>
+                              <div className="flex justify-between items-center">
+                                <p>Bono de alimentación</p>
+                                <p className="text-center">
+                                  {resultado.bonoAlimentacion}
+                                </p>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <p>Bono de día trabajado</p>
+                                <p className="text-center">
+                                  {resultado.bonoTrabajado}
+                                </p>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <p>Bono de día trabajado doble</p>
+                                <p className="text-center">
+                                  {resultado.bonoTrabajadoDoble}
+                                </p>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <p>Recargos</p>
+                                <p className="text-center">
+                                  {formatToCOP(resultado.totalRecargos)}
+                                </p>
+                              </div>
                             </div>
-                            <div className="flex justify-between items-center">
-                              <p>Bono de día trabajado</p>
-                              <p className="text-center">
-                                {resultado.bonoTrabajado}
-                              </p>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <p>Bono de día trabajado doble</p>
-                              <p className="text-center">
-                                {resultado.bonoTrabajadoDoble}
-                              </p>
-                            </div>
-                          </div>
-                        )
+                          );
+                        }
                       )}
                       <Divider />
                       <div
@@ -368,6 +415,14 @@ export default function FiltrarLiquidaciones() {
                             </strong>
                           </p>
                         </div>
+                        <div className="flex justify-between items-center">
+                          <p>Bono de día trabajado doble</p>
+                          <p className="text-center">
+                            <strong>
+                              {formatToCOP(Number(totalRecargos))}
+                            </strong>
+                          </p>
+                        </div>
                       </div>
                     </div>
                   );
@@ -387,43 +442,28 @@ export default function FiltrarLiquidaciones() {
             </div>
             <Table className="-mt-5" aria-label="Liquidaciones filtradas">
               <TableHeader>
-                <TableColumn className="bg-green-700 text-white uppercase">
+                <TableColumn className="bg-green-700 text-white uppercase border-r-2">
                   Conductor
                 </TableColumn>
-                <TableColumn className="text-center bg-green-700 text-white uppercase">
+                <TableColumn className="text-center bg-green-700 text-white uppercase border-r-2">
                   Bono de alimentación
                 </TableColumn>
-                <TableColumn className="text-center bg-green-700 text-white uppercase">
+                <TableColumn className="text-center bg-green-700 text-white uppercase border-r-2">
                   Bono día trabajado
                 </TableColumn>
-                <TableColumn className="text-center bg-green-700 text-white uppercase">
+                <TableColumn className="text-center bg-green-700 text-white uppercase border-r-2">
                   Bono día trabajado doble
                 </TableColumn>
-                <TableColumn className="text-center bg-primary-700 text-white uppercase">
-                  Total
+                <TableColumn className="text-center bg-primary-700 text-white uppercase border-r-2">
+                  Recargos totales
+                </TableColumn>
+                <TableColumn className="text-center bg-primary-700 text-white uppercase border-r-2">
+                  Total servicios
                 </TableColumn>
               </TableHeader>
               <TableBody emptyContent={"No hay resultados por mostrar."}>
                 {[
                   ...resultadosUnificados
-                    ?.filter((resultado: any) => {
-                      const bonoAlimentacion = resultado.bonos[
-                        "Bono de alimentación"
-                      ] || { quantity: 0 };
-                      const bonoTrabajado = resultado.bonos[
-                        "Bono día trabajado"
-                      ] || { quantity: 0 };
-                      const bonoTrabajadoDoble = resultado.bonos[
-                        "Bono día trabajado doble"
-                      ] || { quantity: 0 };
-
-                      // Filtrar aquellos cuyo quantity sea mayor que 0
-                      return (
-                        bonoAlimentacion.quantity > 0 ||
-                        bonoTrabajado.quantity > 0 ||
-                        bonoTrabajadoDoble.quantity > 0
-                      );
-                    })
                     ?.map((resultado: any, index: number) => {
                       const bonoAlimentacion = resultado.bonos[
                         "Bono de alimentación"
@@ -444,35 +484,48 @@ export default function FiltrarLiquidaciones() {
                           className={`${index % 2 === 0 ? "" : "bg-default-100"} border-1`}
                           key={index}
                         >
-                          <TableCell>{`${resultado.conductor.nombre} ${resultado.conductor.apellido}`}</TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="border-r-2">{`${resultado.conductor.nombre} ${resultado.conductor.apellido}`}</TableCell>
+                          <TableCell className="text-center border-r-2">
                             {bonoAlimentacion.quantity}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-center border-r-2">
                             {bonoTrabajado.quantity}
                           </TableCell>
-                          <TableCell className="text-center">
+                          <TableCell className="text-center border-r-2">
                             {bonoTrabajadoDoble.quantity}
                           </TableCell>
-                          <TableCell className={`text-center bg-primary-700 text-white border-1 ${index === 0 ? 'border-t-default-500' : ''}`}>
+                          <TableCell
+                            className={`text-center bg-primary-700 text-white border-1 ${index === 0 ? "border-t-default-500" : ""}`}
+                          >
+                            {formatToCOP(resultado.totalRecargos)}
+                          </TableCell>
+                          <TableCell
+                            className={`text-center bg-primary-700 text-white border-1 ${index === 0 ? "border-t-default-500" : ""}`}
+                          >
                             {total}
                           </TableCell>
                         </TableRow>
                       );
                     }),
                   // Pie de tabla con los totales
-                  <TableRow className="uppercase bg-green-700 text-white" key="totals">
-                    <TableCell className="text-xl">
+                  <TableRow
+                    className="uppercase bg-green-700 text-white"
+                    key="totals"
+                  >
+                    <TableCell className="text-xl border-r-2">
                       <strong>Total</strong>
                     </TableCell>
-                    <TableCell className="text-center text-xl">
+                    <TableCell className="text-center text-xl border-r-2">
                       <strong>{totalBonos.bonoAlimentacion}</strong>
                     </TableCell>
-                    <TableCell className="text-center text-xl">
+                    <TableCell className="text-center text-xl border-r-2">
                       <strong>{totalBonos.bonoTrabajado}</strong>
                     </TableCell>
-                    <TableCell className="text-center text-xl">
+                    <TableCell className="text-center text-xl border-r-2">
                       <strong>{totalBonos.bonoTrabajadoDoble}</strong>
+                    </TableCell>
+                    <TableCell className="text-center text-xl bg-primary-700 border-r-2">
+                      <strong>{formatToCOP(Number(totalRecargos))}</strong>
                     </TableCell>
                     <TableCell className="text-center text-xl bg-primary-700">
                       <strong>{totalBonos.total}</strong>

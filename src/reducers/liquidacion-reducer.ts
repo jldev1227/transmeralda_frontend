@@ -117,12 +117,14 @@ export function LiquidacionReducer(
           mensaje: "",
         },
       };
-    case 'SET_LIQUIDACION':
-      return {
-        ...state,
-        liquidacion: action.payload.liquidacion,
-        allowEdit: action.payload.allowEdit
-      };
+      case 'SET_LIQUIDACION':
+        // Limpia el estado de liquidacion
+        state.liquidacion = null;
+        return {
+          ...state,
+          liquidacion: action.payload.liquidacion, // Asigna el nuevo valor del payload
+          allowEdit: action.payload.allowEdit,
+        };
     case 'SET_CONFIGURACION':
       return {
         ...state,
