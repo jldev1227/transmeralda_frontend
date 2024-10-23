@@ -20,6 +20,7 @@ import {
   obtenerMesesEntreFechas,
   dateToDateValue,
   formatCurrency,
+  formatDateValue,
 } from "@/helpers";
 import {
   Pernote,
@@ -66,6 +67,7 @@ export default function Formulario() {
   const [isCheckedAjuste, setIsCheckedAjuste] = useState(false);
   const [diasLaborados, setDiasLaborados] = useState(0);
   const [diasLaboradosVillanueva, setDiasLaboradosVillanueva] = useState(0);
+  const [ajustePorDia, setAjustePorDia] = useState(0);
 
   // Opciones para selectores
   const conductoresOptions = useMemo(
@@ -117,8 +119,24 @@ export default function Formulario() {
         end: parseDate(stateLiquidacion.periodoEnd),
       });
 
+      setDateSelected({
+        start: parseDate(stateLiquidacion.periodoStart),
+        end: parseDate(stateLiquidacion.periodoEnd),
+      });
+
+      const start = stateLiquidacion.periodoStart;
+      const end = stateLiquidacion.periodoEnd;
+
+      const nuevosMeses = obtenerMesesEntreFechas(start, end);
+
+      // Solo actualiza mesesRange si es diferente al valor actual
+      if (JSON.stringify(nuevosMeses) !== JSON.stringify(mesesRange)) {
+        setMesesRange(nuevosMeses);
+      }
       // Mapear vehículos y asignar bonos, pernotes y recargos
-      setDetallesVehiculos(
+
+      // Mapear vehículos y asignar bonos, pernotes y recargos
+      const detallesVehiculos =
         stateLiquidacion?.vehiculos?.map((vehiculo: Vehiculo) => {
           // Filtrar los bonos, pernotes y recargos correspondientes al vehículo
           const bonosDelVehiculo =
@@ -204,15 +222,16 @@ export default function Formulario() {
           };
 
           return detalles;
-        }) || []
-      );
+        }) || [];
+
+      setDetallesVehiculos(detallesVehiculos);
 
       // Actualizar otros campos (ajuste salarial, días laborados)
       setIsCheckedAjuste(stateLiquidacion.ajusteSalarial > 0);
       setDiasLaborados(stateLiquidacion.diasLaborados);
       setDiasLaboradosVillanueva(stateLiquidacion.diasLaboradosVillanueva);
     }
-  }, [stateLiquidacion, conductoresOptions, vehiculosOptions, mesesRange]);
+  }, [stateLiquidacion]);
 
   // Manejador de fechas
   const handleDateChange = (newDate: RangeValue<DateValue> | null) => {
@@ -225,7 +244,10 @@ export default function Formulario() {
       const start = dateSelected.start;
       const end = dateSelected.end;
 
-      const nuevosMeses = obtenerMesesEntreFechas(start, end);
+      const nuevosMeses = obtenerMesesEntreFechas(
+        formatDateValue(start),
+        formatDateValue(end)
+      );
 
       // Solo actualiza mesesRange si es diferente al valor actual
       if (JSON.stringify(nuevosMeses) !== JSON.stringify(mesesRange)) {
@@ -360,9 +382,11 @@ export default function Formulario() {
                   bono.name === name
                     ? {
                         ...bono,
-                        values: bono.values.map((val) =>
-                          val.mes === mes ? { ...val, quantity } : val
-                        ),
+                        values: bono.values.some((val) => val.mes === mes)
+                          ? bono.values.map((val) =>
+                              val.mes === mes ? { ...val, quantity } : val
+                            )
+                          : [...bono.values, { mes, quantity }], // Agregar nuevo mes si no existe
                       }
                     : bono
                 ),
@@ -546,6 +570,8 @@ export default function Formulario() {
               : Number(ajusteCalculado.toFixed()) === 26715
                 ? Number(ajusteCalculado.toFixed()) + 1
                 : ajusteCalculado;
+
+          setAjustePorDia(ajustePorDia);
 
           // Calcular el total ajustado multiplicado por los días trabajados en Villanueva
           return ajustePorDia * diasLaboradosVillanueva;
@@ -922,9 +948,20 @@ export default function Formulario() {
                             key={bono.name} // Usa 'name' como clave, o cualquier identificador único
                           >
                             <CardBody className="max-md:gap-3 md:flex-row justify-between items-center">
-                              <p className="font-semibold">{bono.name}</p>
+                              <p className="font-semibold">
+                                {bono.name}{" "}
+                                <span className="text-foreground-400">
+                                  (
+                                  {formatToCOP(
+                                    state.configuracion?.find(
+                                      (config) => config.nombre === bono.name
+                                    )?.valor || 0
+                                  )}
+                                  )
+                                </span>
+                              </p>
                               <div className="flex gap-5 max-md:w-full">
-                                {mesesRange.map((mes) => {
+                                {mesesRange?.map((mes) => {
                                   const bonoMes = bono.values.find(
                                     (val) => val.mes === mes
                                   );
@@ -957,7 +994,18 @@ export default function Formulario() {
                           </Card>
                         ))}
                         <Divider />
-                        <h3 className="font-bold text-xl mb-2">Pernotes</h3>
+                        <h3 className="font-bold text-xl mb-2">
+                          Pernotes{" "}
+                          <span className="font-semibold text-foreground-400">
+                            (
+                            {formatToCOP(
+                              state.configuracion?.find(
+                                (config) => config.nombre === "Pernote"
+                              )?.valor || 0
+                            )}
+                            )
+                          </span>
+                        </h3>
                         {detalleVehiculo.pernotes?.map(
                           (pernote, pernoteIndex) => (
                             <div
@@ -1323,9 +1371,16 @@ export default function Formulario() {
                                     className="max-w-xs"
                                   />
                                   <div>
-                                    <p>Bonificación villanueva</p>
+                                    <p>
+                                      Bonificación villanueva{" "}
+                                      <span className="text-sm text-foreground-500">
+                                        (V/Día: {formatToCOP(ajustePorDia)}
+                                        )
+                                      </span>
+                                    </p>
+
                                     <p className="text-xl text-orange-400">
-                                      {formatToCOP(bonificacionVillanueva)}
+                                      {formatToCOP(bonificacionVillanueva)}{" "}
                                     </p>
                                   </div>
                                 </>
