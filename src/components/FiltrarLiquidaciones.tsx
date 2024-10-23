@@ -464,6 +464,27 @@ export default function FiltrarLiquidaciones() {
               <TableBody emptyContent={"No hay resultados por mostrar."}>
                 {[
                   ...resultadosUnificados
+                    ?.filter((resultado: any) => {
+
+                      console.log(resultado)
+                      const bonoAlimentacion = resultado.bonos[
+                        "Bono de alimentación"
+                      ] || { quantity: 0 };
+                      const bonoTrabajado = resultado.bonos[
+                        "Bono día trabajado"
+                      ] || { quantity: 0 };
+                      const bonoTrabajadoDoble = resultado.bonos[
+                        "Bono día trabajado doble"
+                      ] || { quantity: 0 };
+
+                      // Filtrar aquellos cuyo quantity sea mayor que 0
+                      return (
+                        bonoAlimentacion.quantity > 0 ||
+                        bonoTrabajado.quantity > 0 ||
+                        bonoTrabajadoDoble.quantity > 0 ||
+                        resultado.totalRecargos > 0
+                      );
+                    })
                     ?.map((resultado: any, index: number) => {
                       const bonoAlimentacion = resultado.bonos[
                         "Bono de alimentación"
