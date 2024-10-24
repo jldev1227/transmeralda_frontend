@@ -1869,10 +1869,10 @@ const CardLiquidacion = ({
                 if (!isMobile) {
                   return (
                     <table className="table-auto w-full text-sm mb-5">
-                      <thead className="bg-green-500 text-white">
+                      <thead className="bg-green-700 text-white">
                         <tr>
                           <th className="px-4 py-2 text-left">Empresa</th>
-                          <th className="px-4 py-2 text-left">Mes</th>
+                          <th className="px-4 py-2 text-center">Mes</th>
                           <th className="px-4 py-2 text-center">Paga</th>
                           <th className="px-4 py-2 text-center">Total</th>
                         </tr>
@@ -1890,7 +1890,7 @@ const CardLiquidacion = ({
                                   ? empresa.Nombre
                                   : "Empresa no encontrada"}
                               </td>
-                              <td className="border px-4 py-2">
+                              <td className="border px-4 py-2 text-center">
                                 {recargo.mes}
                               </td>
                               <td className="border px-4 py-2 text-center">
