@@ -94,6 +94,8 @@ export type Vehiculo = {
   latitud: number;
   longitud: number;
   galeria: Array<TemplateStringsArray>;
+  soatVencimiento: string;
+  tecnomecanicaVencimiento: string;
   propietarioId: number;
   conductorId: number;
   conductor?: Conductor;

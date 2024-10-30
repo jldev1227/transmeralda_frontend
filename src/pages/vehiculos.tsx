@@ -1,4 +1,5 @@
 import ModalAddVehiculo from "@/components/ModalAddVehiculo";
+import ModalVehiculo from "@/components/ModalVehiculo";
 import VehiculosList from "@/components/VehiculosList";
 
 export default function Vehiculos() {
@@ -9,6 +10,7 @@ export default function Vehiculos() {
       </h1>
       <VehiculosList/>
       <ModalAddVehiculo/>
+      <ModalVehiculo/>
     </div>
   );
 }
