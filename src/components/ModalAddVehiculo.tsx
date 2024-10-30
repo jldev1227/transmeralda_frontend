@@ -8,7 +8,9 @@ import {
   ModalFooter,
 } from "@nextui-org/modal";
 import { useState } from "react";
-import { Button } from '@nextui-org/button'
+import { Button } from "@nextui-org/button";
+import Alerta from "./Alerta";
+import { CircularProgress } from "@nextui-org/react";
 
 export default function ModalAddVehiculo() {
   const { state, dispatch, agregarVehiculo } = useVehiculo();
@@ -20,7 +22,10 @@ export default function ModalAddVehiculo() {
     });
   };
 
-  const handleFilesUploaded = (fileDetails : FileDetailsVehiculos, realFile : File) => {
+  const handleFilesUploaded = (
+    fileDetails: FileDetailsVehiculos,
+    realFile: File
+  ) => {
     setFiles((prevFiles) => [
       ...prevFiles,
       { ...fileDetails, realFile }, // Guardamos tanto los detalles como el archivo real
@@ -44,15 +49,91 @@ export default function ModalAddVehiculo() {
               Registrar vehiculo
             </ModalHeader>
             <ModalBody className="p-6">
-              <Dropzone label={'Tarjeta de propiedad'} onFileUploaded={handleFilesUploaded} onFileRemoved={handleFileRemoved} />
-              <Dropzone label={'SOAT'} onFileUploaded={handleFilesUploaded} onFileRemoved={handleFileRemoved} />
-              <Dropzone label={'Técnicomecánica'} onFileUploaded={handleFilesUploaded} onFileRemoved={handleFileRemoved} />
+              {state.loading ? (
+                <div className="mx-auto">
+                  <CircularProgress
+                    size="lg"
+                    color="success"
+                    label="Registrando vehículo..."
+                    className="text-green-500"
+                  />
+                </div>
+              ) : (
+                !state.alerta && (
+                  <>
+                    <Dropzone
+                      label={"TARJETA DE PROPIEDAD"}
+                      onFileUploaded={handleFilesUploaded}
+                      onFileRemoved={handleFileRemoved}
+                    />
+                    <Dropzone
+                      label={"SOAT"}
+                      onFileUploaded={handleFilesUploaded}
+                      onFileRemoved={handleFileRemoved}
+                    />
+                    <Dropzone
+                      label={"TECNOMECÁNICA"}
+                      onFileUploaded={handleFilesUploaded}
+                      onFileRemoved={handleFileRemoved}
+                    />
+                  </>
+                )
+              )}
+
+              {state.alerta && state.alerta.message ? (
+                state.alerta.success ? (
+                  <div className="flex flex-1 flex-col items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1}
+                      stroke="#22c55e" // Color green-500 de Tailwind
+                      className="size-24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                      />
+                    </svg>
+
+                    <p className="text-lg text-green-500">{state.alerta.message}</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-1 flex-col items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1}
+                      stroke="red"
+                      className="size-24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+                      />
+                    </svg>
+                    <p className="text-lg text-red-500">{state.alerta.message}</p>
+                  </div>
+                )
+              ) : null}
             </ModalBody>
-            <ModalFooter>
-              <Button onPress={handleSubmit} isDisabled={files.length === 0} fullWidth className="bg-green-700 text-white">
-                Realizar registro
-              </Button>
-            </ModalFooter>
+
+            {!state.loading && !state.alerta && (
+              <ModalFooter>
+                <Button
+                  onPress={handleSubmit}
+                  isDisabled={files.length === 0}
+                  fullWidth
+                  className="bg-green-700 text-white"
+                >
+                  Realizar registro
+                </Button>
+              </ModalFooter>
+            )}
           </>
         )}
       </ModalContent>

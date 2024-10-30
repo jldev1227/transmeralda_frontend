@@ -3,6 +3,7 @@ import { Button } from "@nextui-org/button";
 import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/card";
 import { Image } from "@nextui-org/image";
 import { Chip } from "@nextui-org/chip";
+import { daysDifference } from "./utils";
 
 export default function VehiculosList() {
   const { state, dispatch } = useVehiculo();
@@ -62,14 +63,48 @@ export default function VehiculosList() {
             <Card
               key={vehiculo.id}
               isPressable
+              onPress={()=>{
+                // Aquí puedes agregar la lógica para mostrar el detalle del vehículo
+                console.log(vehiculo);
+
+                // dispatch({
+                //   type: "SET_MODAL"
+                // })
+              }}
               className="py-4 hover:cursor-pointer"
             >
-              <CardHeader className="pb-0 pt-2 px-4 flex-col items-start">
-                <p className="text-tiny uppercase font-bold">
-                  {vehiculo.linea}
-                </p>
-                <small className="text-default-500">{vehiculo.modelo}</small>
-                <h4 className="font-bold text-large">{vehiculo.placa}</h4>
+              <CardHeader className="pb-0 pt-2 px-4 justify-between items-start">
+                <div className="flex flex-col items-start">
+                  <p className="text-tiny uppercase font-bold">
+                    {vehiculo.linea}
+                  </p>
+                  <small className="text-default-500">{vehiculo.modelo}</small>
+                  <h4 className="font-bold text-large">{vehiculo.placa}</h4>
+                </div>
+
+                {(() => {
+                  const daysDiff = daysDifference(vehiculo.soatVencimiento);
+
+                   if (daysDiff < -10) return null; // Si es mayor a 10, no se muestra el SVG
+
+                  const fillColor = daysDiff > 0 ? "red" : "#ea8b2d"; // Asigna el color según la condición
+
+                  return (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill={fillColor}
+                      className="size-8"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  );
+                })()}
+
               </CardHeader>
               <CardBody className="overflow-visible py-2">
                 <Image
