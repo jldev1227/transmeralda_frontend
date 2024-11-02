@@ -12,7 +12,7 @@ import {
   useEffect,
   useCallback,
 } from "react";
-import { OBTENER_VEHICULOS } from "@/graphql/vehiculo";
+import { OBTENER_VEHICULO, OBTENER_VEHICULOS } from "@/graphql/vehiculo";
 import { useQuery } from "@apollo/client";
 import { FileDetailsVehiculos } from "@/hooks/useDropzone";
 import axios from "axios";
@@ -22,6 +22,7 @@ interface VehiculoContextType {
   state: VehiculoState;
   dispatch: Dispatch<VehiculoActions>;
   agregarVehiculo: (files: FileDetailsVehiculos[]) => void;
+  actualizarVehiculo: (file: FileDetailsVehiculos) => void;
 }
 
 // Crear el contexto con un valor inicial tipado correctamente
@@ -42,6 +43,12 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
     error: errorQueryVehiculos,
   } = useQuery(OBTENER_VEHICULOS);
 
+  const { data: vehiculoData, error: errorQueryVehiculo } = useQuery(OBTENER_VEHICULO, {
+    variables: { id: state.selectedVehicleId }, // Reemplaza "el_id_del_vehiculo" con el ID correcto
+    skip: !state.selectedVehicleId, // Para evitar ejecutar la consulta si no hay un id
+  });
+  
+
   const obtenerVehiculos = useCallback(() => {
     if (!loadingVehiculos && vehiculosData.obtenerVehiculos) {
       dispatch({
@@ -50,8 +57,6 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
       });
     }
   }, [vehiculosData, loadingVehiculos, dispatch]);
-
-  // Función para agregar una liquidación, optimizado con useCallback.
 
   // Función para crear un vehículo en la app web
   const agregarVehiculo = async (files: FileDetailsVehiculos[]) => {
@@ -160,6 +165,12 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
               }
             }
           )
+
+          setTimeout(() => {
+            dispatch({
+              type: "SET_MODAL_ADD",
+            })
+          }, 2000);
         } else {
           throw new Error(message || "Error en la creación del vehículo");
         }
@@ -169,18 +180,157 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
     } catch (error) {
       // Manejo de errores
       console.error("Error en la solicitud", error);
+      setTimeout(() => {
+        dispatch({
+          type: "CLEAR_ALERTA",
+        })
+      }, 2000);
+
       throw error;
     }finally{
       dispatch({
         type: "SET_LOADING",
         payload: false,
       })
-      
+    }
+  };
+
+  // Función para agregar una liquidación, optimizado con useCallback.
+
+  // Función para crear un vehículo en la app web
+  const actualizarVehiculo = async (files: FileDetailsVehiculos) => {
+    try {
+      dispatch({
+        type: "SET_LOADING",
+        payload: true,
+      })
+      // Obtener el token desde el localStorage
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        throw new Error("Token no proporcionado");
+      }
+
+      // Preparar los datos de la solicitud utilizando FormData
+      const formData = new FormData();
+
+      // Añadir el JSON de 'operations' al formData primero
+      formData.append(
+        "operations",
+        JSON.stringify({
+          query: `mutation actualizarVehiculo($files: [Upload!]!, $categorias: [String!]!) {
+            actualizarVehiculo(files: $files, categorias: $categorias) {
+              success
+              message
+              vehiculo {
+                id
+                placa
+                marca
+                linea
+                modelo
+                color
+                claseVehiculo
+                combustible
+                tipoCarroceria
+                numeroMotor
+                vin
+                numeroSerie
+                numeroChasis
+                propietarioNombre
+                propietarioIdentificacion
+              }
+            }
+          }`,
+          variables: {
+            files: Array(files.length).fill(null),
+            categorias: files.map((file) =>
+              file.category?.toUpperCase().replace(/ /g, "_")
+            ),
+          },
+        })
+      );
+
+      // Añadir el JSON del 'map' al formData después del 'operations'
+      const map: Record<string, string[]> = {};
+      files.forEach((_: any, index: number) => {
+        map[index.toString()] = [`variables.files.${index}`];
+      });
+
+      formData.append("map", JSON.stringify(map));
+
+      // Añadir los archivos al formData
+      files.forEach((file, index) => {
+        formData.append(`${index}`, file.realFile, file.name);
+      });
+
+      // Realizar la solicitud HTTP a través de axios
+      const response = await axios({
+        method: "POST",
+        url: import.meta.env.VITE_API_URL, // URL de tu backend GraphQL
+        data: formData,
+        headers: {
+          Authorization: `Bearer ${token}`, // Añadir el token al header
+        },
+      });
+
+      // Obtener los datos de la respuesta
+      const {
+        data: { data: responseData, errors },
+      } = response;
+
+      // Manejar la respuesta
+      if (errors && errors.length > 0) {
+        dispatch({
+          type: "SET_ALERTA",
+          payload: {
+            success: false,
+            message: errors[0].message,
+          },
+        })
+        throw new Error(errors.map((err: any) => err.message).join(", "));
+      }
+
+      if (responseData?.crearVehiculo) {
+        const { success, message, vehiculo } = responseData.crearVehiculo;
+
+        // Si fue exitoso, actualiza el estado del vehículo
+        if (success && vehiculo) {
+          dispatch(
+            {
+              type: "SET_ALERTA",
+              payload: {
+                success: success,
+                message: message,
+              }
+            }
+          )
+
+          setTimeout(() => {
+            dispatch({
+              type: "SET_MODAL_ADD",
+            })
+          }, 2000);
+        } else {
+          throw new Error(message || "Error en la creación del vehículo");
+        }
+      }
+
+      throw new Error("Respuesta inesperada del servidor");
+    } catch (error) {
+      // Manejo de errores
+      console.error("Error en la solicitud", error);
       setTimeout(() => {
         dispatch({
           type: "CLEAR_ALERTA",
         })
       }, 2000);
+
+      throw error;
+    }finally{
+      dispatch({
+        type: "SET_LOADING",
+        payload: false,
+      })
     }
   };
 
@@ -190,8 +340,22 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
     }
   }, [vehiculosData, obtenerVehiculos]);
 
+  useEffect(() => {
+    if (vehiculoData && vehiculoData.obtenerVehiculo) {
+      // Actualiza el estado con la data del vehículo
+      dispatch({
+        type: "SET_VEHICULO",
+        payload: vehiculoData.obtenerVehiculo,
+      });
+    }
+  }, [vehiculoData, dispatch]);
+
   if (errorQueryVehiculos) {
-    console.error("Error obteniendo liquidaciones:", errorQueryVehiculos);
+    console.error("Error obteniendo vehículos:", errorQueryVehiculos);
+  }
+
+  if (errorQueryVehiculo) {
+    console.error("Error obteniendo vehículo:", errorQueryVehiculo);
   }
 
   return (

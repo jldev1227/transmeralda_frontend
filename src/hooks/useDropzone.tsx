@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useDropzone, DropEvent, FileRejection } from "react-dropzone";
+import { useDropzone } from "react-dropzone";
 import { useMediaQuery } from "./useMediaQuery";
 import { Card, CardBody } from "@nextui-org/card";
 import { Image } from "@nextui-org/image";
@@ -32,8 +32,6 @@ const Dropzone: React.FC<DropzoneProps> = ({
   const onDrop = useCallback(
     (
       acceptedFiles: File[], // Cambié a plural porque React Dropzone maneja un array
-      fileRejections: FileRejection[],
-      event: DropEvent
     ): void => {
       const acceptedFile = acceptedFiles[0]; // Solo tomamos el primer archivo
       if (acceptedFile) {
@@ -79,7 +77,7 @@ const Dropzone: React.FC<DropzoneProps> = ({
 
   return (
     <div className="space-y-3">
-      <h3 style={{ fontWeight: "bold" }}>{label}</h3>
+      <h3 style={{ fontWeight: "bold", fontSize: 14 }}>{label}</h3>
       {!file && (
         <div {...getRootProps()} style={styles.dropzone}>
           <input {...getInputProps()} />
@@ -93,7 +91,7 @@ const Dropzone: React.FC<DropzoneProps> = ({
                 viewBox="0 0 24 24"
                 strokeWidth={1}
                 stroke="#58c064"
-                className="h-16"
+                className="h-12"
               >
                 <path
                   strokeLinecap="round"
@@ -102,7 +100,7 @@ const Dropzone: React.FC<DropzoneProps> = ({
                 />
               </svg>
 
-              <p>
+              <p className="text-sm">
                 Arrastra y suelta el archivo aquí, o haz clic para seleccionar
                 el archivo
               </p>
@@ -167,10 +165,10 @@ const styles: { [key: string]: React.CSSProperties } = {
   dropzone: {
     border: "2px dashed #cccccc",
     borderRadius: "10px",
-    padding: "20px",
+    padding: "10px",
     textAlign: "center",
     cursor: "pointer",
-    marginBottom: "20px",
+    marginBottom: "10px",
   },
 };
 
