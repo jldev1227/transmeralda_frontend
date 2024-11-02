@@ -9,8 +9,8 @@ import {
 } from "@nextui-org/modal";
 import { useState } from "react";
 import { Button } from "@nextui-org/button";
-import Alerta from "./Alerta";
 import { CircularProgress } from "@nextui-org/react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export default function ModalAddVehiculo() {
   const { state, dispatch, agregarVehiculo } = useVehiculo();
@@ -40,17 +40,23 @@ export default function ModalAddVehiculo() {
     await agregarVehiculo(files);
   };
 
+  const isMobile = useMediaQuery("(max-width: 560px)"); // Tailwind `sm` breakpoint
+
   return (
-    <Modal size="xl" isOpen={state.modalAdd} onOpenChange={handleModal}>
+    <Modal
+      size={isMobile ? "full" : "xl"}
+      isOpen={state.modalAdd}
+      onOpenChange={handleModal}
+    >
       <ModalContent>
         {() => (
           <>
             <ModalHeader className="flex flex-col gap-1">
               Registrar vehiculo
             </ModalHeader>
-            <ModalBody className="p-6">
+            <ModalBody className="max-sm:overflow-y-scroll">
               {state.loading ? (
-                <div className="mx-auto">
+                <div className="flex flex-1 flex-col items-center justify-center">
                   <CircularProgress
                     size="lg"
                     color="success"
@@ -82,7 +88,7 @@ export default function ModalAddVehiculo() {
 
               {state.alerta && state.alerta.message ? (
                 state.alerta.success ? (
-                  <div className="flex flex-1 flex-col items-center justify-center">
+                  <div className="flex flex-1 flex-col items-center justify-center p-5">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
@@ -98,7 +104,9 @@ export default function ModalAddVehiculo() {
                       />
                     </svg>
 
-                    <p className="text-lg text-green-500">{state.alerta.message}</p>
+                    <p className="text-lg text-green-500 text-center">
+                      {state.alerta.message}
+                    </p>
                   </div>
                 ) : (
                   <div className="flex flex-1 flex-col items-center justify-center">
@@ -116,7 +124,9 @@ export default function ModalAddVehiculo() {
                         d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
                       />
                     </svg>
-                    <p className="text-lg text-red-500">{state.alerta.message}</p>
+                    <p className="text-lg text-red-500 text-center">
+                      {state.alerta.message}
+                    </p>
                   </div>
                 )
               ) : null}

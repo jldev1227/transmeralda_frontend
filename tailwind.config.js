@@ -10,7 +10,11 @@ module.exports = {
     './node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
-    extend: {},
+    extend: {
+      maxHeight: {
+        '1/3': '2%', // Un tercio de la altura
+      },
+    },
   },
   darkMode: "class",
   plugins: [nextui()],

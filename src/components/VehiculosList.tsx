@@ -64,12 +64,13 @@ export default function VehiculosList() {
               key={vehiculo.id}
               isPressable
               onPress={()=>{
-                // Aquí puedes agregar la lógica para mostrar el detalle del vehículo
-                console.log(vehiculo);
-
-                // dispatch({
-                //   type: "SET_MODAL"
-                // })
+                dispatch({
+                  type: "SELECT_VEHICULO",
+                  payload: vehiculo.id
+                })
+                dispatch({
+                  type: "SET_MODAL"
+                })
               }}
               className="py-4 hover:cursor-pointer"
             >
@@ -123,9 +124,9 @@ export default function VehiculosList() {
                 <div className="flex flex-col gap-2">
                   <Chip
                     radius="sm"
-                    className={`${vehiculo.conductorId ? "bg-black text-white" : ""}`}
+                    className={`${vehiculo.conductor ? "bg-black text-white" : ""}`}
                   >
-                    {vehiculo.conductorId
+                    {vehiculo.conductor
                       ? `${vehiculo.conductor?.nombre} ${vehiculo.conductor?.apellido}`
                       : "Conductor no asignado"}
                   </Chip>
