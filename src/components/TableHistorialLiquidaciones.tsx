@@ -72,8 +72,8 @@ export default function App() {
     column: string;
     direction: SortDirection;
   }>({
-    column: "age",
-    direction: "ascending",
+    column: "periodoStart",
+    direction: "descending",
   });
 
   const hasSearchFilter = Boolean(filterValue);
