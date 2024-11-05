@@ -195,8 +195,6 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
     }
   };
 
-  // Función para agregar una liquidación, optimizado con useCallback.
-
   // Función para crear un vehículo en la app web
   const actualizarVehiculo = async (file: FileDetailsVehiculos) => {
     try {
@@ -299,6 +297,11 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
               success: success,
               message: message,
             },
+          });
+
+          dispatch({
+            type: 'UPDATED_VEHICULO',
+            payload: vehiculo,
           });
 
           setTimeout(() => {

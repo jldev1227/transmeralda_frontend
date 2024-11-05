@@ -3,6 +3,7 @@ import { AlertState, Vehiculo } from "@/types";
 export type VehiculoActions =
   | { type: 'SET_VEHICULOS'; payload: Vehiculo[] }
   | { type: 'SET_VEHICULO'; payload: Vehiculo }
+  | { type: 'UPDATED_VEHICULO'; payload: Vehiculo }
   | { type: 'SELECT_VEHICULO'; payload: number | string | null }
   | { type: 'SET_MODAL_ADD' }
   | { type: 'SET_MODAL' }
@@ -44,6 +45,14 @@ export function VehiculoReducer(
       return {
         ...state,
         vehiculo: action.payload,
+      };
+
+    case 'UPDATED_VEHICULO':
+      return {
+        ...state,
+        vehiculos: state.vehiculos.map(vehiculo =>
+          vehiculo.id === action.payload.id ? { ...vehiculo, ...action.payload } : vehiculo
+        ),
       };
     case 'SELECT_VEHICULO':
       return {
