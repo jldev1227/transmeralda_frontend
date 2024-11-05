@@ -165,6 +165,8 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
             ...liquidacion,
             periodoStart: formatDateValue(liquidacion.periodoStart),
             periodoEnd: formatDateValue(liquidacion.periodoEnd),
+            periodoStartVacaciones: formatDateValue(liquidacion.periodoStartVacaciones),
+            periodoEndVacaciones: formatDateValue(liquidacion.periodoEndVacaciones),
           },
         });
 
@@ -195,10 +197,13 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
             ...liquidacion,
             periodoStart: formatDateValue(liquidacion.periodoStart),
             periodoEnd: formatDateValue(liquidacion.periodoEnd),
+            periodoStartVacaciones: formatDateValue(liquidacion.periodoStartVacaciones),
+            periodoEndVacaciones: formatDateValue(liquidacion.periodoEndVacaciones),
           },
         });
 
         if (data?.editarLiquidacion) {
+          console.log(data)
           dispatch({
             type: "EDITAR_LIQUIDACION",
             payload: data.editarLiquidacion,

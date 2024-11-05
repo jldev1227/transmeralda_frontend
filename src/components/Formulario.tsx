@@ -21,6 +21,7 @@ import {
   dateToDateValue,
   formatCurrency,
   formatDateValue,
+  obtenerDiferenciaDias,
 } from "@/helpers";
 import {
   Pernote,
@@ -59,12 +60,15 @@ export default function Formulario() {
   >([]);
   const [dateSelected, setDateSelected] =
     useState<RangeValue<DateValue> | null>(null);
+  const [periodoVacaciones, setPeriodoVacaciones] =
+    useState<RangeValue<DateValue> | null>(null);
   const [detallesVehiculos, setDetallesVehiculos] = useState<DetalleVehiculo[]>(
     []
   );
   const [mesesRange, setMesesRange] = useState<string[]>([]);
   const [liquidacion, setLiquidacion] = useState<LiquidacionInput | null>(null);
   const [isCheckedAjuste, setIsCheckedAjuste] = useState(false);
+  const [isVacaciones, setIsVacaciones] = useState(false);
   const [diasLaborados, setDiasLaborados] = useState(0);
   const [diasLaboradosVillanueva, setDiasLaboradosVillanueva] = useState(0);
   const [ajustePorDia, setAjustePorDia] = useState(0);
@@ -99,6 +103,7 @@ export default function Formulario() {
 
   useEffect(() => {
     if (stateLiquidacion) {
+
       // Actualizar conductor seleccionado
       const selectedConductor = conductoresOptions.find(
         (option) => option.value === stateLiquidacion.conductor.id
@@ -119,10 +124,15 @@ export default function Formulario() {
         end: parseDate(stateLiquidacion.periodoEnd),
       });
 
-      setDateSelected({
-        start: parseDate(stateLiquidacion.periodoStart),
-        end: parseDate(stateLiquidacion.periodoEnd),
-      });
+      setPeriodoVacaciones(
+        stateLiquidacion.periodoStartVacaciones && stateLiquidacion.periodoEndVacaciones
+          ? {
+              start: parseDate(stateLiquidacion.periodoStartVacaciones),
+              end: parseDate(stateLiquidacion.periodoEndVacaciones),
+            }
+          : null
+      );
+      
 
       const start = stateLiquidacion.periodoStart;
       const end = stateLiquidacion.periodoEnd;
@@ -228,6 +238,7 @@ export default function Formulario() {
 
       // Actualizar otros campos (ajuste salarial, días laborados)
       setIsCheckedAjuste(stateLiquidacion.ajusteSalarial > 0);
+      setIsVacaciones(stateLiquidacion.totalVacaciones > 0);
       setDiasLaborados(stateLiquidacion.diasLaborados);
       setDiasLaboradosVillanueva(stateLiquidacion.diasLaboradosVillanueva);
     }
@@ -236,6 +247,13 @@ export default function Formulario() {
   // Manejador de fechas
   const handleDateChange = (newDate: RangeValue<DateValue> | null) => {
     setDateSelected(newDate);
+  };
+
+  // Manejador de fechas
+  const handleDateVacacionesChange = (
+    newDate: RangeValue<DateValue> | null
+  ) => {
+    setPeriodoVacaciones(newDate);
   };
 
   // Efecto para actualizar mesesRange basado en dateSelected
@@ -535,6 +553,8 @@ export default function Formulario() {
     setDetallesVehiculos([]);
     setDateSelected(null);
     setIsCheckedAjuste(false);
+    setIsVacaciones(false);
+    setPeriodoVacaciones(null);
     setDiasLaborados(0);
     setDiasLaboradosVillanueva(0);
   };
@@ -602,6 +622,7 @@ export default function Formulario() {
     totalPernotes,
     totalBonificaciones,
     totalRecargos,
+    totalVacaciones,
     totalAnticipos,
   } = useMemo(() => {
     const total = detallesVehiculos.reduce(
@@ -669,15 +690,33 @@ export default function Formulario() {
       state.configuracion?.find((config) => config.nombre === "Pensión")
         ?.valor ?? 0; // Asumir que cada config tiene una propiedad 'valor'
 
-    const salud = (salarioDevengado * saludConfig) / 100;
+    let salud = (salarioDevengado * saludConfig) / 100;
 
-    const pension = (salarioDevengado * pensionConfig) / 100;
+    let pension = (salarioDevengado * pensionConfig) / 100;
 
     const totalAnticipos =
       state.liquidacion?.anticipos?.reduce((total, anticipo) => {
         return total + (anticipo.valor || 0); // Asegúrate de que anticipo.valor no sea undefined
       }, 0) || 0; // Si el resultado es undefined, establece en 0
 
+    const diasVacaciones = obtenerDiferenciaDias(periodoVacaciones);
+
+    // Asegúrate de convertir diasVacaciones a number
+    const diasVacacionesNumerico =
+      typeof diasVacaciones === "string"
+        ? parseFloat(diasVacaciones)
+        : diasVacaciones;
+
+    const pensionVacaciones = (((salarioBaseConductor / 30) * diasVacacionesNumerico) * pensionConfig) / 100
+    const saludVacaciones = (((salarioBaseConductor / 30) * diasVacacionesNumerico) * saludConfig) / 100
+
+    const totalVacaciones = (salarioBaseConductor / 30) * diasVacacionesNumerico;
+    
+    if (diasVacacionesNumerico > 0) {
+      salud += saludVacaciones;
+      pension += pensionVacaciones;
+    }
+    
     return {
       auxilioTransporte,
       salud,
@@ -687,11 +726,13 @@ export default function Formulario() {
       totalPernotes: total.totalPernotes,
       totalRecargos: total.totalRecargos,
       totalAnticipos,
+      totalVacaciones,
       salarioDevengado,
       sueldoTotal:
         total.totalSubtotales +
         bonificacionVillanueva +
         salarioDevengado +
+        (totalVacaciones ? totalVacaciones : 0) +
         auxilioTransporte -
         (salud + pension) -
         totalAnticipos,
@@ -706,6 +747,7 @@ export default function Formulario() {
     vehiculosSelected,
     state.conductores,
     state.configuracion,
+    periodoVacaciones,
   ]);
 
   // Actualización de la liquidación en el useEffect
@@ -725,6 +767,8 @@ export default function Formulario() {
     const nuevaLiquidacion: LiquidacionInput = {
       periodoStart: dateSelected.start, // Asegura que no sea null
       periodoEnd: dateSelected.end, // Asegura que no sea null
+      periodoStartVacaciones: periodoVacaciones?.start || null, // Asegura que no sea null
+      periodoEndVacaciones: periodoVacaciones?.end || null, // Asegura que no sea null
       bonificaciones: detallesVehiculos.flatMap((detalle) =>
         detalle.bonos.map((bono) => ({
           ...bono,
@@ -757,6 +801,7 @@ export default function Formulario() {
       totalPernotes: totalPernotes || 0,
       totalBonificaciones: totalBonificaciones || 0,
       totalRecargos: totalRecargos || 0,
+      totalVacaciones: totalVacaciones || 0,
       totalAnticipos: totalAnticipos || 0,
       diasLaborados: diasLaborados || 0,
       diasLaboradosVillanueva: diasLaboradosVillanueva || 0,
@@ -782,12 +827,14 @@ export default function Formulario() {
     vehiculosSelected, // Ahora también dependemos de cambios en `vehiculosSelected`
     totalRecargos,
     totalAnticipos,
+    totalVacaciones,
     conductorSelected, // Dependemos de cambios en `conductorSelected`
     detallesVehiculos,
     state.conductores,
     mesesRange,
     diasLaborados,
     diasLaboradosVillanueva,
+    periodoVacaciones,
     bonificacionVillanueva, // Ajuste salarial
   ]);
 
@@ -812,6 +859,8 @@ export default function Formulario() {
           id: stateLiquidacion?.id || undefined, // Usa el ID de stateLiquidacion si está disponible
           periodoStart: liquidacion.periodoStart,
           periodoEnd: liquidacion.periodoEnd,
+          periodoStartVacaciones: liquidacion.periodoStartVacaciones,
+          periodoEndVacaciones: liquidacion.periodoEndVacaciones,
           conductorId: liquidacion.conductorId || null, // Asegura que conductorId sea nulo si no está presente
           auxilioTransporte: liquidacion.auxilioTransporte || 0, // Provee un valor por defecto si es necesario
           sueldoTotal: liquidacion.sueldoTotal || 0,
@@ -819,6 +868,7 @@ export default function Formulario() {
           totalPernotes: liquidacion.totalPernotes || 0,
           totalBonificaciones: liquidacion.totalBonificaciones || 0,
           totalRecargos: liquidacion.totalRecargos || 0,
+          totalVacaciones: liquidacion.totalVacaciones || 0,
           totalAnticipos: liquidacion.totalAnticipos || 0,
           diasLaborados: liquidacion.diasLaborados || 0,
           diasLaboradosVillanueva: liquidacion.diasLaboradosVillanueva || 0,
@@ -1338,53 +1388,97 @@ export default function Formulario() {
                                 placeholder="Ingresa la cantidad de días laborados"
                                 className="max-w-xs"
                               />
-                              <Checkbox
-                                isDisabled={
-                                  state.allowEdit || state.allowEdit == null
-                                    ? false
-                                    : true
-                                }
-                                isSelected={isCheckedAjuste}
-                                onChange={(e) =>
-                                  setIsCheckedAjuste(e.target.checked)
-                                }
-                              >
-                                Bonificación Villanueva
-                              </Checkbox>
-                              {isCheckedAjuste && (
-                                <>
-                                  <Input
+
+                              <div className="space-y-4">
+                                <div className="space-y-3">
+                                  <Checkbox
                                     isDisabled={
                                       state.allowEdit || state.allowEdit == null
                                         ? false
                                         : true
                                     }
-                                    value={diasLaboradosVillanueva.toString()}
+                                    isSelected={isCheckedAjuste}
                                     onChange={(e) =>
-                                      setDiasLaboradosVillanueva(
-                                        +e.target.value
-                                      )
+                                      setIsCheckedAjuste(e.target.checked)
                                     }
-                                    type="number"
-                                    label="Cantidad días laborados Villanueva"
-                                    placeholder="Ingresa la cantidad de días laborados en villanueva"
-                                    className="max-w-xs"
-                                  />
-                                  <div>
-                                    <p>
-                                      Bonificación villanueva{" "}
-                                      <span className="text-sm text-foreground-500">
-                                        (V/Día: {formatToCOP(ajustePorDia)}
-                                        )
-                                      </span>
-                                    </p>
+                                  >
+                                    Bonificación Villanueva
+                                  </Checkbox>
 
-                                    <p className="text-xl text-orange-400">
-                                      {formatToCOP(bonificacionVillanueva)}{" "}
-                                    </p>
-                                  </div>
-                                </>
-                              )}
+                                  {isCheckedAjuste && (
+                                    <>
+                                      <Input
+                                        isDisabled={
+                                          state.allowEdit ||
+                                          state.allowEdit == null
+                                            ? false
+                                            : true
+                                        }
+                                        value={diasLaboradosVillanueva.toString()}
+                                        onChange={(e) =>
+                                          setDiasLaboradosVillanueva(
+                                            +e.target.value
+                                          )
+                                        }
+                                        type="number"
+                                        label="Cantidad días laborados Villanueva"
+                                        placeholder="Ingresa la cantidad de días laborados en villanueva"
+                                        className="max-w-xs"
+                                      />
+                                      <div>
+                                        <p>
+                                          Bonificación villanueva{" "}
+                                          <span className="text-sm text-foreground-500">
+                                            (V/Día: {formatToCOP(ajustePorDia)})
+                                          </span>
+                                        </p>
+
+                                        <p className="text-xl text-orange-400">
+                                          {formatToCOP(bonificacionVillanueva)}{" "}
+                                        </p>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+
+                                <div className="space-y-3">
+                                  <Checkbox
+                                    isDisabled={
+                                      state.allowEdit || state.allowEdit == null
+                                        ? false
+                                        : true
+                                    }
+                                    isSelected={isVacaciones}
+                                    onChange={(e) =>
+                                      setIsVacaciones(e.target.checked)
+                                    }
+                                  >
+                                    Vacaciones
+                                  </Checkbox>
+
+                                  {isVacaciones && (
+                                    <>
+                                      <DateRangePicker
+                                        onChange={handleDateVacacionesChange}
+                                        label="Periodo vacaciones"
+                                        className="max-w-xs"
+                                        lang="es-ES"
+                                        value={periodoVacaciones}
+                                      />
+
+                                      <p className="font-semibold p-1">
+                                        Dias de vacaciones:{" "}
+                                        <span className="font-normal">
+                                          {obtenerDiferenciaDias(
+                                            periodoVacaciones
+                                          )}{" "}
+                                          días
+                                        </span>
+                                      </p>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
 
                               <Table shadow="none" aria-label="Resumen">
                                 <TableHeader>
@@ -1452,6 +1546,12 @@ export default function Formulario() {
                                     </TableCell>
                                     <TableCell>
                                       {formatToCOP(pension)}
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1 bg-yellow-100">
+                                    <TableCell>Vacaciones</TableCell>
+                                    <TableCell>
+                                      {formatToCOP(totalVacaciones || 0)}
                                     </TableCell>
                                   </TableRow>
                                   <TableRow className="border-1 bg-red-600 text-white">
