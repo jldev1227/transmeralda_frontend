@@ -43,11 +43,13 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
     error: errorQueryVehiculos,
   } = useQuery(OBTENER_VEHICULOS);
 
-  const { data: vehiculoData, error: errorQueryVehiculo } = useQuery(OBTENER_VEHICULO, {
-    variables: { id: state.selectedVehicleId }, // Reemplaza "el_id_del_vehiculo" con el ID correcto
-    skip: !state.selectedVehicleId, // Para evitar ejecutar la consulta si no hay un id
-  });
-  
+  const { data: vehiculoData, error: errorQueryVehiculo } = useQuery(
+    OBTENER_VEHICULO,
+    {
+      variables: { id: state.selectedVehicleId }, // Reemplaza "el_id_del_vehiculo" con el ID correcto
+      skip: !state.selectedVehicleId, // Para evitar ejecutar la consulta si no hay un id
+    }
+  );
 
   const obtenerVehiculos = useCallback(() => {
     if (!loadingVehiculos && vehiculosData.obtenerVehiculos) {
@@ -64,7 +66,7 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
       dispatch({
         type: "SET_LOADING",
         payload: true,
-      })
+      });
       // Obtener el token desde el localStorage
       const token = localStorage.getItem("authToken");
 
@@ -147,7 +149,7 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
             success: false,
             message: errors[0].message,
           },
-        })
+        });
         throw new Error(errors.map((err: any) => err.message).join(", "));
       }
 
@@ -156,20 +158,18 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
 
         // Si fue exitoso, actualiza el estado del vehículo
         if (success && vehiculo) {
-          dispatch(
-            {
-              type: "SET_ALERTA",
-              payload: {
-                success: success,
-                message: message,
-              }
-            }
-          )
+          dispatch({
+            type: "SET_ALERTA",
+            payload: {
+              success: success,
+              message: message,
+            },
+          });
 
           setTimeout(() => {
             dispatch({
               type: "SET_MODAL_ADD",
-            })
+            });
           }, 2000);
         } else {
           throw new Error(message || "Error en la creación del vehículo");
@@ -183,27 +183,28 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
       setTimeout(() => {
         dispatch({
           type: "CLEAR_ALERTA",
-        })
+        });
       }, 2000);
 
       throw error;
-    }finally{
+    } finally {
       dispatch({
         type: "SET_LOADING",
         payload: false,
-      })
+      });
     }
   };
 
   // Función para agregar una liquidación, optimizado con useCallback.
 
   // Función para crear un vehículo en la app web
-  const actualizarVehiculo = async (files: FileDetailsVehiculos) => {
+  const actualizarVehiculo = async (file: FileDetailsVehiculos) => {
     try {
       dispatch({
         type: "SET_LOADING",
         payload: true,
-      })
+      });
+
       // Obtener el token desde el localStorage
       const token = localStorage.getItem("authToken");
 
@@ -218,8 +219,8 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
       formData.append(
         "operations",
         JSON.stringify({
-          query: `mutation actualizarVehiculo($files: [Upload!]!, $categorias: [String!]!) {
-            actualizarVehiculo(files: $files, categorias: $categorias) {
+          query: `mutation actualizarVehiculo($id: ID!, $file: Upload!, $categoria: String!) {
+            actualizarVehiculo(id: $id, file: $file, categoria: $categoria) {
               success
               message
               vehiculo {
@@ -242,26 +243,23 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
             }
           }`,
           variables: {
-            files: Array(files.length).fill(null),
-            categorias: files.map((file) =>
-              file.category?.toUpperCase().replace(/ /g, "_")
-            ),
+            file: null,
+            id: state.vehiculo?.id,
+            categoria: file.category?.toUpperCase().replace(/ /g, "_"),
           },
         })
       );
 
-      // Añadir el JSON del 'map' al formData después del 'operations'
-      const map: Record<string, string[]> = {};
-      files.forEach((_: any, index: number) => {
-        map[index.toString()] = [`variables.files.${index}`];
-      });
+      // Añadir el JSON del 'map' al formData
+      formData.append(
+        "map",
+        JSON.stringify({
+          "0": ["variables.file"],
+        })
+      );
 
-      formData.append("map", JSON.stringify(map));
-
-      // Añadir los archivos al formData
-      files.forEach((file, index) => {
-        formData.append(`${index}`, file.realFile, file.name);
-      });
+      // Añadir el archivo al formData
+      formData.append("0", file.realFile, file.name);
 
       // Realizar la solicitud HTTP a través de axios
       const response = await axios({
@@ -286,32 +284,34 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
             success: false,
             message: errors[0].message,
           },
-        })
+        });
         throw new Error(errors.map((err: any) => err.message).join(", "));
       }
 
-      if (responseData?.crearVehiculo) {
-        const { success, message, vehiculo } = responseData.crearVehiculo;
+      if (responseData?.actualizarVehiculo) {
+        const { success, message, vehiculo } = responseData.actualizarVehiculo;
 
         // Si fue exitoso, actualiza el estado del vehículo
         if (success && vehiculo) {
-          dispatch(
-            {
-              type: "SET_ALERTA",
-              payload: {
-                success: success,
-                message: message,
-              }
-            }
-          )
+          dispatch({
+            type: "SET_ALERTA",
+            payload: {
+              success: success,
+              message: message,
+            },
+          });
 
           setTimeout(() => {
             dispatch({
-              type: "SET_MODAL_ADD",
-            })
+              type: "CLEAR_ALERTA",
+            });
+            dispatch({
+              type: "SET_MODAL",
+            });
           }, 2000);
+          return;
         } else {
-          throw new Error(message || "Error en la creación del vehículo");
+          throw new Error(message || "Error en la actualización del vehículo");
         }
       }
 
@@ -322,15 +322,15 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
       setTimeout(() => {
         dispatch({
           type: "CLEAR_ALERTA",
-        })
+        });
       }, 2000);
 
       throw error;
-    }finally{
+    } finally {
       dispatch({
         type: "SET_LOADING",
         payload: false,
-      })
+      });
     }
   };
 
@@ -359,7 +359,9 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
   }
 
   return (
-    <VehiculoContext.Provider value={{ state, dispatch, agregarVehiculo }}>
+    <VehiculoContext.Provider
+      value={{ state, dispatch, agregarVehiculo, actualizarVehiculo }}
+    >
       {children}
     </VehiculoContext.Provider>
   );
