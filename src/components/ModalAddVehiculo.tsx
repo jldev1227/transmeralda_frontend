@@ -109,7 +109,7 @@ export default function ModalAddVehiculo() {
                     </p>
                   </div>
                 ) : (
-                  <div className="flex flex-1 flex-col items-center justify-center">
+                  <div className="flex flex-1 flex-col items-center justify-center p-5">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"

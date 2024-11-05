@@ -1,5 +1,11 @@
 import useVehiculo from "@/hooks/useVehiculo";
-import { Modal, ModalContent, ModalHeader, ModalBody } from "@nextui-org/react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  CircularProgress,
+} from "@nextui-org/react";
 import { Chip } from "@nextui-org/chip";
 import { Popover, PopoverTrigger, PopoverContent } from "@nextui-org/popover";
 import { Divider } from "@nextui-org/divider";
@@ -14,7 +20,7 @@ import { useState } from "react";
 import Dropzone, { FileDetailsVehiculos } from "@/hooks/useDropzone";
 
 export default function ModalVehiculo() {
-  const { state, dispatch } = useVehiculo();
+  const { state, dispatch, actualizarVehiculo } = useVehiculo();
   const [editFile, setEditFile] = useState({
     label: "",
     visible: false,
@@ -38,18 +44,34 @@ export default function ModalVehiculo() {
     setFile(null);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!file) {
       setEditFile({
         label: "",
         visible: false,
       });
-
-      return
+      return;
     }
+  
+    try {
+      await actualizarVehiculo(file); // Asegúrate de que actualizarVehiculo sea asíncrono
 
+      setTimeout(() => {
+        setEditFile({
+          label: "",
+          visible: false,
+        });
+        setFile(null);
+      }, 2000);
+    } catch (error) {
+      console.error("Error al actualizar el vehículo:", error);
+      // Puedes manejar el error aquí si es necesario
 
-  };
+      setTimeout(() => {
+        setFile(null);
+      }, 2000);
+    }
+  };  
 
   const {
     placa = "",
@@ -354,18 +376,78 @@ export default function ModalVehiculo() {
                     </div>
                   ) : (
                     <div className="space-y-8">
-                      <Dropzone
-                        label={editFile.label}
-                        onFileUploaded={handleFilesUploaded}
-                        onFileRemoved={handleFileRemoved}
-                      />
-                      <Button
-                        onPress={handleSubmit}
-                        fullWidth
-                        className={`text-white ${!file ? "bg-red-500" : "bg-purple-700"}`}
-                      >
-                        {!file ? "Cancelar" : "Modificar"}
-                      </Button>
+                      {state.loading ? (
+                        <div className="flex flex-1 flex-col items-center justify-center p-5">
+                          <CircularProgress
+                            size="lg"
+                            color="primary"
+                            label="Actualizando vehículo..."
+                            className="text-primary-500"
+                          />
+                        </div>
+                      ) : (
+                        !state.alerta && (
+                          <>
+                            <Dropzone
+                              label={editFile.label}
+                              onFileUploaded={handleFilesUploaded}
+                              onFileRemoved={handleFileRemoved}
+                            />
+                            <Button
+                              onPress={handleSubmit}
+                              fullWidth
+                              className={`text-white ${!file ? "bg-red-500" : "bg-purple-700"}`}
+                            >
+                              {!file ? "Cancelar" : "Modificar"}
+                            </Button>
+                          </>
+                        )
+                      )}
+
+                      {state.alerta && state.alerta.message ? (
+                        state.alerta.success ? (
+                          <div className="flex flex-1 flex-col items-center justify-center p-5">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1}
+                              stroke="#22c55e" // Color green-500 de Tailwind
+                              className="size-24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                              />
+                            </svg>
+
+                            <p className="text-lg text-green-500 text-center">
+                              {state.alerta.message}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-1 flex-col items-center justify-center p-5">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1}
+                              stroke="red"
+                              className="size-24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+                              />
+                            </svg>
+                            <p className="text-lg text-red-500 text-center">
+                              {state.alerta.message}
+                            </p>
+                          </div>
+                        )
+                      ) : null}
                     </div>
                   )}
                 </Tab>
