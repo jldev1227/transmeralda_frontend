@@ -323,8 +323,11 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
               <Text
                 style={[styles.textValue, { flex: 1, textAlign: "center" }]}
               >
-                {item?.pernotes?.map((pernote) => pernote.fechas?.length)}
+                {item?.pernotes?.reduce((total, pernote) => {
+                  return total + (pernote.fechas ? pernote.fechas.length : 0);
+                }, 0) || 0}
               </Text>
+
               <Text
                 style={[styles.textValue, { flex: 2, textAlign: "center" }]}
               >
