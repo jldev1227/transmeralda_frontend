@@ -109,7 +109,7 @@ export const dateValueToDate = (dateValue: DateValue): Date => {
 export function obtenerDiferenciaDias(periodo: RangeValue<DateValue> | null) : number | string {
   // Verifica si alguna de las fechas es null
   if (!periodo) {
-    return "Fechas no válidas"
+    return 0
   }
 
   // Convierte las fechas de formato DateValue a objetos Date

@@ -203,7 +203,6 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
         });
 
         if (data?.editarLiquidacion) {
-          console.log(data)
           dispatch({
             type: "EDITAR_LIQUIDACION",
             payload: data.editarLiquidacion,

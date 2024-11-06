@@ -103,7 +103,6 @@ export default function Formulario() {
 
   useEffect(() => {
     if (stateLiquidacion) {
-
       // Actualizar conductor seleccionado
       const selectedConductor = conductoresOptions.find(
         (option) => option.value === stateLiquidacion.conductor.id
@@ -125,14 +124,14 @@ export default function Formulario() {
       });
 
       setPeriodoVacaciones(
-        stateLiquidacion.periodoStartVacaciones && stateLiquidacion.periodoEndVacaciones
+        stateLiquidacion.periodoStartVacaciones &&
+          stateLiquidacion.periodoEndVacaciones
           ? {
               start: parseDate(stateLiquidacion.periodoStartVacaciones),
               end: parseDate(stateLiquidacion.periodoEndVacaciones),
             }
           : null
       );
-      
 
       const start = stateLiquidacion.periodoStart;
       const end = stateLiquidacion.periodoEnd;
@@ -699,24 +698,36 @@ export default function Formulario() {
         return total + (anticipo.valor || 0); // Asegúrate de que anticipo.valor no sea undefined
       }, 0) || 0; // Si el resultado es undefined, establece en 0
 
-    const diasVacaciones = obtenerDiferenciaDias(periodoVacaciones);
+    let totalVacaciones = 0
 
-    // Asegúrate de convertir diasVacaciones a number
-    const diasVacacionesNumerico =
-      typeof diasVacaciones === "string"
-        ? parseFloat(diasVacaciones)
-        : diasVacaciones;
+    if (isVacaciones) {
+      const diasVacaciones = obtenerDiferenciaDias(periodoVacaciones);
 
-    const pensionVacaciones = (((salarioBaseConductor / 30) * diasVacacionesNumerico) * pensionConfig) / 100
-    const saludVacaciones = (((salarioBaseConductor / 30) * diasVacacionesNumerico) * saludConfig) / 100
+      // Asegúrate de convertir diasVacaciones a number
+      const diasVacacionesNumerico =
+        typeof diasVacaciones === "string"
+          ? parseFloat(diasVacaciones)
+          : diasVacaciones;
 
-    const totalVacaciones = (salarioBaseConductor / 30) * diasVacacionesNumerico;
-    
-    if (diasVacacionesNumerico > 0) {
-      salud += saludVacaciones;
-      pension += pensionVacaciones;
+      const pensionVacaciones =
+        ((salarioBaseConductor / 30) * diasVacacionesNumerico * pensionConfig) /
+        100;
+      const saludVacaciones =
+        ((salarioBaseConductor / 30) * diasVacacionesNumerico * saludConfig) /
+        100;
+
+      totalVacaciones =
+        (salarioBaseConductor / 30) * diasVacacionesNumerico;
+
+      if (diasVacacionesNumerico > 0) {
+        salud += saludVacaciones;
+        pension += pensionVacaciones;
+      }
+    }else{
+      totalVacaciones = 0
+      setPeriodoVacaciones(null)
     }
-    
+
     return {
       auxilioTransporte,
       salud,
@@ -732,7 +743,7 @@ export default function Formulario() {
         total.totalSubtotales +
         bonificacionVillanueva +
         salarioDevengado +
-        (totalVacaciones ? totalVacaciones : 0) +
+        totalVacaciones +
         auxilioTransporte -
         (salud + pension) -
         totalAnticipos,
@@ -748,6 +759,7 @@ export default function Formulario() {
     state.conductores,
     state.configuracion,
     periodoVacaciones,
+    isVacaciones
   ]);
 
   // Actualización de la liquidación en el useEffect
@@ -1467,7 +1479,7 @@ export default function Formulario() {
                                       />
 
                                       <p className="font-semibold p-1">
-                                        Dias de vacaciones:{" "}
+                                        Días de vacaciones:{" "}
                                         <span className="font-normal">
                                           {obtenerDiferenciaDias(
                                             periodoVacaciones
@@ -1548,7 +1560,7 @@ export default function Formulario() {
                                       {formatToCOP(pension)}
                                     </TableCell>
                                   </TableRow>
-                                  <TableRow className="border-1 bg-yellow-100">
+                                  <TableRow className="border-1 bg-purple-600 text-white">
                                     <TableCell>Vacaciones</TableCell>
                                     <TableCell>
                                       {formatToCOP(totalVacaciones || 0)}
