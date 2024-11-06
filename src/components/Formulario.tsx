@@ -559,12 +559,6 @@ export default function Formulario() {
   };
 
   const bonificacionVillanueva: number = useMemo(() => {
-    if (diasLaboradosVillanueva > diasLaborados) {
-      // Lanza el alert si diasLaboradosVillanueva es mayor que diasLaborados
-      setDiasLaboradosVillanueva(0);
-      return 0; // Opcional: devolver un valor por defecto si la condición no es válida
-    }
-
     if (isCheckedAjuste) {
       const conductor = state.conductores.find(
         (c) => c.id === conductorSelected?.value
