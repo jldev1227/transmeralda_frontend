@@ -43,6 +43,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   "totalRecargos",
   "totalPernotes",
   "ajusteSalarial",
+  "totalVacaciones",
   "salud",
   "pension",
   "totalAnticipos",
@@ -197,6 +198,14 @@ export default function App() {
             <div className="flex flex-col">
               <p className="text-bold text-tiny capitalize text-default-400">
                 {formatToCOP(liquidacion?.ajusteSalarial)}
+              </p>
+            </div>
+          );
+        case "totalVacaciones":
+          return (
+            <div className="flex flex-col">
+              <p className="text-bold text-tiny capitalize text-default-400">
+                {formatToCOP(liquidacion?.totalVacaciones || 0)}
               </p>
             </div>
           );

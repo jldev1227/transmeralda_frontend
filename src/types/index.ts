@@ -117,6 +117,7 @@ type BaseLiquidacion = {
   totalPernotes: number;
   totalBonificaciones: number;
   totalRecargos: number;
+  totalVacaciones: number;
   totalAnticipos: number;
   diasLaborados: number;
   diasLaboradosVillanueva: number;
@@ -137,6 +138,8 @@ export type LiquidacionInput = BaseLiquidacion & {
   id?: string;
   periodoStart: DateValue | null;  // Asegúrate de que esta propiedad esté incluida
   periodoEnd: DateValue | null;    // Asegúrate de que esta propiedad esté incluida
+  periodoStartVacaciones: DateValue | null;  // Asegúrate de que esta propiedad esté incluida
+  periodoEndVacaciones: DateValue | null;    // Asegúrate de que esta propiedad esté incluida
   vehiculos: string[]
 };
 
