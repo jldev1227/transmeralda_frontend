@@ -56,7 +56,7 @@ export default function ModalAddVehiculo() {
             </ModalHeader>
             <ModalBody className="max-sm:overflow-y-scroll">
               {state.loading ? (
-                <div className="flex flex-1 flex-col items-center justify-center">
+                <div className="flex flex-1 flex-col items-center justify-center p-5">
                   <CircularProgress
                     size="lg"
                     color="success"

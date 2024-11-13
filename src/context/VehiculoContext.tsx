@@ -91,16 +91,16 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
                 marca
                 linea
                 modelo
-                color
-                claseVehiculo
-                combustible
-                tipoCarroceria
-                numeroMotor
-                vin
-                numeroSerie
-                numeroChasis
-                propietarioNombre
-                propietarioIdentificacion
+                kilometraje
+                disponibilidad
+                galeria
+                soatVencimiento
+                tecnomecanicaVencimiento
+                conductor {
+                    id
+                    nombre
+                    apellido
+                }
               }
             }
           }`,
@@ -231,12 +231,22 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
                 claseVehiculo
                 combustible
                 tipoCarroceria
+                disponibilidad
                 numeroMotor
                 vin
                 numeroSerie
                 numeroChasis
                 propietarioNombre
                 propietarioIdentificacion
+                soatVencimiento
+                tecnomecanicaVencimiento
+                fechaMatricula
+                conductor {
+                  id
+                  nombre
+                  apellido
+                  cc
+                }
               }
             }
           }`,
@@ -307,9 +317,6 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
           setTimeout(() => {
             dispatch({
               type: "CLEAR_ALERTA",
-            });
-            dispatch({
-              type: "SET_MODAL",
             });
           }, 2000);
           return;
