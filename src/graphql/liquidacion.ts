@@ -137,6 +137,7 @@ export const CREAR_LIQUIDACION = gql`
         totalBonificaciones
         totalRecargos
         totalAnticipos
+        totalVacaciones
         diasLaborados
         diasLaboradosVillanueva
         ajusteSalarial
