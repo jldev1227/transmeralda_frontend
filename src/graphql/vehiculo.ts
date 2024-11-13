@@ -13,6 +13,7 @@ export const OBTENER_VEHICULOS = gql`
             galeria
             soatVencimiento
             tecnomecanicaVencimiento
+            fechaMatricula
             conductor {
                 id
                 nombre
@@ -44,6 +45,7 @@ export const OBTENER_VEHICULO = gql`
     galeria
     soatVencimiento
     tecnomecanicaVencimiento
+    fechaMatricula
     conductor {
       id
       nombre
@@ -52,55 +54,3 @@ export const OBTENER_VEHICULO = gql`
   }
 }
 `
-
-export const CREAR_VEHICULO = gql`
-  mutation crearVehiculo($files: [Upload!]!, $name: String!, $categorias: [String!]!) {
-    crearVehiculo(files: $files, name: $name, categorias: $categorias) {
-      success
-      message
-      vehiculo {
-        id
-        placa
-        marca
-        linea
-        modelo
-        color
-        claseVehiculo
-        combustible
-        tipoCarroceria
-        numeroMotor
-        vin
-        numeroSerie
-        numeroChasis
-        propietarioNombre
-        propietarioIdentificacion
-      }
-    }
-  }
-`;
-
-export const ACTUALIZAR_VEHICULO = gql`
-  mutation actualizarVehiculo($files: [Upload!]!, $name: String!, $categorias: [String!]!) {
-    actualizarVehiculo(files: $files, name: $name, categorias: $categorias) {
-      success
-      message
-      vehiculo {
-        id
-        placa
-        marca
-        linea
-        modelo
-        color
-        claseVehiculo
-        combustible
-        tipoCarroceria
-        numeroMotor
-        vin
-        numeroSerie
-        numeroChasis
-        propietarioNombre
-        propietarioIdentificacion
-      }
-    }
-  }
-`;

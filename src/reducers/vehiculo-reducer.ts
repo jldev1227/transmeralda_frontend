@@ -53,6 +53,7 @@ export function VehiculoReducer(
         vehiculos: state.vehiculos.map(vehiculo =>
           vehiculo.id === action.payload.id ? { ...vehiculo, ...action.payload } : vehiculo
         ),
+        vehiculo: action.payload
       };
     case 'SELECT_VEHICULO':
       return {

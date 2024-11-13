@@ -11,7 +11,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@nextui-org/popover";
 import { Divider } from "@nextui-org/divider";
 import { Tabs, Tab } from "@nextui-org/tabs";
 import { CustomPagingSlider } from "./CustomPagingSlider";
-import { daysDifference } from "./utils";
+import { daysDifference, requiereTecnomecanica } from "./utils";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Card, CardBody, CardFooter } from "@nextui-org/card";
 import { Image } from "@nextui-org/image";
@@ -52,7 +52,7 @@ export default function ModalVehiculo() {
       });
       return;
     }
-  
+
     try {
       await actualizarVehiculo(file); // Asegúrate de que actualizarVehiculo sea asíncrono
 
@@ -71,7 +71,7 @@ export default function ModalVehiculo() {
         setFile(null);
       }, 2000);
     }
-  };  
+  };
 
   const {
     placa = "",
@@ -81,6 +81,7 @@ export default function ModalVehiculo() {
     kilometraje = 0,
     soatVencimiento = "",
     tecnomecanicaVencimiento = "",
+    fechaMatricula = "",
     conductor = null,
     disponibilidad = false,
     propietarioNombre = "",
@@ -154,6 +155,12 @@ export default function ModalVehiculo() {
                           <p>{combustible}</p>
                         </div>
                         <div className="flex items-center justify-between gap-2">
+                          <p className="text-lg font-semibold">
+                            Fecha matrícula
+                          </p>
+                          <p>{fechaMatricula}</p>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
                           <p className="text-lg font-semibold">Kilometraje</p>
                           <p>{kilometraje ?? 0} Km</p>
                         </div>
@@ -175,7 +182,7 @@ export default function ModalVehiculo() {
 
                             return (
                               <div className="flex items-center gap-2">
-                                {fillColor !== "success" && (
+                                {soatVencimiento && fillColor !== "success" && (
                                   <Popover color={fillColor}>
                                     <PopoverTrigger>
                                       <svg
@@ -215,10 +222,23 @@ export default function ModalVehiculo() {
                           </p>
 
                           {(() => {
+                            const solicitarTecnomecanica =
+                              requiereTecnomecanica(fechaMatricula);
+
+                            // Determina el color y contenido del chip según el valor de solicitarTecnomecanica
+                            const fillColor =
+                              solicitarTecnomecanica &&
+                              !tecnomecanicaVencimiento
+                                ? "danger"
+                                : "success";
+                            const chipContent = solicitarTecnomecanica
+                              ? "No cuenta con tecnomecánica"
+                              : "No requiere tecnomecánica";
+
                             const daysDiff = daysDifference(
                               tecnomecanicaVencimiento
                             );
-                            const fillColor =
+                            const expirationFillColor =
                               daysDiff > 0
                                 ? "danger"
                                 : daysDiff < -10
@@ -227,35 +247,37 @@ export default function ModalVehiculo() {
 
                             return (
                               <div className="flex items-center gap-2">
-                                {fillColor !== "success" && (
-                                  <Popover color={fillColor}>
-                                    <PopoverTrigger>
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth={1.5}
-                                        stroke={daysDiff > 0 ? "red" : "orange"}
-                                        className="size-6 cursor-pointer"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
-                                        />
-                                      </svg>
-                                    </PopoverTrigger>
-                                    <PopoverContent>
-                                      {daysDiff > 0
-                                        ? "Tecnomecánica vencida"
-                                        : "Tecnomecánica próxima a vencer"}
-                                    </PopoverContent>
-                                  </Popover>
-                                )}
+                                {tecnomecanicaVencimiento &&
+                                  expirationFillColor !== "success" && (
+                                    <Popover color={expirationFillColor}>
+                                      <PopoverTrigger>
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          fill="none"
+                                          viewBox="0 0 24 24"
+                                          strokeWidth={1.5}
+                                          stroke={
+                                            daysDiff > 0 ? "red" : "orange"
+                                          }
+                                          className="size-6 cursor-pointer"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+                                          />
+                                        </svg>
+                                      </PopoverTrigger>
+                                      <PopoverContent>
+                                        {daysDiff > 0
+                                          ? "Tecnomecánica vencida"
+                                          : "Tecnomecánica próxima a vencer"}
+                                      </PopoverContent>
+                                    </Popover>
+                                  )}
 
                                 <Chip radius="sm" color={fillColor}>
-                                  {tecnomecanicaVencimiento ??
-                                    "No cuenta con SOAT"}
+                                  {tecnomecanicaVencimiento ?? chipContent}
                                 </Chip>
                               </div>
                             );
@@ -321,29 +343,29 @@ export default function ModalVehiculo() {
                 </Tab>
                 <Tab key="documentos" title="Documentos">
                   {!editFile.visible ? (
-                    <div className="grid grid-cols-3 max-sm:grid-cols-1 mx-auto gap-5">
+                    <div className={`grid ${
+                      requiereTecnomecanica(fechaMatricula) ? "grid-cols-3" : "grid-cols-2"
+                    } max-sm:grid-cols-1 mx-auto gap-5`}>
                       {(() => {
                         const titles = [
                           "TARJETA DE PROPIEDAD",
                           "SOAT",
-                          "TECNOMECÁNICA",
-                        ];
+                          requiereTecnomecanica(fechaMatricula)
+                            ? "TECNOMECÁNICA"
+                            : null,
+                        ].filter(Boolean); // Filtra valores null o false para tener solo títulos válidos
 
-                        const titlesHref = [
-                          "TARJETA_DE_PROPIEDAD",
-                          "SOAT",
-                          "TECNOMECANICA",
-                        ];
+                        console.log(titles);
+
+                        // const titlesHref = [
+                        //   "TARJETA_DE_PROPIEDAD",
+                        //   "SOAT",
+                        //   "TECNOMECANICA",
+                        // ];
 
                         return titles.map((title, index) => (
                           <Card
                             className="max-sm:w-2/3 max-sm:mx-auto"
-                            isPressable
-                            onPress={() => {
-                              window.open(
-                                `${import.meta.env.VITE_AZURE_STORAGE_BLOB_URL}/${placa}/${placa}_${titlesHref[index]}.pdf?${import.meta.env.VITE_AZURE_STORAGE_SAS_TOKEN}`
-                              );
-                            }}
                             key={index}
                           >
                             <CardBody className="items-center gap-3">
@@ -361,13 +383,13 @@ export default function ModalVehiculo() {
                                 onPress={() => {
                                   setEditFile({
                                     visible: true,
-                                    label: title,
+                                    label: title ?? '',
                                   });
                                 }}
                                 fullWidth
                                 color="secondary"
                               >
-                                Modificar
+                                Actualizar
                               </Button>
                             </CardFooter>
                           </Card>
@@ -381,7 +403,7 @@ export default function ModalVehiculo() {
                           <CircularProgress
                             size="lg"
                             color="primary"
-                            label="Actualizando vehículo..."
+                            label="Actualizando documento..."
                             className="text-primary-500"
                           />
                         </div>
@@ -398,7 +420,7 @@ export default function ModalVehiculo() {
                               fullWidth
                               className={`text-white ${!file ? "bg-red-500" : "bg-purple-700"}`}
                             >
-                              {!file ? "Cancelar" : "Modificar"}
+                              {!file ? "Cancelar" : "Realizar actualización"}
                             </Button>
                           </>
                         )

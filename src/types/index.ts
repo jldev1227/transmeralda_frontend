@@ -96,6 +96,7 @@ export type Vehiculo = {
   galeria: Array<TemplateStringsArray>;
   soatVencimiento: string;
   tecnomecanicaVencimiento: string;
+  fechaMatricula: string;
   propietarioId: number;
   conductorId: number;
   conductor?: Conductor;

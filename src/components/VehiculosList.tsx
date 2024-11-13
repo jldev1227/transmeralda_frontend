@@ -3,7 +3,7 @@ import { Button } from "@nextui-org/button";
 import { Card, CardHeader, CardBody, CardFooter } from "@nextui-org/card";
 import { Image } from "@nextui-org/image";
 import { Chip } from "@nextui-org/chip";
-import { daysDifference } from "./utils";
+import { daysDifference, requiereTecnomecanica } from "./utils";
 
 export default function VehiculosList() {
   const { state, dispatch } = useVehiculo();
@@ -63,14 +63,14 @@ export default function VehiculosList() {
             <Card
               key={vehiculo.id}
               isPressable
-              onPress={()=>{
+              onPress={() => {
                 dispatch({
                   type: "SELECT_VEHICULO",
-                  payload: vehiculo.id
-                })
+                  payload: vehiculo.id,
+                });
                 dispatch({
-                  type: "SET_MODAL"
-                })
+                  type: "SET_MODAL",
+                });
               }}
               className="py-4 hover:cursor-pointer"
             >
@@ -84,11 +84,26 @@ export default function VehiculosList() {
                 </div>
 
                 {(() => {
-                  const daysDiff = daysDifference(vehiculo.soatVencimiento);
+                  const solicitarTecnomecanica = requiereTecnomecanica(
+                    vehiculo.fechaMatricula
+                  );
 
-                   if (daysDiff < -10) return null; // Si es mayor a 10, no se muestra el SVG
+                  if(vehiculo.soatVencimiento && !solicitarTecnomecanica){
+                    return null
+                  }
 
-                  const fillColor = daysDiff > 0 ? "red" : "#ea8b2d"; // Asigna el color según la condición
+                  const daysDiffSoat = daysDifference(vehiculo.soatVencimiento);
+                  const daysDiffTecnomecanica = daysDifference(
+                    vehiculo.tecnomecanicaVencimiento
+                  );
+
+                  if (daysDiffSoat < -10 && daysDiffTecnomecanica < -10)
+                    return null; // Si es mayor a 10, no se muestra el SVG
+
+                  const fillColor =
+                    daysDiffSoat > 0 || daysDiffTecnomecanica > 0
+                      ? "red"
+                      : "#ea8b2d"; // Asigna el color según la condición
 
                   return (
                     <svg
@@ -105,7 +120,6 @@ export default function VehiculosList() {
                     </svg>
                   );
                 })()}
-
               </CardHeader>
               <CardBody className="overflow-visible py-2">
                 <Image
