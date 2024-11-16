@@ -92,7 +92,6 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
                 linea
                 modelo
                 kilometraje
-                disponibilidad
                 galeria
                 soatVencimiento
                 tecnomecanicaVencimiento
@@ -231,8 +230,8 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
                 claseVehiculo
                 combustible
                 tipoCarroceria
-                disponibilidad
                 numeroMotor
+                estado
                 vin
                 numeroSerie
                 numeroChasis
@@ -351,12 +350,20 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
   }, [vehiculosData, obtenerVehiculos]);
 
   useEffect(() => {
+    dispatch({
+      type: "SET_LOADING",
+      payload: true,
+    })
     if (vehiculoData && vehiculoData.obtenerVehiculo) {
       // Actualiza el estado con la data del vehículo
       dispatch({
         type: "SET_VEHICULO",
         payload: vehiculoData.obtenerVehiculo,
       });
+      dispatch({
+        type: "SET_LOADING",
+        payload: false,
+      })
     }
   }, [vehiculoData, dispatch]);
 

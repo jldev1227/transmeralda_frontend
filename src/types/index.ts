@@ -89,7 +89,6 @@ export type Vehiculo = {
   propietarioNombre: string;
   propietarioIdentificacion: string;
   kilometraje: string;
-  disponibilidad: string;
   estado: string;
   latitud: number;
   longitud: number;

@@ -8,9 +8,10 @@ export const OBTENER_VEHICULOS = gql`
             marca
             linea
             modelo
+            claseVehiculo
             kilometraje
-            disponibilidad
             galeria
+            estado
             soatVencimiento
             tecnomecanicaVencimiento
             fechaMatricula
@@ -31,6 +32,7 @@ export const OBTENER_VEHICULO = gql`
     linea
     modelo
     color
+    estado
     claseVehiculo
     tipoCarroceria
     combustible
@@ -41,7 +43,6 @@ export const OBTENER_VEHICULO = gql`
     propietarioNombre
     propietarioIdentificacion
     kilometraje
-    disponibilidad
     galeria
     soatVencimiento
     tecnomecanicaVencimiento
