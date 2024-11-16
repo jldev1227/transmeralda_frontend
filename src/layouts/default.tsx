@@ -112,7 +112,7 @@ export default function DefaultLayout() {
         </NavbarMenu>
       </Navbar>
 
-      <main className="w-full mx-auto sm:px-20 flex-grow py-10 md:py-16">
+      <main className="w-full flex-grow py-10">
         <Outlet />
       </main>
     </>

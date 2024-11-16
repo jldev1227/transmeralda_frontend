@@ -2,7 +2,7 @@ import { AlertState, Vehiculo } from "@/types";
 
 export type VehiculoActions =
   | { type: 'SET_VEHICULOS'; payload: Vehiculo[] }
-  | { type: 'SET_VEHICULO'; payload: Vehiculo }
+  | { type: 'SET_VEHICULO'; payload: Vehiculo | null }
   | { type: 'UPDATED_VEHICULO'; payload: Vehiculo }
   | { type: 'SELECT_VEHICULO'; payload: number | string | null }
   | { type: 'SET_MODAL_ADD' }
