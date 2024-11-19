@@ -1199,7 +1199,7 @@ export default function Formulario() {
                           onClick={() =>
                             handleAddPernote(detalleVehiculo.vehiculo.value)
                           }
-                          className="w-full col-span-6 bg-primary-700 text-white"
+                          className="w-full col-span-6 bg-primary-500 text-white"
                         >
                           Añadir pernote
                         </Button>
@@ -1332,7 +1332,7 @@ export default function Formulario() {
                           onClick={() =>
                             handleAddRecargo(detalleVehiculo.vehiculo.value)
                           }
-                          className="bg-primary-700 text-white"
+                          className="bg-primary-500 text-white"
                         >
                           Añadir recargo
                         </Button>
