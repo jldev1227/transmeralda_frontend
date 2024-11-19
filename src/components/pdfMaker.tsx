@@ -9,8 +9,9 @@ import {
 } from "@react-pdf/renderer";
 import { Divider } from "@nextui-org/divider";
 import { BonificacionesAcc, Bono, Liquidacion } from "@/types/index";
-import { formatDate, formatToCOP } from "@/helpers";
+import { formatDate, formatToCOP, obtenerDiferenciaDias } from "@/helpers";
 import { Font } from "@react-pdf/renderer";
+import { parseDate } from "@internationalized/date";
 
 Font.register({
   family: "Roboto",
@@ -30,7 +31,7 @@ Font.register({
 const styles = StyleSheet.create({
   page: {
     paddingHorizontal: 85,
-    paddingVertical: 60,
+    paddingVertical: 50,
     backgroundColor: "#FFF", // Fondo gris claro para el PDF}
     fontFamily: "Roboto", // Usa una fuente predeterminada
     fontSize: 12,
@@ -308,18 +309,25 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
                   { flex: 2, textAlign: "center", fontSize: 9 },
                 ]}
               >
-                {item?.pernotes?.map((pernote) =>
-                  pernote.fechas?.map((fecha) => {
-                    const fechaSeparada = formatDate(fecha).split(' ');
-                    return `${fechaSeparada[0]}-${fechaSeparada[1]}`; // Verificamos que haya al menos 3 elementos
-                  }).join(", ")
-                )}
+                {item?.pernotes?.map((pernote) => {
+                  // Mapea las fechas y formatea cada una
+                  const fechasFormateadas = pernote.fechas?.map((fecha) => {
+                    const fechaSeparada = formatDate(fecha).split(" ");
+                    return `${fechaSeparada[0]}-${fechaSeparada[1]} `; // Formateamos sin agregar la coma aquí
+                  });
+
+                  // Verificamos que haya fechas y unimos con ", "
+                  return fechasFormateadas;
+                })}
               </Text>
               <Text
                 style={[styles.textValue, { flex: 1, textAlign: "center" }]}
               >
-                {item?.pernotes?.map((pernote) => pernote.fechas?.length)}
+                {item?.pernotes?.reduce((total, pernote) => {
+                  return total + (pernote.fechas ? pernote.fechas.length : 0);
+                }, 0) || 0}
               </Text>
+
               <Text
                 style={[styles.textValue, { flex: 2, textAlign: "center" }]}
               >
@@ -351,6 +359,33 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
         </View>
 
         <View style={styles.card}>
+          {(item?.totalVacaciones ? item.totalVacaciones : 0) > 0 && (
+            <View style={styles.cardRow}>
+              <Text style={styles.label}>Vacaciones</Text>
+              <Text>
+                {obtenerDiferenciaDias({
+                  start: parseDate(item?.periodoStartVacaciones),
+                  end: parseDate(item?.periodoEndVacaciones),
+                })}{" "}
+                días
+              </Text>
+              <Text
+                style={[
+                  styles.textValue,
+                  {
+                    color: "#690fe6",
+                    backgroundColor: "#690fe61e",
+                    padding: 3,
+                    borderRadius: 5,
+                    fontSize: 14,
+                  },
+                ]}
+              >
+                {formatToCOP(item?.totalVacaciones)}
+              </Text>
+            </View>
+          )}
+
           <View style={[styles.cardRow, { borderBottom: 0 }]}>
             <Text style={styles.label}>Salud</Text>
             <Text

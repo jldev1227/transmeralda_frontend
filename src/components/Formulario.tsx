@@ -20,6 +20,8 @@ import {
   obtenerMesesEntreFechas,
   dateToDateValue,
   formatCurrency,
+  formatDateValue,
+  obtenerDiferenciaDias,
 } from "@/helpers";
 import {
   Pernote,
@@ -58,14 +60,18 @@ export default function Formulario() {
   >([]);
   const [dateSelected, setDateSelected] =
     useState<RangeValue<DateValue> | null>(null);
+  const [periodoVacaciones, setPeriodoVacaciones] =
+    useState<RangeValue<DateValue> | null>(null);
   const [detallesVehiculos, setDetallesVehiculos] = useState<DetalleVehiculo[]>(
     []
   );
   const [mesesRange, setMesesRange] = useState<string[]>([]);
   const [liquidacion, setLiquidacion] = useState<LiquidacionInput | null>(null);
   const [isCheckedAjuste, setIsCheckedAjuste] = useState(false);
+  const [isVacaciones, setIsVacaciones] = useState(false);
   const [diasLaborados, setDiasLaborados] = useState(0);
   const [diasLaboradosVillanueva, setDiasLaboradosVillanueva] = useState(0);
+  const [ajustePorDia, setAjustePorDia] = useState(0);
 
   // Opciones para selectores
   const conductoresOptions = useMemo(
@@ -117,8 +123,29 @@ export default function Formulario() {
         end: parseDate(stateLiquidacion.periodoEnd),
       });
 
+      setPeriodoVacaciones(
+        stateLiquidacion.periodoStartVacaciones &&
+          stateLiquidacion.periodoEndVacaciones
+          ? {
+              start: parseDate(stateLiquidacion.periodoStartVacaciones),
+              end: parseDate(stateLiquidacion.periodoEndVacaciones),
+            }
+          : null
+      );
+
+      const start = stateLiquidacion.periodoStart;
+      const end = stateLiquidacion.periodoEnd;
+
+      const nuevosMeses = obtenerMesesEntreFechas(start, end);
+
+      // Solo actualiza mesesRange si es diferente al valor actual
+      if (JSON.stringify(nuevosMeses) !== JSON.stringify(mesesRange)) {
+        setMesesRange(nuevosMeses);
+      }
       // Mapear vehículos y asignar bonos, pernotes y recargos
-      setDetallesVehiculos(
+
+      // Mapear vehículos y asignar bonos, pernotes y recargos
+      const detallesVehiculos =
         stateLiquidacion?.vehiculos?.map((vehiculo: Vehiculo) => {
           // Filtrar los bonos, pernotes y recargos correspondientes al vehículo
           const bonosDelVehiculo =
@@ -204,19 +231,28 @@ export default function Formulario() {
           };
 
           return detalles;
-        }) || []
-      );
+        }) || [];
+
+      setDetallesVehiculos(detallesVehiculos);
 
       // Actualizar otros campos (ajuste salarial, días laborados)
       setIsCheckedAjuste(stateLiquidacion.ajusteSalarial > 0);
+      setIsVacaciones(stateLiquidacion.totalVacaciones > 0);
       setDiasLaborados(stateLiquidacion.diasLaborados);
       setDiasLaboradosVillanueva(stateLiquidacion.diasLaboradosVillanueva);
     }
-  }, [stateLiquidacion, conductoresOptions, vehiculosOptions, mesesRange]);
+  }, [stateLiquidacion]);
 
   // Manejador de fechas
   const handleDateChange = (newDate: RangeValue<DateValue> | null) => {
     setDateSelected(newDate);
+  };
+
+  // Manejador de fechas
+  const handleDateVacacionesChange = (
+    newDate: RangeValue<DateValue> | null
+  ) => {
+    setPeriodoVacaciones(newDate);
   };
 
   // Efecto para actualizar mesesRange basado en dateSelected
@@ -225,7 +261,10 @@ export default function Formulario() {
       const start = dateSelected.start;
       const end = dateSelected.end;
 
-      const nuevosMeses = obtenerMesesEntreFechas(start, end);
+      const nuevosMeses = obtenerMesesEntreFechas(
+        formatDateValue(start),
+        formatDateValue(end)
+      );
 
       // Solo actualiza mesesRange si es diferente al valor actual
       if (JSON.stringify(nuevosMeses) !== JSON.stringify(mesesRange)) {
@@ -360,9 +399,11 @@ export default function Formulario() {
                   bono.name === name
                     ? {
                         ...bono,
-                        values: bono.values.map((val) =>
-                          val.mes === mes ? { ...val, quantity } : val
-                        ),
+                        values: bono.values.some((val) => val.mes === mes)
+                          ? bono.values.map((val) =>
+                              val.mes === mes ? { ...val, quantity } : val
+                            )
+                          : [...bono.values, { mes, quantity }], // Agregar nuevo mes si no existe
                       }
                     : bono
                 ),
@@ -511,21 +552,18 @@ export default function Formulario() {
     setDetallesVehiculos([]);
     setDateSelected(null);
     setIsCheckedAjuste(false);
+    setIsVacaciones(false);
+    setPeriodoVacaciones(null);
     setDiasLaborados(0);
     setDiasLaboradosVillanueva(0);
   };
 
-  const bonificacionVillanueva = useMemo(() => {
-    if (diasLaboradosVillanueva > diasLaborados) {
-      // Lanza el alert si diasLaboradosVillanueva es mayor que diasLaborados
-      setDiasLaboradosVillanueva(0);
-      return 0; // Opcional: devolver un valor por defecto si la condición no es válida
-    }
-
+  const bonificacionVillanueva: number = useMemo(() => {
     if (isCheckedAjuste) {
       const conductor = state.conductores.find(
         (c) => c.id === conductorSelected?.value
       );
+
       return conductor
         ? diasLaboradosVillanueva >= 17
           ? 2101498 - conductor.salarioBase
@@ -533,6 +571,37 @@ export default function Formulario() {
               (config) => config.nombre == "Ajuste villanueva"
             )?.valor || 0) * diasLaboradosVillanueva
         : 0;
+
+
+      const ajusteVillanueva =
+        state.configuracion?.find(
+          (config) => config.nombre === "Salario villanueva"
+        )?.valor || 0;
+
+      if (conductor) {
+        const ajusteCalculado = (ajusteVillanueva - conductor.salarioBase) / 30;
+
+        // Determinar el ajuste adicional si el valor coincide con 20048 o 26715
+
+        if (diasLaboradosVillanueva >= 17) {
+          return ajusteVillanueva - conductor.salarioBase;
+        } else {
+          const ajustePorDia =
+            Number(ajusteCalculado.toFixed()) === 20048
+              ? Number(ajusteCalculado.toFixed()) + 2
+              : Number(ajusteCalculado.toFixed()) === 26715
+                ? Number(ajusteCalculado.toFixed()) + 1
+                : ajusteCalculado;
+
+          setAjustePorDia(ajustePorDia);
+
+          // Calcular el total ajustado multiplicado por los días trabajados en Villanueva
+          return ajustePorDia * diasLaboradosVillanueva;
+        }
+      }
+
+      return 0;
+
     } else {
       setDiasLaboradosVillanueva(0);
     }
@@ -540,9 +609,10 @@ export default function Formulario() {
     return 0;
   }, [
     isCheckedAjuste,
-    liquidacion,
     diasLaborados,
     diasLaboradosVillanueva,
+    conductorSelected,
+    state.conductores,
     state.configuracion,
   ]);
 
@@ -555,6 +625,7 @@ export default function Formulario() {
     totalPernotes,
     totalBonificaciones,
     totalRecargos,
+    totalVacaciones,
     totalAnticipos,
   } = useMemo(() => {
     const total = detallesVehiculos.reduce(
@@ -622,14 +693,44 @@ export default function Formulario() {
       state.configuracion?.find((config) => config.nombre === "Pensión")
         ?.valor ?? 0; // Asumir que cada config tiene una propiedad 'valor'
 
-    const salud = (salarioDevengado * saludConfig) / 100;
+    let salud = (salarioDevengado * saludConfig) / 100;
 
-    const pension = (salarioDevengado * pensionConfig) / 100;
+    let pension = (salarioDevengado * pensionConfig) / 100;
 
     const totalAnticipos =
       state.liquidacion?.anticipos?.reduce((total, anticipo) => {
         return total + (anticipo.valor || 0); // Asegúrate de que anticipo.valor no sea undefined
       }, 0) || 0; // Si el resultado es undefined, establece en 0
+
+    let totalVacaciones = 0
+
+    if (isVacaciones) {
+      const diasVacaciones = obtenerDiferenciaDias(periodoVacaciones);
+
+      // Asegúrate de convertir diasVacaciones a number
+      const diasVacacionesNumerico =
+        typeof diasVacaciones === "string"
+          ? parseFloat(diasVacaciones)
+          : diasVacaciones;
+
+      const pensionVacaciones =
+        ((salarioBaseConductor / 30) * diasVacacionesNumerico * pensionConfig) /
+        100;
+      const saludVacaciones =
+        ((salarioBaseConductor / 30) * diasVacacionesNumerico * saludConfig) /
+        100;
+
+      totalVacaciones =
+        (salarioBaseConductor / 30) * diasVacacionesNumerico;
+
+      if (diasVacacionesNumerico > 0) {
+        salud += saludVacaciones;
+        pension += pensionVacaciones;
+      }
+    }else{
+      totalVacaciones = 0
+      setPeriodoVacaciones(null)
+    }
 
     return {
       auxilioTransporte,
@@ -640,11 +741,13 @@ export default function Formulario() {
       totalPernotes: total.totalPernotes,
       totalRecargos: total.totalRecargos,
       totalAnticipos,
+      totalVacaciones,
       salarioDevengado,
       sueldoTotal:
         total.totalSubtotales +
         bonificacionVillanueva +
         salarioDevengado +
+        totalVacaciones +
         auxilioTransporte -
         (salud + pension) -
         totalAnticipos,
@@ -659,6 +762,8 @@ export default function Formulario() {
     vehiculosSelected,
     state.conductores,
     state.configuracion,
+    periodoVacaciones,
+    isVacaciones
   ]);
 
   // Actualización de la liquidación en el useEffect
@@ -678,6 +783,8 @@ export default function Formulario() {
     const nuevaLiquidacion: LiquidacionInput = {
       periodoStart: dateSelected.start, // Asegura que no sea null
       periodoEnd: dateSelected.end, // Asegura que no sea null
+      periodoStartVacaciones: periodoVacaciones?.start || null, // Asegura que no sea null
+      periodoEndVacaciones: periodoVacaciones?.end || null, // Asegura que no sea null
       bonificaciones: detallesVehiculos.flatMap((detalle) =>
         detalle.bonos.map((bono) => ({
           ...bono,
@@ -710,6 +817,7 @@ export default function Formulario() {
       totalPernotes: totalPernotes || 0,
       totalBonificaciones: totalBonificaciones || 0,
       totalRecargos: totalRecargos || 0,
+      totalVacaciones: totalVacaciones || 0,
       totalAnticipos: totalAnticipos || 0,
       diasLaborados: diasLaborados || 0,
       diasLaboradosVillanueva: diasLaboradosVillanueva || 0,
@@ -735,12 +843,14 @@ export default function Formulario() {
     vehiculosSelected, // Ahora también dependemos de cambios en `vehiculosSelected`
     totalRecargos,
     totalAnticipos,
+    totalVacaciones,
     conductorSelected, // Dependemos de cambios en `conductorSelected`
     detallesVehiculos,
     state.conductores,
     mesesRange,
     diasLaborados,
     diasLaboradosVillanueva,
+    periodoVacaciones,
     bonificacionVillanueva, // Ajuste salarial
   ]);
 
@@ -765,6 +875,8 @@ export default function Formulario() {
           id: stateLiquidacion?.id || undefined, // Usa el ID de stateLiquidacion si está disponible
           periodoStart: liquidacion.periodoStart,
           periodoEnd: liquidacion.periodoEnd,
+          periodoStartVacaciones: liquidacion.periodoStartVacaciones,
+          periodoEndVacaciones: liquidacion.periodoEndVacaciones,
           conductorId: liquidacion.conductorId || null, // Asegura que conductorId sea nulo si no está presente
           auxilioTransporte: liquidacion.auxilioTransporte || 0, // Provee un valor por defecto si es necesario
           sueldoTotal: liquidacion.sueldoTotal || 0,
@@ -772,6 +884,7 @@ export default function Formulario() {
           totalPernotes: liquidacion.totalPernotes || 0,
           totalBonificaciones: liquidacion.totalBonificaciones || 0,
           totalRecargos: liquidacion.totalRecargos || 0,
+          totalVacaciones: liquidacion.totalVacaciones || 0,
           totalAnticipos: liquidacion.totalAnticipos || 0,
           diasLaborados: liquidacion.diasLaborados || 0,
           diasLaboradosVillanueva: liquidacion.diasLaboradosVillanueva || 0,
@@ -901,9 +1014,20 @@ export default function Formulario() {
                             key={bono.name} // Usa 'name' como clave, o cualquier identificador único
                           >
                             <CardBody className="max-md:gap-3 md:flex-row justify-between items-center">
-                              <p className="font-semibold">{bono.name}</p>
+                              <p className="font-semibold">
+                                {bono.name}{" "}
+                                <span className="text-foreground-400">
+                                  (
+                                  {formatToCOP(
+                                    state.configuracion?.find(
+                                      (config) => config.nombre === bono.name
+                                    )?.valor || 0
+                                  )}
+                                  )
+                                </span>
+                              </p>
                               <div className="flex gap-5 max-md:w-full">
-                                {mesesRange.map((mes) => {
+                                {mesesRange?.map((mes) => {
                                   const bonoMes = bono.values.find(
                                     (val) => val.mes === mes
                                   );
@@ -936,7 +1060,18 @@ export default function Formulario() {
                           </Card>
                         ))}
                         <Divider />
-                        <h3 className="font-bold text-xl mb-2">Pernotes</h3>
+                        <h3 className="font-bold text-xl mb-2">
+                          Pernotes{" "}
+                          <span className="font-semibold text-foreground-400">
+                            (
+                            {formatToCOP(
+                              state.configuracion?.find(
+                                (config) => config.nombre === "Pernote"
+                              )?.valor || 0
+                            )}
+                            )
+                          </span>
+                        </h3>
                         {detalleVehiculo.pernotes?.map(
                           (pernote, pernoteIndex) => (
                             <div
@@ -1217,7 +1352,7 @@ export default function Formulario() {
               </div>
             </form>
           )}
-
+        
         <div>
           {conductorSelected && vehiculosSelected.length > 0 && dateSelected ? (
             <div
@@ -1444,6 +1579,241 @@ export default function Formulario() {
                                     ? "Editar liquidación"
                                     : "Agregar liquidación"}
                                 </Button>
+        <>
+          {conductorSelected &&
+            vehiculosSelected.length > 0 &&
+            dateSelected && (
+              <div
+                className={`${state.allowEdit || state.allowEdit == null ? "" : "lg:w-2/3 xl:w-1/2 md:mx-auto"}`}
+              >
+                <ConductorInfo
+                  conductor={
+                    state.conductores.find(
+                      (c) => c.id === conductorSelected?.value
+                    ) || null
+                  }
+                  dateSelected={dateSelected}
+                />
+
+                <div className="w-full flex flex-col space-y-2">
+                  <Tabs className="mx-auto" color="primary">
+                    <Tab key={"liquidación"} title="Liquidación">
+                      {detallesVehiculos?.map((detalle, index) => (
+                        <CardLiquidacion
+                          key={index}
+                          detalleVehiculo={detalle}
+                          empresas={state.empresas}
+                        />
+                      ))}
+                      {conductorSelected &&
+                        detallesVehiculos.length > 0 &&
+                        dateSelected &&
+                        state.vehiculos && (
+                          <Card>
+                            <CardHeader>
+                              <p className="text-xl font-semibold">Resumen</p>
+                            </CardHeader>
+                            <Divider />
+                            <CardBody className="space-y-4">
+                              <Input
+                                isDisabled={
+                                  state.allowEdit || state.allowEdit == null
+                                    ? false
+                                    : true
+                                }
+                                value={diasLaborados.toString()}
+                                onChange={(e) =>
+                                  setDiasLaborados(+e.target.value)
+                                }
+                                type="number"
+                                label="Cantidad días laborados"
+                                placeholder="Ingresa la cantidad de días laborados"
+                                className="max-w-xs"
+                              />
+
+                              <div className="space-y-4">
+                                <div className="space-y-3">
+                                  <Checkbox
+                                    isDisabled={
+                                      state.allowEdit || state.allowEdit == null
+                                        ? false
+                                        : true
+                                    }
+                                    isSelected={isCheckedAjuste}
+                                    onChange={(e) =>
+                                      setIsCheckedAjuste(e.target.checked)
+                                    }
+                                  >
+                                    Bonificación Villanueva
+                                  </Checkbox>
+
+                                  {isCheckedAjuste && (
+                                    <>
+                                      <Input
+                                        isDisabled={
+                                          state.allowEdit ||
+                                          state.allowEdit == null
+                                            ? false
+                                            : true
+                                        }
+                                        value={diasLaboradosVillanueva.toString()}
+                                        onChange={(e) =>
+                                          setDiasLaboradosVillanueva(
+                                            +e.target.value
+                                          )
+                                        }
+                                        type="number"
+                                        label="Cantidad días laborados Villanueva"
+                                        placeholder="Ingresa la cantidad de días laborados en villanueva"
+                                        className="max-w-xs"
+                                      />
+                                      <div>
+                                        <p>
+                                          Bonificación villanueva{" "}
+                                          <span className="text-sm text-foreground-500">
+                                            (V/Día: {formatToCOP(ajustePorDia)})
+                                          </span>
+                                        </p>
+
+                                        <p className="text-xl text-orange-400">
+                                          {formatToCOP(bonificacionVillanueva)}{" "}
+                                        </p>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+
+                                <div className="space-y-3">
+                                  <Checkbox
+                                    isDisabled={
+                                      state.allowEdit || state.allowEdit == null
+                                        ? false
+                                        : true
+                                    }
+                                    isSelected={isVacaciones}
+                                    onChange={(e) =>
+                                      setIsVacaciones(e.target.checked)
+                                    }
+                                  >
+                                    Vacaciones
+                                  </Checkbox>
+
+                                  {isVacaciones && (
+                                    <>
+                                      <DateRangePicker
+                                        onChange={handleDateVacacionesChange}
+                                        label="Periodo vacaciones"
+                                        className="max-w-xs"
+                                        lang="es-ES"
+                                        value={periodoVacaciones}
+                                      />
+
+                                      <p className="font-semibold p-1">
+                                        Días de vacaciones:{" "}
+                                        <span className="font-normal">
+                                          {obtenerDiferenciaDias(
+                                            periodoVacaciones
+                                          )}{" "}
+                                          días
+                                        </span>
+                                      </p>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+
+                              <Table shadow="none" aria-label="Resumen">
+                                <TableHeader>
+                                  <TableColumn className="bg-black text-white">
+                                    CONCEPTO
+                                  </TableColumn>
+                                  <TableColumn className="bg-black text-white">
+                                    VALOR
+                                  </TableColumn>
+                                </TableHeader>
+                                <TableBody>
+                                  <TableRow className="border-1">
+                                    <TableCell>Salario devengado</TableCell>
+                                    <TableCell>
+                                      {formatToCOP(salarioDevengado)}
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1">
+                                    <TableCell>Ajuste Villanueva</TableCell>
+                                    <TableCell>
+                                      {formatToCOP(bonificacionVillanueva)}
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1">
+                                    <TableCell>Auxilio de transporte</TableCell>
+                                    <TableCell>
+                                      {formatToCOP(auxilioTransporte)}
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1">
+                                    <TableCell>Bonificaciones</TableCell>
+                                    <TableCell>
+                                      {formatToCOP(totalBonificaciones)}
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1">
+                                    <TableCell>Pernotes</TableCell>
+                                    <TableCell>
+                                      {formatToCOP(totalPernotes)}
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1">
+                                    <TableCell>Recargos</TableCell>
+                                    <TableCell>
+                                      {formatToCOP(totalRecargos)}
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1">
+                                    <TableCell>
+                                      Salud (
+                                      {state.configuracion?.find(
+                                        (config) => config.nombre == "Salud"
+                                      )?.valor || 0}
+                                      %)
+                                    </TableCell>
+                                    <TableCell>{formatToCOP(salud)}</TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1">
+                                    <TableCell>
+                                      Pensión (
+                                      {state.configuracion?.find(
+                                        (config) => config.nombre == "Pensión"
+                                      )?.valor || 0}
+                                      %)
+                                    </TableCell>
+                                    <TableCell>
+                                      {formatToCOP(pension)}
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1 bg-purple-600 text-white">
+                                    <TableCell>Vacaciones</TableCell>
+                                    <TableCell>
+                                      {formatToCOP(totalVacaciones || 0)}
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1 bg-red-600 text-white">
+                                    <TableCell>Anticipos</TableCell>
+                                    <TableCell>
+                                      {formatToCOP(totalAnticipos)}
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1 bg-green-700 text-white">
+                                    <TableCell className="text-xl">
+                                      Sueldo total
+                                    </TableCell>
+                                    <TableCell className="text-xl">
+                                      {formatToCOP(sueldoTotal)}
+                                    </TableCell>
+                                  </TableRow>
+                                </TableBody>
+                              </Table>
+
+                              {!state.allowEdit && state?.liquidacion?.id && (
                                 <Button
                                   className="md:col-span-2 bg-red-600 text-white"
                                   onPress={() => {
@@ -1795,10 +2165,10 @@ const CardLiquidacion = ({
                 if (!isMobile) {
                   return (
                     <table className="table-auto w-full text-sm mb-5">
-                      <thead className="bg-green-500 text-white">
+                      <thead className="bg-green-700 text-white">
                         <tr>
                           <th className="px-4 py-2 text-left">Empresa</th>
-                          <th className="px-4 py-2 text-left">Mes</th>
+                          <th className="px-4 py-2 text-center">Mes</th>
                           <th className="px-4 py-2 text-center">Paga</th>
                           <th className="px-4 py-2 text-center">Total</th>
                         </tr>
@@ -1817,6 +2187,8 @@ const CardLiquidacion = ({
                                   : "Empresa no encontrada"}
                               </td>
                               <td className="border px-4 py-2">
+                              <td className="border px-4 py-2 text-center">
+
                                 {recargo.mes}
                               </td>
                               <td className="border px-4 py-2 text-center">

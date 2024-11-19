@@ -6,6 +6,8 @@ query Liquidaciones {
         id
         periodoStart
         periodoEnd
+        periodoStartVacaciones
+        periodoEndVacaciones
         conductor {
             id
             nombre
@@ -20,6 +22,7 @@ query Liquidaciones {
         totalBonificaciones
         totalRecargos
         totalAnticipos
+        totalVacaciones
         diasLaborados
         diasLaboradosVillanueva
         ajusteSalarial
@@ -69,6 +72,8 @@ export const CREAR_LIQUIDACION = gql`
     $conductorId: ID!
     $periodoStart: String!
     $periodoEnd: String!
+    $periodoStartVacaciones: String!
+    $periodoEndVacaciones: String!
     $auxilioTransporte: Float!
     $sueldoTotal: Float!
     $salarioDevengado: Float!
@@ -76,6 +81,7 @@ export const CREAR_LIQUIDACION = gql`
     $totalBonificaciones: Float!
     $totalRecargos: Float!
     $totalAnticipos: Float!
+    $totalVacaciones: Float!
     $diasLaborados: Int!
     $diasLaboradosVillanueva: Int!
     $ajusteSalarial: Float!
@@ -91,6 +97,8 @@ export const CREAR_LIQUIDACION = gql`
       conductorId: $conductorId
       periodoStart: $periodoStart
       periodoEnd: $periodoEnd
+      periodoStartVacaciones: $periodoStartVacaciones
+      periodoEndVacaciones: $periodoEndVacaciones
       auxilioTransporte: $auxilioTransporte
       sueldoTotal: $sueldoTotal
       salarioDevengado: $salarioDevengado
@@ -98,6 +106,7 @@ export const CREAR_LIQUIDACION = gql`
       totalBonificaciones: $totalBonificaciones
       totalRecargos: $totalRecargos
       totalAnticipos: $totalAnticipos
+      totalVacaciones: $totalVacaciones
       diasLaborados: $diasLaborados
       diasLaboradosVillanueva: $diasLaboradosVillanueva
       ajusteSalarial: $ajusteSalarial
@@ -112,6 +121,8 @@ export const CREAR_LIQUIDACION = gql`
         id
         periodoStart
         periodoEnd
+        periodoStartVacaciones
+        periodoEndVacaciones
         conductor {
             id
             nombre
@@ -126,6 +137,7 @@ export const CREAR_LIQUIDACION = gql`
         totalBonificaciones
         totalRecargos
         totalAnticipos
+        totalVacaciones
         diasLaborados
         diasLaboradosVillanueva
         ajusteSalarial
@@ -176,6 +188,8 @@ export const EDITAR_LIQUIDACION = gql`
     $conductorId: ID!
     $periodoStart: String!
     $periodoEnd: String!
+    $periodoStartVacaciones: String!
+    $periodoEndVacaciones: String!
     $auxilioTransporte: Float!
     $sueldoTotal: Float!
     $salarioDevengado: Float!
@@ -183,6 +197,7 @@ export const EDITAR_LIQUIDACION = gql`
     $totalBonificaciones: Float!
     $totalRecargos: Float!
     $totalAnticipos: Float!
+    $totalVacaciones: Float!
     $diasLaborados: Int!
     $diasLaboradosVillanueva: Int!
     $ajusteSalarial: Float!
@@ -199,6 +214,8 @@ export const EDITAR_LIQUIDACION = gql`
         conductorId: $conductorId
         periodoStart: $periodoStart
         periodoEnd: $periodoEnd
+        periodoStartVacaciones: $periodoStartVacaciones
+        periodoEndVacaciones: $periodoEndVacaciones
         auxilioTransporte: $auxilioTransporte
         sueldoTotal: $sueldoTotal
         salarioDevengado: $salarioDevengado
@@ -206,6 +223,7 @@ export const EDITAR_LIQUIDACION = gql`
         totalBonificaciones: $totalBonificaciones
         totalRecargos: $totalRecargos
         totalAnticipos: $totalAnticipos
+        totalVacaciones: $totalVacaciones
         diasLaborados: $diasLaborados
         diasLaboradosVillanueva: $diasLaboradosVillanueva
         ajusteSalarial: $ajusteSalarial
@@ -220,6 +238,8 @@ export const EDITAR_LIQUIDACION = gql`
         id
         periodoStart
         periodoEnd
+        periodoStartVacaciones
+        periodoEndVacaciones
         conductor {
             id
             nombre
@@ -234,6 +254,7 @@ export const EDITAR_LIQUIDACION = gql`
         totalBonificaciones
         totalRecargos
         totalAnticipos
+        totalVacaciones
         diasLaborados
         diasLaboradosVillanueva
         ajusteSalarial

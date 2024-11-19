@@ -1,4 +1,4 @@
-import { DateValue } from "@nextui-org/react";
+import { DateValue, RangeValue } from "@nextui-org/react";
 
 export const formatToCOP = (value: number | undefined | null) => {
   if (value === undefined || value === null) {
@@ -55,7 +55,7 @@ export const formatDateValue = (dateValue: DateValue | null): string => {
   return ''; // Retorna una cadena vacía si no hay valor
 };
 
-export function obtenerMesesEntreFechas(start: DateValue | null, end: DateValue | null): string[] {
+export function obtenerMesesEntreFechas(start: string | null, end: string | null): string[] {
   if (!start || !end) {
     return []; // Si alguna de las fechas es null, devolver un array vacío.
   }
@@ -67,17 +67,29 @@ export function obtenerMesesEntreFechas(start: DateValue | null, end: DateValue 
 
   const resultado: string[] = [];
 
-  let fechaActual = new Date(start.year, start.month - 1, 1);
-  const fechaFinal = new Date(end.year, end.month - 1, 1);
+  // Parsear las fechas en formato YYYY-MM-DD
+  let fechaActual = new Date(start + "T00:00:00");
+  const fechaFinal = new Date(end + "T00:00:00");
 
-  while (fechaActual <= fechaFinal) {
-    resultado.push(meses[fechaActual.getMonth()]);
+  // Asegurarse de que la fecha inicial sea menor o igual a la final
+  if (fechaActual > fechaFinal) {
+    return []; // Si la fecha de inicio es después de la fecha de fin, devolver un array vacío.
+  }
+
+  // Añadir los meses al resultado mientras el año y mes de fechaActual estén antes o iguales a los de fechaFinal
+  while (
+    fechaActual.getFullYear() < fechaFinal.getFullYear() ||
+    (fechaActual.getFullYear() === fechaFinal.getFullYear() && fechaActual.getMonth() <= fechaFinal.getMonth())
+  ) {
+    const mesNombre = meses[fechaActual.getMonth()];
+    if (!resultado.includes(mesNombre)) {
+      resultado.push(mesNombre);
+    }
     fechaActual.setMonth(fechaActual.getMonth() + 1);
   }
 
   return resultado;
 }
-
 
 // Función para convertir un Date de JavaScript a un DateValue
 export const dateToDateValue = (date : Date) => {
@@ -87,7 +99,29 @@ export const dateToDateValue = (date : Date) => {
 
   return `${year}-${month}-${day}`;
 };
+
 // Función para convertir un DateValue a un Date de JavaScript
 export const dateValueToDate = (dateValue: DateValue): Date => {
   return new Date(dateValue.year, dateValue.month - 1, dateValue.day); // En JavaScript, los meses empiezan en 0
 };
+
+// Obtener diferencia de días entre dos fechas
+export function obtenerDiferenciaDias(periodo: RangeValue<DateValue> | null) : number | string {
+  // Verifica si alguna de las fechas es null
+  if (!periodo) {
+    return 0
+  }
+
+  // Convierte las fechas de formato DateValue a objetos Date
+  const inicio = new Date(periodo.start.year, periodo.start.month - 1, periodo.start.day);
+  const fin = new Date(periodo.end.year, periodo.end.month - 1, periodo.end.day);
+
+  // Calcula la diferencia en milisegundos
+  const diferenciaMilisegundos = fin.getTime() - inicio.getTime();
+
+  // Convierte la diferencia de milisegundos a días
+  const diferenciaDias = diferenciaMilisegundos / (1000 * 60 * 60 * 24);
+
+  return Math.round(diferenciaDias); // Redondea a días enteros
+}
+
