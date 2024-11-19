@@ -3,6 +3,7 @@ import { AlertState, Vehiculo } from "@/types";
 export type VehiculoActions =
   | { type: 'SET_VEHICULOS'; payload: Vehiculo[] }
   | { type: 'SET_VEHICULO'; payload: Vehiculo | null }
+  | { type: 'ADD_VEHICULO'; payload: Vehiculo } // Nueva acción
   | { type: 'UPDATED_VEHICULO'; payload: Vehiculo }
   | { type: 'SELECT_VEHICULO'; payload: number | string | null }
   | { type: 'SET_MODAL_ADD' }
@@ -46,7 +47,11 @@ export function VehiculoReducer(
         ...state,
         vehiculo: action.payload,
       };
-
+    case 'ADD_VEHICULO':
+      return {
+        ...state,
+        vehiculos: [...state.vehiculos, action.payload], // Agrega el nuevo vehículo al array
+      };
     case 'UPDATED_VEHICULO':
       return {
         ...state,
@@ -68,7 +73,7 @@ export function VehiculoReducer(
     case 'SET_MODAL':
       return {
         ...state,
-        modal: !state.modal
+        modal: !state.modal,
       };
     case 'SET_ALERTA':
       return {

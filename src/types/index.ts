@@ -196,6 +196,6 @@ export type Usuario = {
 
 // Estado de alerta (mensaje de éxito o error)
 export interface AlertState {
-  success: boolean;
-  message: string;
+  success?: boolean | null;
+  message?: string;
 }
