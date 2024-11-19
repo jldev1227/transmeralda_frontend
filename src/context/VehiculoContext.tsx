@@ -17,7 +17,7 @@ import { useQuery } from "@apollo/client";
 import { FileDetailsVehiculos } from "@/hooks/useDropzone";
 import axios from "axios";
 
-// Definir el tipo del contexto
+// Tipo del contexto
 interface VehiculoContextType {
   state: VehiculoState;
   dispatch: Dispatch<VehiculoActions>;
@@ -25,15 +25,15 @@ interface VehiculoContextType {
   actualizarVehiculo: (file: FileDetailsVehiculos) => void;
 }
 
-// Crear el contexto con un valor inicial tipado correctamente
+// Crear el contexto
 export const VehiculoContext = createContext<VehiculoContextType | null>(null);
 
-// Definir las props del provider
+// Props del provider
 interface VehiculoProviderProps {
   children: ReactNode;
 }
 
-// Crear el UsuarioProvider como un componente funcional tipado
+// Provider del contexto
 export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
   const [state, dispatch] = useReducer(VehiculoReducer, initialState);
 
@@ -43,23 +43,35 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
     error: errorQueryVehiculos,
   } = useQuery(OBTENER_VEHICULOS);
 
-  const { data: vehiculoData, error: errorQueryVehiculo } = useQuery(
-    OBTENER_VEHICULO,
-    {
-      variables: { id: state.selectedVehicleId }, // Reemplaza "el_id_del_vehiculo" con el ID correcto
-      skip: !state.selectedVehicleId, // Para evitar ejecutar la consulta si no hay un id
-    }
-  );
+  const {
+    data: vehiculoData,
+    loading: loadingVehiculo,
+    error: errorQueryVehiculo,
+  } = useQuery(OBTENER_VEHICULO, {
+    variables: { id: state.selectedVehicleId },
+    skip: !state.selectedVehicleId,
+    fetchPolicy: "network-only",
+  });
 
-  const obtenerVehiculos = useCallback(() => {
-    if (!loadingVehiculos && vehiculosData.obtenerVehiculos) {
+  // Función centralizada para manejar errores
+  const handleError = useCallback((error: any, message: string) => {
+    if (error) {
+      console.error(message, error);
       dispatch({
-        type: "SET_VEHICULOS",
-        payload: vehiculosData.obtenerVehiculos,
+        type: "SET_ALERTA",
+        payload: {
+          success: false,
+          message: error.message || message,
+        },
       });
-    }
-  }, [vehiculosData, loadingVehiculos, dispatch]);
 
+      setTimeout(() => {
+        dispatch({ type: "CLEAR_ALERTA" });
+      }, 3000);
+    }
+  }, []);
+
+  // Crear un vehículo
   // Función para crear un vehículo en la app web
   const agregarVehiculo = async (files: FileDetailsVehiculos[]) => {
     try {
@@ -82,27 +94,30 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
         "operations",
         JSON.stringify({
           query: `mutation crearVehiculo($files: [Upload!]!, $categorias: [String!]!) {
-            crearVehiculo(files: $files, categorias: $categorias) {
-              success
-              message
-              vehiculo {
-                id
-                placa
-                marca
-                linea
-                modelo
-                kilometraje
-                galeria
-                soatVencimiento
-                tecnomecanicaVencimiento
-                conductor {
-                    id
-                    nombre
-                    apellido
-                }
+          crearVehiculo(files: $files, categorias: $categorias) {
+            success
+            message
+            vehiculo {
+              id
+              placa
+              marca
+              linea
+              modelo
+              claseVehiculo
+              kilometraje
+              galeria
+              estado
+              soatVencimiento
+              tecnomecanicaVencimiento
+              fechaMatricula
+              conductor {
+                  id
+                  nombre
+                  apellido
               }
             }
-          }`,
+          }
+        }`,
           variables: {
             files: Array(files.length).fill(null),
             categorias: files.map((file) =>
@@ -157,6 +172,11 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
 
         // Si fue exitoso, actualiza el estado del vehículo
         if (success && vehiculo) {
+          dispatch({
+            type: "ADD_VEHICULO",
+            payload: vehiculo, // Agrega el nuevo vehículo al array
+          });
+
           dispatch({
             type: "SET_ALERTA",
             payload: {
@@ -309,7 +329,7 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
           });
 
           dispatch({
-            type: 'UPDATED_VEHICULO',
+            type: "UPDATED_VEHICULO",
             payload: vehiculo,
           });
 
@@ -344,37 +364,57 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
   };
 
   useEffect(() => {
-    if (vehiculosData) {
-      obtenerVehiculos();
-    }
-  }, [vehiculosData, obtenerVehiculos]);
+    // Sincroniza el estado de carga con la consulta
+    dispatch({ type: "SET_LOADING", payload: loadingVehiculos });
 
-  useEffect(() => {
-    dispatch({
-      type: "SET_LOADING",
-      payload: true,
-    })
-    if (vehiculoData && vehiculoData.obtenerVehiculo) {
-      // Actualiza el estado con la data del vehículo
+    if (errorQueryVehiculos) {
+      // Manejo de error al obtener vehículos
+      console.error("Error obteniendo vehículos:", errorQueryVehiculos);
+
       dispatch({
-        type: "SET_VEHICULO",
-        payload: vehiculoData.obtenerVehiculo,
+        type: "SET_ALERTA",
+        payload: {
+          success: false,
+          message: errorQueryVehiculos.message || "Error al obtener vehículos",
+        },
       });
+
+      // Asegúrate de que el estado de vehículos sea vacío en caso de error
+      dispatch({ type: "SET_VEHICULOS", payload: [] });
+    } else if (vehiculosData?.obtenerVehiculos) {
+      // Si se obtienen los vehículos correctamente, actualiza el estado
       dispatch({
-        type: "SET_LOADING",
-        payload: false,
-      })
+        type: "SET_VEHICULOS",
+        payload: vehiculosData.obtenerVehiculos,
+      });
+
+      // Limpia cualquier alerta existente
+      dispatch({ type: "CLEAR_ALERTA" });
     }
-  }, [vehiculoData, dispatch]);
+  }, [vehiculosData, loadingVehiculos, errorQueryVehiculos, dispatch]);
 
-  if (errorQueryVehiculos) {
-    console.error("Error obteniendo vehículos:", errorQueryVehiculos);
-  }
+  // Efectos
+  useEffect(() => {
+    // Sincroniza el estado de carga con la consulta
+    dispatch({ type: "SET_LOADING", payload: loadingVehiculo });
 
-  if (errorQueryVehiculo) {
-    console.error("Error obteniendo vehículo:", errorQueryVehiculo);
-  }
+    if (errorQueryVehiculo) {
+      // Manejo de error al obtener un vehículo
+      handleError(errorQueryVehiculo, "Error obteniendo vehículo");
 
+      // Si hay un error, asegúrate de que el estado del vehículo sea null
+      dispatch({ type: "SET_VEHICULO", payload: null });
+    } else if (vehiculoData?.obtenerVehiculo) {
+      // Si se encuentra un vehículo, actualiza el estado
+      dispatch({ type: "SET_VEHICULO", payload: vehiculoData.obtenerVehiculo });
+      dispatch({ type: "CLEAR_ALERTA" }); // Limpia cualquier alerta existente
+    } else if (!vehiculoData?.obtenerVehiculo) {
+      // Si no hay datos de vehículo, actualiza el estado a null
+      dispatch({ type: "SET_VEHICULO", payload: null });
+    }
+  }, [vehiculoData, loadingVehiculo, errorQueryVehiculo, handleError]);
+
+  // Proveedor
   return (
     <VehiculoContext.Provider
       value={{ state, dispatch, agregarVehiculo, actualizarVehiculo }}

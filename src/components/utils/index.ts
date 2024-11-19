@@ -3,6 +3,7 @@ export function capitalize(str: string) {
 }
 
 export function daysDifference(dateString: string): number {
+
   const currentDate = new Date().getTime(); // Fecha actual en milisegundos
   const inputDate = new Date(dateString).getTime(); // Fecha ingresada en milisegundos
 

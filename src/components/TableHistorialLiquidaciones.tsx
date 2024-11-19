@@ -374,7 +374,7 @@ export default function App() {
         <div className="flex justify-between gap-3 items-end">
           <Input
             isClearable
-            className="w-full sm:max-w-[44%]"
+            className="w-full sm:max-w-[24%]"
             placeholder="Buscar por conductor..."
             startContent={<SearchIcon />}
             value={filterValue}
