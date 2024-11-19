@@ -564,6 +564,15 @@ export default function Formulario() {
         (c) => c.id === conductorSelected?.value
       );
 
+      return conductor
+        ? diasLaboradosVillanueva >= 17
+          ? 2101498 - conductor.salarioBase
+          : (state.configuracion?.find(
+              (config) => config.nombre == "Ajuste villanueva"
+            )?.valor || 0) * diasLaboradosVillanueva
+        : 0;
+
+
       const ajusteVillanueva =
         state.configuracion?.find(
           (config) => config.nombre === "Salario villanueva"
@@ -592,6 +601,7 @@ export default function Formulario() {
       }
 
       return 0;
+
     } else {
       setDiasLaboradosVillanueva(0);
     }
@@ -1199,7 +1209,7 @@ export default function Formulario() {
                           onClick={() =>
                             handleAddPernote(detalleVehiculo.vehiculo.value)
                           }
-                          className="w-full col-span-6 bg-primary-700 text-white"
+                          className="w-full col-span-6 bg-primary-500 text-white"
                         >
                           Añadir pernote
                         </Button>
@@ -1332,7 +1342,7 @@ export default function Formulario() {
                           onClick={() =>
                             handleAddRecargo(detalleVehiculo.vehiculo.value)
                           }
-                          className="bg-primary-700 text-white"
+                          className="bg-primary-500 text-white"
                         >
                           Añadir recargo
                         </Button>
@@ -1342,7 +1352,233 @@ export default function Formulario() {
               </div>
             </form>
           )}
+        
+        <div>
+          {conductorSelected && vehiculosSelected.length > 0 && dateSelected ? (
+            <div
+              className={`${state.allowEdit || state.allowEdit == null ? "" : "lg:w-2/3 xl:w-1/2 md:mx-auto"}`}
+            >
+              <ConductorInfo
+                conductor={
+                  state.conductores.find(
+                    (c) => c.id === conductorSelected?.value
+                  ) || null
+                }
+                dateSelected={dateSelected}
+              />
 
+              <div className="w-full flex flex-col space-y-2">
+                <Tabs className="mx-auto" color="primary">
+                  <Tab key={"liquidación"} title="Liquidación">
+                    {detallesVehiculos?.map((detalle, index) => (
+                      <CardLiquidacion
+                        key={index}
+                        detalleVehiculo={detalle}
+                        empresas={state.empresas}
+                      />
+                    ))}
+                    {conductorSelected &&
+                      detallesVehiculos.length > 0 &&
+                      dateSelected &&
+                      state.vehiculos && (
+                        <Card>
+                          <CardHeader>
+                            <p className="text-xl font-semibold">Resumen</p>
+                          </CardHeader>
+                          <Divider />
+                          <CardBody className="space-y-4">
+                            <Input
+                              isDisabled={
+                                state.allowEdit || state.allowEdit == null
+                                  ? false
+                                  : true
+                              }
+                              value={diasLaborados.toString()}
+                              onChange={(e) =>
+                                setDiasLaborados(+e.target.value)
+                              }
+                              type="number"
+                              label="Cantidad días laborados"
+                              placeholder="Ingresa la cantidad de días laborados"
+                              className="max-w-xs"
+                            />
+                            <Checkbox
+                              isDisabled={
+                                state.allowEdit || state.allowEdit == null
+                                  ? false
+                                  : true
+                              }
+                              isSelected={isCheckedAjuste}
+                              onChange={(e) =>
+                                setIsCheckedAjuste(e.target.checked)
+                              }
+                            >
+                              Bonificación Villanueva
+                            </Checkbox>
+                            {isCheckedAjuste && (
+                              <>
+                                <Input
+                                  isDisabled={
+                                    state.allowEdit || state.allowEdit == null
+                                      ? false
+                                      : true
+                                  }
+                                  value={diasLaboradosVillanueva.toString()}
+                                  onChange={(e) =>
+                                    setDiasLaboradosVillanueva(+e.target.value)
+                                  }
+                                  type="number"
+                                  label="Cantidad días laborados Villanueva"
+                                  placeholder="Ingresa la cantidad de días laborados en villanueva"
+                                  className="max-w-xs"
+                                />
+                                <div>
+                                  <p>Bonificación villanueva</p>
+                                  <p className="text-xl text-orange-400">
+                                    {formatToCOP(bonificacionVillanueva)}
+                                  </p>
+                                </div>
+                              </>
+                            )}
+
+                            <Table shadow="none" aria-label="Resumen">
+                              <TableHeader>
+                                <TableColumn className="bg-black text-white">
+                                  CONCEPTO
+                                </TableColumn>
+                                <TableColumn className="bg-black text-white">
+                                  VALOR
+                                </TableColumn>
+                              </TableHeader>
+                              <TableBody>
+                                <TableRow className="border-1">
+                                  <TableCell>Salario devengado</TableCell>
+                                  <TableCell>
+                                    {formatToCOP(salarioDevengado)}
+                                  </TableCell>
+                                </TableRow>
+                                <TableRow className="border-1">
+                                  <TableCell>Ajuste Villanueva</TableCell>
+                                  <TableCell>
+                                    {formatToCOP(bonificacionVillanueva)}
+                                  </TableCell>
+                                </TableRow>
+                                <TableRow className="border-1">
+                                  <TableCell>Auxilio de transporte</TableCell>
+                                  <TableCell>
+                                    {formatToCOP(auxilioTransporte)}
+                                  </TableCell>
+                                </TableRow>
+                                <TableRow className="border-1">
+                                  <TableCell>Bonificaciones</TableCell>
+                                  <TableCell>
+                                    {formatToCOP(totalBonificaciones)}
+                                  </TableCell>
+                                </TableRow>
+                                <TableRow className="border-1">
+                                  <TableCell>Pernotes</TableCell>
+                                  <TableCell>
+                                    {formatToCOP(totalPernotes)}
+                                  </TableCell>
+                                </TableRow>
+                                <TableRow className="border-1">
+                                  <TableCell>Recargos</TableCell>
+                                  <TableCell>
+                                    {formatToCOP(totalRecargos)}
+                                  </TableCell>
+                                </TableRow>
+                                <TableRow className="border-1">
+                                  <TableCell>
+                                    Salud (
+                                    {state.configuracion?.find(
+                                      (config) => config.nombre == "Salud"
+                                    )?.valor || 0}
+                                    %)
+                                  </TableCell>
+                                  <TableCell>{formatToCOP(salud)}</TableCell>
+                                </TableRow>
+                                <TableRow className="border-1">
+                                  <TableCell>
+                                    Pensión (
+                                    {state.configuracion?.find(
+                                      (config) => config.nombre == "Pensión"
+                                    )?.valor || 0}
+                                    %)
+                                  </TableCell>
+                                  <TableCell>{formatToCOP(pension)}</TableCell>
+                                </TableRow>
+                                <TableRow className="border-1 bg-red-600 text-white">
+                                  <TableCell>Anticipos</TableCell>
+                                  <TableCell>
+                                    {formatToCOP(totalAnticipos)}
+                                  </TableCell>
+                                </TableRow>
+                                <TableRow className="border-1 bg-green-700 text-white">
+                                  <TableCell className="text-xl">
+                                    Sueldo total
+                                  </TableCell>
+                                  <TableCell className="text-xl">
+                                    {formatToCOP(sueldoTotal)}
+                                  </TableCell>
+                                </TableRow>
+                              </TableBody>
+                            </Table>
+
+                            {!state.allowEdit && state?.liquidacion?.id && (
+                              <Button
+                                className="col-span-2 md:col-span-1 bg-red-600 text-white"
+                                onPress={() => {
+                                  // Cancelar y limpiar los estados
+                                  dispatch({
+                                    type: "SET_LIQUIDACION",
+                                    payload: {
+                                      allowEdit: null,
+                                      liquidacion: null,
+                                    },
+                                  });
+
+                                  limpiarStates();
+                                }}
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth={1.5}
+                                  stroke="currentColor"
+                                  className="size-5 text-white"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M6 18 18 6M6 6l12 12"
+                                  />
+                                </svg>
+                                <p>
+                                  {" "}
+                                  Cancelar{" "}
+                                  {stateLiquidacion?.id && state.allowEdit
+                                    ? "edición"
+                                    : stateLiquidacion?.id && !state.allowEdit
+                                      ? "consulta"
+                                      : "creación"}
+                                </p>
+                              </Button>
+                            )}
+                          </CardBody>
+                          {(state.allowEdit || state.allowEdit === null) && (
+                            <>
+                              <Divider />
+                              <CardFooter className="grid grid-cols-1 md:grid-cols-5 gap-5">
+                                <Button
+                                  color="primary"
+                                  onPress={handleSubmit}
+                                  className="col-span-1 md:col-span-3 text-white"
+                                >
+                                  {stateLiquidacion?.id
+                                    ? "Editar liquidación"
+                                    : "Agregar liquidación"}
+                                </Button>
         <>
           {conductorSelected &&
             vehiculosSelected.length > 0 &&
@@ -1579,7 +1815,7 @@ export default function Formulario() {
 
                               {!state.allowEdit && state?.liquidacion?.id && (
                                 <Button
-                                  className="col-span-2 md:col-span-1 bg-red-600 text-white"
+                                  className="md:col-span-2 bg-red-600 text-white"
                                   onPress={() => {
                                     // Cancelar y limpiar los estados
                                     dispatch({
@@ -1607,84 +1843,38 @@ export default function Formulario() {
                                       d="M6 18 18 6M6 6l12 12"
                                     />
                                   </svg>
-                                  <p>
-                                    {" "}
-                                    Cancelar{" "}
-                                    {stateLiquidacion?.id && state.allowEdit
-                                      ? "edición"
-                                      : stateLiquidacion?.id && !state.allowEdit
-                                        ? "consulta"
-                                        : "creación"}
-                                  </p>
+                                  Cancelar{" "}
+                                  {stateLiquidacion?.id && state.allowEdit
+                                    ? "edición"
+                                    : stateLiquidacion?.id && !state.allowEdit
+                                      ? "consulta"
+                                      : "creación"}
                                 </Button>
-                              )}
-                            </CardBody>
-                            {(state.allowEdit || state.allowEdit === null) && (
-                              <>
-                                <Divider />
-                                <CardFooter className="grid grid-cols-1 md:grid-cols-5 gap-5">
-                                  <Button
-                                    onPress={handleSubmit}
-                                    className="col-span-1 md:col-span-3 bg-green-700 text-white"
-                                  >
-                                    {stateLiquidacion?.id
-                                      ? "Editar liquidación"
-                                      : "Agregar liquidación"}
-                                  </Button>
-                                  <Button
-                                    className="md:col-span-2 bg-red-600 text-white"
-                                    onPress={() => {
-                                      // Cancelar y limpiar los estados
-                                      dispatch({
-                                        type: "SET_LIQUIDACION",
-                                        payload: {
-                                          allowEdit: null,
-                                          liquidacion: null,
-                                        },
-                                      });
-
-                                      limpiarStates();
-                                    }}
-                                  >
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      strokeWidth={1.5}
-                                      stroke="currentColor"
-                                      className="size-5 text-white"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M6 18 18 6M6 6l12 12"
-                                      />
-                                    </svg>
-                                    Cancelar{" "}
-                                    {stateLiquidacion?.id && state.allowEdit
-                                      ? "edición"
-                                      : stateLiquidacion?.id && !state.allowEdit
-                                        ? "consulta"
-                                        : "creación"}
-                                  </Button>
-                                </CardFooter>
-                              </>
-                            )}
-                          </Card>
-                        )}
-                    </Tab>
-                    <Tab
-                      className="w-full lg:w-2/3 mx-auto"
-                      key={"anticipos"}
-                      title="Anticipos"
-                    >
-                      <Anticipos />
-                    </Tab>
-                  </Tabs>
-                </div>
+                              </CardFooter>
+                            </>
+                          )}
+                        </Card>
+                      )}
+                  </Tab>
+                  <Tab
+                    className="w-full lg:w-2/3 mx-auto"
+                    key={"anticipos"}
+                    title="Anticipos"
+                  >
+                    <Anticipos />
+                  </Tab>
+                </Tabs>
               </div>
-            )}
-        </>
+            </div>
+          ) : (
+            <div className="h-full mx-auto w-2/3 grid place-content-center">
+              <p className="text-center font-semibold text-foreground-500">
+                No hay liquidación por visualizar, rellena el formulario de
+                registro o consulta una liquidación existente para visualizarla
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </>
   );
@@ -1867,7 +2057,7 @@ const CardLiquidacion = ({
                 if (!isMobile) {
                   return (
                     <table className="table-auto w-full text-sm mb-5">
-                      <thead className="bg-blue-500 text-white">
+                      <thead className="bg-primary-500 text-white">
                         <tr>
                           <th className="px-4 py-2 text-left">Empresa</th>
                           <th className="px-4 py-2 text-center">Fechas</th>
@@ -1996,7 +2186,9 @@ const CardLiquidacion = ({
                                   ? empresa.Nombre
                                   : "Empresa no encontrada"}
                               </td>
+                              <td className="border px-4 py-2">
                               <td className="border px-4 py-2 text-center">
+
                                 {recargo.mes}
                               </td>
                               <td className="border px-4 py-2 text-center">

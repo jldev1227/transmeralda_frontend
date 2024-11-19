@@ -1,3 +1,35 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Asegúrate de que el contenedor de puntos esté centrado debajo de la imagen principal */
+.slick-dots {
+    bottom: 10px; /* Ajusta según el espacio necesario */
+    left: 50%;
+    transform: translateX(-50%) translateY(120%);
+    display: flex;
+    gap: 5px; /* Espaciado entre las miniaturas */
+}
+
+/* Estilo para las miniaturas */
+.slick-dots li {
+    width: 80px; /* Ajusta el ancho de la miniatura */
+    height: 80px;
+}
+
+.slick-dots li img {
+    border-radius: 10px; /* Opcional: bordes redondeados */
+    height: 100%;
+    width: 100%;
+    object-fit: contain; /* Asegura que la imagen mantenga su proporción */
+  }
+  
+.slick-prev:before, .slick-next:before {
+    color: 'green'; /* Color del icono de navegación */
+}
+
+@media (min-width: 560px) {
+    .max-h-modal {
+        max-height: 73vh;
+    }
+}
