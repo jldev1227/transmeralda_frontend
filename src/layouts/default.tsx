@@ -30,10 +30,6 @@ export default function DefaultLayout() {
       href: "/liquidaciones",
     },
     {
-      name: "Vehiculos",
-      href: "/vehiculos",
-    },
-    {
       name: "Empresas",
       href: "/empresas",
     },
@@ -46,8 +42,8 @@ export default function DefaultLayout() {
   };
 
   return (
-    <>
-      <Navbar position="sticky" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
+    <div className="relative flex flex-col h-screen">
+      <Navbar isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
         <NavbarContent>
           <NavbarMenuToggle
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
@@ -112,9 +108,9 @@ export default function DefaultLayout() {
         </NavbarMenu>
       </Navbar>
 
-      <main className="w-full flex-grow py-10">
+      <main className="w-full mx-auto sm:px-20 flex-grow pt-10 md:pt-16">
         <Outlet />
       </main>
-    </>
+    </div>
   );
 }

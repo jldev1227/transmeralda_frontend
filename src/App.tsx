@@ -10,8 +10,6 @@ import ProtectedRoutes from "./layouts/ProtectedLayout"; // Asume que tienes un 
 import Liquidador from "./pages/liquidador";
 import DefaultLayout from "./layouts/default";
 import Empresas from "./pages/empresas";
-import Vehiculos from "./pages/vehiculos";
-import { VehiculoProvider } from "./context/VehiculoContext";
 
 function App() {
   return (
@@ -28,14 +26,7 @@ function App() {
             <Route element={<DefaultLayout />}>
               {/* Ruta para Dashboard */}
               <Route path="empresas" element={<Empresas />} />
-              <Route
-                path="/vehiculos"
-                element={
-                  <VehiculoProvider>
-                    <Vehiculos />
-                  </VehiculoProvider>
-                }
-              />
+
               {/* Ruta para Liquidaciones con LiquidacionProvider */}
               <Route
                 path="/liquidaciones"

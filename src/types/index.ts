@@ -78,29 +78,8 @@ export type Vehiculo = {
   marca: string;
   linea: string;
   modelo: string;
-  color: string;
-  claseVehiculo: string;
-  tipoCarroceria: string;
-  combustible: string;
-  numeroMotor: string;
-  vin: string;
-  numeroSerie: string;
-  numeroChasis: string;
   propietarioNombre: string;
   propietarioIdentificacion: string;
-  kilometraje: string;
-  estado: string;
-  latitud: number;
-  longitud: number;
-  galeria: Array<TemplateStringsArray>;
-  soatVencimiento: string;
-  tecnomecanicaVencimiento: string;
-  fechaMatricula: string;
-  propietarioId: number;
-  conductorId: number;
-  conductor?: Conductor;
-  createdAt: string;
-  updateddAt: string;
   __typename?: string;
 };
 
@@ -196,6 +175,6 @@ export type Usuario = {
 
 // Estado de alerta (mensaje de éxito o error)
 export interface AlertState {
-  success?: boolean | null;
-  message?: string;
+  success: boolean;
+  message: string;
 }

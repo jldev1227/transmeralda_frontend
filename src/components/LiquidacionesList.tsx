@@ -18,7 +18,7 @@ export default function LiquidacionesList() {
   }
 
   return (
-    <div className="space-y-7 mt-10">
+    <div className="space-y-7 mt-5">
       <h2 className="max-sm:text-center font-bold text-2xl text-green-700">
         Historial de Liquidaciones
       </h2>

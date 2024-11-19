@@ -22,15 +22,14 @@ import {
   OBTENER_LIQUIDACIONES,
   CREAR_LIQUIDACION,
   EDITAR_LIQUIDACION,
-  OBTENER_VEHICULOS,
-  OBTENER_CONFIGURACION_LIQUIDACION,
-  ACTUALIZAR_CONFIGURACION,
-  OBTERNER_EMPRESAS,
-  OBTENER_CONDUCTORES,
-  CREAR_ANTICIPOS,
-  ELIMINAR_ANTICIPO,
 } from "../graphql/liquidacion"; // Asegúrate de tener esta mutación bien definida
 import { formatDateValue } from "@/helpers";
+import { OBTENER_CONDUCTORES } from "@/graphql/conductor";
+import { OBTENER_VEHICULOS } from "@/graphql/vehiculo";
+import { OBTENER_CONFIGURACION_LIQUIDACION } from "@/graphql/configuracionLiquidacion";
+import { ACTUALIZAR_CONFIGURACION } from "@/graphql/configuracionLiquidacion"; // Asegúrate de la ruta correcta
+import { OBTERNER_EMPRESAS } from "@/graphql/empresa";
+import { CREAR_ANTICIPOS, ELIMINAR_ANTICIPO } from "@/graphql/anticipo";
 
 type LiquidacionContextType = {
   state: LiquidacionState;
@@ -44,10 +43,7 @@ type LiquidacionContextType = {
     configuracion: ConfiguracionLiquidacion[]
   ) => void;
   agregarAnticipos: (anticipos: Anticipo[]) => void;
-  eliminarAnticipo: (
-    id: Anticipo["id"],
-    liquidacionId: Liquidacion["id"]
-  ) => void;
+  eliminarAnticipo: (id: Anticipo['id'], liquidacionId: Liquidacion['id']) => void;
 };
 
 export const LiquidacionContext = createContext<LiquidacionContextType | null>(
@@ -270,46 +266,40 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
     }
   };
 
-  const agregarAnticipos = useCallback(
-    async (anticipos: Anticipo[]) => {
-      try {
-        const { data, errors } = await crearAnticipo({
-          variables: {
-            anticipos: anticipos.map(({ valor, liquidacionId }) => ({
-              valor,
-              liquidacionId,
-            })),
-          },
+  const agregarAnticipos = useCallback(async (anticipos: Anticipo[]) => {
+    try {
+      const { data, errors } = await crearAnticipo({
+        variables: {
+          anticipos: anticipos.map(({ valor, liquidacionId }) => ({
+            valor,
+            liquidacionId,
+          })),
+        },
+      });
+
+      if (data?.registrarAnticipos) {
+        dispatch({
+          type: "AGREGAR_ANTICIPOS",
+          payload: data?.registrarAnticipos,
         });
-
-        if (data?.registrarAnticipos) {
-          dispatch({
-            type: "AGREGAR_ANTICIPOS",
-            payload: data?.registrarAnticipos,
-          });
-        }
-
-        return { data, errors };
-      } catch (err) {
-        if (err instanceof ApolloError) {
-          handleApolloError(err);
-        } else {
-          console.error("Error desconocido:", err);
-        }
       }
-    },
-    [crearAnticipo]
-  );
 
-  const eliminarAnticipo = async (
-    id: Anticipo["id"],
-    liquidacionId: Liquidacion["id"]
-  ) => {
+      return { data, errors };
+    } catch (err) {
+      if (err instanceof ApolloError) {
+        handleApolloError(err);
+      } else {
+        console.error("Error desconocido:", err);
+      }
+    }
+  }, [crearAnticipo]);
+
+  const eliminarAnticipo = async (id: Anticipo['id'], liquidacionId: Liquidacion['id']) => {
     try {
       const { data } = await eliminarAnticipoMutation({
         variables: { id },
       });
-
+  
       if (data.eliminarAnticipo) {
         dispatch({
           type: "ELIMINAR_ANTICIPO",
@@ -322,6 +312,7 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
       console.error("Error:", error);
     }
   };
+  
 
   const handleApolloError = (error: ApolloError) => {
     if (error.networkError) {
@@ -415,7 +406,7 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
         setLiquidacion,
         handleActualizarConfiguracion,
         agregarAnticipos,
-        eliminarAnticipo,
+        eliminarAnticipo
       }}
     >
       {children}
