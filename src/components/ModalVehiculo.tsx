@@ -13,7 +13,7 @@ import { Tabs, Tab } from "@nextui-org/tabs";
 // import { CustomPagingSlider } from "./CustomPagingSlider";
 import { daysDifference, requiereTecnomecanica } from "./utils";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { Card, CardBody, CardFooter } from "@nextui-org/card";
+import { Card } from "@nextui-org/card";
 import { Image } from "@nextui-org/image";
 import { Button } from "@nextui-org/button";
 import { useState } from "react";
@@ -378,7 +378,7 @@ export default function ModalVehiculo() {
                         requiereTecnomecanica(fechaMatricula)
                           ? "grid-cols-3"
                           : "grid-cols-2"
-                      } max-sm:grid-cols-1 mx-auto gap-5`}
+                      } max-md:grid-cols-1 mx-auto gap-5`}
                     >
                       {(() => {
                         const titles = [
@@ -389,18 +389,23 @@ export default function ModalVehiculo() {
                             : null,
                         ].filter(Boolean); // Filtra valores null o false para tener solo títulos válidos
 
-                        // const titlesHref = [
-                        //   "TARJETA_DE_PROPIEDAD",
-                        //   "SOAT",
-                        //   "TECNOMECANICA",
-                        // ];
+                        const titlesHref = [
+                          "TARJETA_DE_PROPIEDAD",
+                          "SOAT",
+                          "TECNOMECANICA",
+                        ];
 
                         return titles.map((title, index) => (
-                          <Card
-                            className="max-sm:w-2/3 max-sm:mx-auto"
+                          <div
+                            className="max-lg:w-2/3 max-lg:mx-auto shadow-md border-small rounded-lg hover:cursor-pointer"
                             key={index}
+                            onClick={()=>{
+                              window.open(
+                                `${import.meta.env.VITE_AZURE_STORAGE_BLOB_URL}/${placa}/${placa}_${titlesHref[index]}.pdf?${import.meta.env.VITE_AZURE_STORAGE_SAS_TOKEN}`
+                              );
+                            }}
                           >
-                            <CardBody className="items-center gap-3">
+                            <div className="flex flex-col items-center gap-3 p-3">
                               <Image
                                 style={{ objectFit: "contain" }}
                                 src="/assets/pdfIcon.png"
@@ -409,8 +414,8 @@ export default function ModalVehiculo() {
                                 alt="Pdf icon"
                               />
                               <p className="text-sm">{title}</p>
-                            </CardBody>
-                            <CardFooter className="justify-center">
+                            </div>
+                            <div className="flex justify-center">
                               <Button
                                 onPress={() => {
                                   setEditFile({
@@ -418,13 +423,13 @@ export default function ModalVehiculo() {
                                     label: title ?? "",
                                   });
                                 }}
-                                fullWidth
+                                className="w-5/6 mb-2"
                                 color="secondary"
                               >
                                 Actualizar
                               </Button>
-                            </CardFooter>
-                          </Card>
+                            </div>
+                          </div>
                         ));
                       })()}
                     </div>
