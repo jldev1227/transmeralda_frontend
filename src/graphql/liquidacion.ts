@@ -43,6 +43,15 @@ query Liquidaciones {
             value
             vehiculoId
         }
+        mantenimientos {
+            id
+            values {
+                mes
+                quantity
+            }
+            value
+            vehiculoId
+        }
         pernotes {
             id    
             empresa
@@ -90,6 +99,7 @@ export const CREAR_LIQUIDACION = gql`
     $estado: String!
     $vehiculos: [ID!]!
     $bonificaciones: [BonificacionInput!]! 
+    $mantenimientos: [MantenimientoInput!]! 
     $pernotes: [PernoteInput!]!
     $recargos: [RecargoInput!]!
   ) {
@@ -115,6 +125,7 @@ export const CREAR_LIQUIDACION = gql`
       estado: $estado
       vehiculos: $vehiculos
       bonificaciones: $bonificaciones
+      mantenimientos: $mantenimientos
       pernotes: $pernotes
       recargos: $recargos
     ) {
@@ -151,6 +162,15 @@ export const CREAR_LIQUIDACION = gql`
         bonificaciones {
             id
             name
+            values {
+                mes
+                quantity
+            }
+            value
+            vehiculoId
+        }
+        mantenimientos {
+            id
             values {
                 mes
                 quantity
@@ -206,6 +226,7 @@ export const EDITAR_LIQUIDACION = gql`
     $estado: String!
     $vehiculos: [ID!]!
     $bonificaciones: [BonificacionInput!]! 
+    $mantenimientos: [MantenimientoInput!]! 
     $pernotes: [PernoteInput!]!
     $recargos: [RecargoInput!]!
 ) {
@@ -232,6 +253,7 @@ export const EDITAR_LIQUIDACION = gql`
         estado: $estado
         vehiculos: $vehiculos
         bonificaciones: $bonificaciones
+        mantenimientos: $mantenimientos
         pernotes: $pernotes
         recargos: $recargos
     ) {
@@ -275,6 +297,15 @@ export const EDITAR_LIQUIDACION = gql`
             value
             vehiculoId
         }
+        mantenimientos {
+            id
+            values {
+                mes
+                quantity
+            }
+            value
+            vehiculoId
+        }
         pernotes {
             id
             empresa
@@ -306,7 +337,7 @@ export const OBTENER_VEHICULOS = gql`
             placa
         }
     }
-` 
+`
 
 export const OBTERNER_EMPRESAS = gql`
     query ObtenerEmpresas {

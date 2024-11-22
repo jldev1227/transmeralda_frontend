@@ -33,6 +33,7 @@ import {
   Conductor,
   Vehiculo,
   Empresa,
+  Mantenimiento,
 } from "@/types/index";
 import useLiquidacion from "@/hooks/useLiquidacion";
 import { parseDate } from "@internationalized/date";
@@ -127,9 +128,9 @@ export default function Formulario() {
         stateLiquidacion.periodoStartVacaciones &&
           stateLiquidacion.periodoEndVacaciones
           ? {
-              start: parseDate(stateLiquidacion.periodoStartVacaciones),
-              end: parseDate(stateLiquidacion.periodoEndVacaciones),
-            }
+            start: parseDate(stateLiquidacion.periodoStartVacaciones),
+            end: parseDate(stateLiquidacion.periodoEndVacaciones),
+          }
           : null
       );
 
@@ -153,6 +154,11 @@ export default function Formulario() {
               (bono) => bono.vehiculoId === vehiculo.id
             ) || [];
 
+          const mantenimientosDelVehiculo =
+            stateLiquidacion.mantenimientos?.filter(
+              (mantenimiento: Mantenimiento) => mantenimiento.vehiculoId === vehiculo.id
+            ) || [];
+
           const pernotesDelVehiculo =
             stateLiquidacion.pernotes?.filter(
               (pernote) => pernote.vehiculoId === vehiculo.id
@@ -172,49 +178,70 @@ export default function Formulario() {
             bonos:
               bonosDelVehiculo.length > 0
                 ? bonosDelVehiculo.map((bono) => ({
-                    name: bono.name,
-                    values: bono.values?.map((val) => ({
-                      mes: val.mes,
-                      quantity: val.quantity,
-                    })) || [{ mes: "Mes no definido", quantity: 0 }],
-                    value: bono.value,
-                  }))
+                  name: bono.name,
+                  values: bono.values?.map((val) => ({
+                    mes: val.mes,
+                    quantity: val.quantity,
+                  })) || [{ mes: "Mes no definido", quantity: 0 }],
+                  value: bono.value,
+                }))
                 : [
-                    {
-                      name: "Bono de alimentación",
-                      values: mesesRange.map((mes) => ({
-                        mes,
-                        quantity: 0,
-                      })),
-                      value:
-                        state?.configuracion?.find(
-                          (config) => config.nombre === "Bono de alimentación"
-                        )?.valor || 0,
-                    },
-                    {
-                      name: "Bono día trabajado",
-                      values: mesesRange.map((mes) => ({
-                        mes,
-                        quantity: 0,
-                      })),
-                      value:
-                        state?.configuracion?.find(
-                          (config) => config.nombre === "Bono día trabajado"
-                        )?.valor || 0,
-                    },
-                    {
-                      name: "Bono día trabajado doble",
-                      values: mesesRange.map((mes) => ({
-                        mes,
-                        quantity: 0,
-                      })),
-                      value:
-                        state?.configuracion?.find(
-                          (config) =>
-                            config.nombre === "Bono día trabajado doble"
-                        )?.valor || 0,
-                    },
-                  ],
+                  {
+                    name: "Bono de alimentación",
+                    values: mesesRange.map((mes) => ({
+                      mes,
+                      quantity: 0,
+                    })),
+                    value:
+                      state?.configuracion?.find(
+                        (config) => config.nombre === "Bono de alimentación"
+                      )?.valor || 0,
+                  },
+                  {
+                    name: "Bono día trabajado",
+                    values: mesesRange.map((mes) => ({
+                      mes,
+                      quantity: 0,
+                    })),
+                    value:
+                      state?.configuracion?.find(
+                        (config) => config.nombre === "Bono día trabajado"
+                      )?.valor || 0,
+                  },
+                  {
+                    name: "Bono día trabajado doble",
+                    values: mesesRange.map((mes) => ({
+                      mes,
+                      quantity: 0,
+                    })),
+                    value:
+                      state?.configuracion?.find(
+                        (config) =>
+                          config.nombre === "Bono día trabajado doble"
+                      )?.valor || 0,
+                  },
+                ],
+            mantenimientos: mantenimientosDelVehiculo.length > 0
+              ? mantenimientosDelVehiculo.map((mantenimiento: Mantenimiento) => ({
+                value: state?.configuracion?.find(
+                  (config) =>
+                    config.nombre === "Mantenimiento"
+                )?.valor || 0,
+                values: mantenimiento.values?.map((val) => ({
+                  mes: val.mes,
+                  quantity: val.quantity,
+                })) || [{ mes: "Mes no definido", quantity: 0 }],
+              })) : [
+                {
+                  values: mesesRange.map((mes) => ({
+                    mes,
+                    quantity: 0, // Valores predeterminados si no hay values
+                  })),
+                  value: state?.configuracion?.find(
+                    (config) => config.nombre === "Mantenimiento"
+                  )?.valor || 0
+                }
+              ],
             pernotes: pernotesDelVehiculo.map((pernote) => ({
               ...pernote,
               fechas: pernote.fechas || [],
@@ -242,6 +269,12 @@ export default function Formulario() {
       setDiasLaboradosVillanueva(stateLiquidacion.diasLaboradosVillanueva);
     }
   }, [stateLiquidacion]);
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }, [state.liquidacion]);
 
   // Manejador de fechas
   const handleDateChange = (newDate: RangeValue<DateValue> | null) => {
@@ -300,6 +333,19 @@ export default function Formulario() {
                   return bonoExistente || { mes, quantity: 0 }; // Mantener el quantity si el mes ya existe
                 }),
               })),
+              mantenimientos: detalleExistente.mantenimientos.map((mantenimiento) => ({
+                ...mantenimiento,
+                value:
+                  state?.configuracion?.find(
+                    (config) => config.nombre === "Mantenimiento"
+                  )?.valor || 0,
+                values: mesesRange.map((mes) => {
+                  const mantenimientoExistente = mantenimiento.values.find(
+                    (val) => val.mes === mes
+                  );
+                  return mantenimientoExistente || { mes, quantity: 0 }; // Mantener el quantity si el mes ya existe
+                }),
+              })),
               pernotes: detalleExistente.pernotes.map((pernote) => ({
                 ...pernote,
                 valor:
@@ -349,6 +395,17 @@ export default function Formulario() {
                   )?.valor || 0,
               },
             ],
+            mantenimientos: [
+              {
+                value: state?.configuracion?.find(
+                  (config) => config.nombre === "Mantenimiento"
+                )?.valor || 0,
+                values: mesesRange.map((mes) => ({
+                  mes: mes,
+                  quantity: 0,
+                })),
+                vehiculoId: vehiculo.value
+              }],
             pernotes: [],
             recargos: [],
           };
@@ -394,26 +451,50 @@ export default function Formulario() {
         prevDetalles.map((detalle) =>
           detalle.vehiculo.value === vehiculoId
             ? {
-                ...detalle,
-                bonos: detalle.bonos.map((bono) =>
-                  bono.name === name
-                    ? {
-                        ...bono,
-                        values: bono.values.some((val) => val.mes === mes)
-                          ? bono.values.map((val) =>
-                              val.mes === mes ? { ...val, quantity } : val
-                            )
-                          : [...bono.values, { mes, quantity }], // Agregar nuevo mes si no existe
-                      }
-                    : bono
-                ),
-              }
+              ...detalle,
+              bonos: detalle.bonos.map((bono) =>
+                bono.name === name
+                  ? {
+                    ...bono,
+                    values: bono.values.some((val) => val.mes === mes)
+                      ? bono.values.map((val) =>
+                        val.mes === mes ? { ...val, quantity } : val
+                      )
+                      : [...bono.values, { mes, quantity }], // Agregar nuevo mes si no existe
+                  }
+                  : bono
+              ),
+            }
             : detalle
         )
       );
     },
     []
   );
+
+  const handleMantenimientoChange = useCallback(
+    (vehiculoId: string, mes: string, quantity: number) => {
+      setDetallesVehiculos((prevDetalles) =>
+        prevDetalles.map((detalle) =>
+          detalle.vehiculo.value === vehiculoId
+            ? {
+              ...detalle,
+              mantenimientos: detalle.mantenimientos.map((mantenimiento) => ({
+                ...mantenimiento,
+                values: mantenimiento.values.some((val) => val.mes === mes)
+                  ? mantenimiento.values.map((val) =>
+                    val.mes === mes ? { ...val, quantity } : val
+                  )
+                  : [...mantenimiento.values, { mes, quantity }], // Agregar nuevo mes si no existe
+              })),
+            }
+            : detalle
+        )
+      );
+    },
+    []
+  );
+
 
   const handlePernoteChange = useCallback(
     (
@@ -426,11 +507,11 @@ export default function Formulario() {
         prevDetalles.map((detalle) =>
           detalle.vehiculo.value === vehiculoId
             ? {
-                ...detalle,
-                pernotes: detalle.pernotes.map((pernote, i) =>
-                  i === index ? { ...pernote, [field]: value } : pernote
-                ),
-              }
+              ...detalle,
+              pernotes: detalle.pernotes.map((pernote, i) =>
+                i === index ? { ...pernote, [field]: value } : pernote
+              ),
+            }
             : detalle
         )
       );
@@ -450,19 +531,19 @@ export default function Formulario() {
         prevDetalles.map((detalle) =>
           detalle.vehiculo.value === vehiculoId
             ? {
-                ...detalle,
-                recargos: detalle.recargos.map((recargo, i) =>
-                  i === index
-                    ? {
-                        ...recargo,
-                        [field]: value, // Actualiza el campo especificado
-                        ...(pagCliente !== undefined && {
-                          pagCliente: pagCliente,
-                        }), // Inserta `pagCliente` si se pasó como argumento
-                      }
-                    : recargo
-                ),
-              }
+              ...detalle,
+              recargos: detalle.recargos.map((recargo, i) =>
+                i === index
+                  ? {
+                    ...recargo,
+                    [field]: value, // Actualiza el campo especificado
+                    ...(pagCliente !== undefined && {
+                      pagCliente: pagCliente,
+                    }), // Inserta `pagCliente` si se pasó como argumento
+                  }
+                  : recargo
+              ),
+            }
             : detalle
         )
       );
@@ -476,19 +557,19 @@ export default function Formulario() {
         prevDetalles.map((detalle: any) =>
           detalle.vehiculo.value === vehiculoId
             ? {
-                ...detalle,
-                pernotes: [
-                  ...detalle.pernotes,
-                  {
-                    empresa: "",
-                    cantidad: 0,
-                    fechas: [],
-                    valor: state?.configuracion?.find(
-                      (config) => config.nombre === "Pernote"
-                    )?.valor,
-                  },
-                ],
-              }
+              ...detalle,
+              pernotes: [
+                ...detalle.pernotes,
+                {
+                  empresa: "",
+                  cantidad: 0,
+                  fechas: [],
+                  valor: state?.configuracion?.find(
+                    (config) => config.nombre === "Pernote"
+                  )?.valor,
+                },
+              ],
+            }
             : detalle
         )
       );
@@ -501,12 +582,12 @@ export default function Formulario() {
       prevDetalles.map((detalle: any) =>
         detalle.vehiculo.value === vehiculoId
           ? {
-              ...detalle,
-              recargos: [
-                ...detalle.recargos,
-                { empresa: "", valor: 0, pagCliente: null, mes: "" },
-              ],
-            }
+            ...detalle,
+            recargos: [
+              ...detalle.recargos,
+              { empresa: "", valor: 0, pagCliente: null, mes: "" },
+            ],
+          }
           : detalle
       )
     );
@@ -518,9 +599,9 @@ export default function Formulario() {
         prevDetalles.map((detalle) =>
           detalle.vehiculo.value === vehiculoId
             ? {
-                ...detalle,
-                pernotes: detalle.pernotes.filter((_, i) => i !== index),
-              }
+              ...detalle,
+              pernotes: detalle.pernotes.filter((_, i) => i !== index),
+            }
             : detalle
         )
       );
@@ -534,9 +615,9 @@ export default function Formulario() {
         prevDetalles.map((detalle) =>
           detalle.vehiculo.value === vehiculoId
             ? {
-                ...detalle,
-                recargos: detalle.recargos.filter((_, i) => i !== index),
-              }
+              ...detalle,
+              recargos: detalle.recargos.filter((_, i) => i !== index),
+            }
             : detalle
         )
       );
@@ -717,7 +798,7 @@ export default function Formulario() {
         salud += saludVacaciones;
         pension += pensionVacaciones;
       }
-    }else{
+    } else {
       totalVacaciones = 0
       setPeriodoVacaciones(null)
     }
@@ -785,6 +866,41 @@ export default function Formulario() {
           })),
         }))
       ),
+      mantenimientos: detallesVehiculos.flatMap((detalle) => {
+        if (!detalle.mantenimientos || detalle.mantenimientos.length === 0) {
+          // Si no hay mantenimientos, retorna un array con un mantenimiento por defecto
+          return [
+            {
+              vehiculoId: detalle.vehiculo.value,
+              values: mesesRange.map((mes) => ({
+                mes,
+                quantity: 0,
+              })),
+              value: state?.configuracion?.find(
+                (config) => config.nombre === "Mantenimiento"
+              )?.valor || 0,
+            },
+          ];
+        }
+
+        // Si hay mantenimientos, procesarlos normalmente
+        return detalle.mantenimientos.map((mantenimiento) => ({
+          ...mantenimiento,
+          vehiculoId: detalle.vehiculo.value,
+          values: mantenimiento.values && mantenimiento.values.length > 0
+            ? mantenimiento.values.map((value) => ({
+              ...value,
+              quantity: value.quantity || 0, // Asegura que quantity esté presente
+            }))
+            : mesesRange.map((mes) => ({
+              mes,
+              quantity: 0, // Valores predeterminados si no hay values
+            })),
+          value: state?.configuracion?.find(
+            (config) => config.nombre === "Mantenimiento"
+          )?.valor || 0,
+        }));
+      }),
       pernotes: detallesVehiculos.flatMap((detalle) =>
         detalle.pernotes.map((pernote) => ({
           ...pernote,
@@ -884,6 +1000,7 @@ export default function Formulario() {
           estado: liquidacion.estado,
           vehiculos: liquidacion.vehiculos, // Mapeamos los valores correctos de los vehículos
           bonificaciones: bonificacionesFiltradas, // Enviamos las bonificaciones filtradas
+          mantenimientos: liquidacion.mantenimientos,
           pernotes: pernotesFiltrados, // Enviamos los pernotes filtrados
           recargos: recargosFiltrados, // Enviamos los recargos filtrados
         };
@@ -1050,6 +1167,43 @@ export default function Formulario() {
                           </Card>
                         ))}
                         <Divider />
+                        <Card>
+                          <CardBody className="max-md:gap-3 md:flex-row gap-3 items-center justify-between">
+                            <h3 className="font-bold text-xl mb-2">Mantenimientos</h3>
+                            <div className="flex gap-5">
+                              {detalleVehiculo.mantenimientos.map((mantenimiento, indexMantenimiento) => (
+                                <div className="flex gap-5" key={indexMantenimiento}>
+                                  {mesesRange?.map((mes, indexMes) => {
+                                    const mantenimientoMes = mantenimiento.values.find(
+                                      (val) => val.mes === mes
+                                    );
+
+                                    return (
+                                      <Input
+                                        key={`${indexMantenimiento}-${indexMes}`} // Generar una clave única combinando índices
+                                        type="number"
+                                        label={mes}
+                                        className="md:w-24"
+                                        placeholder={`Ingresa la cantidad de mantenimientos`}
+                                        value={
+                                          mantenimientoMes
+                                            ? mantenimientoMes.quantity.toString()
+                                            : "0"
+                                        } onChange={(e) => handleMantenimientoChange(
+                                          detalleVehiculo.vehiculo.value,
+                                          mes,
+                                          +e.target.value
+                                        )}
+                                      />
+                                    );
+                                  })}
+                                </div>
+                              ))}
+
+                            </div>
+                          </CardBody>
+                        </Card>
+                        <Divider />
                         <h3 className="font-bold text-xl mb-2">
                           Pernotes{" "}
                           <span className="font-semibold text-foreground-400">
@@ -1062,6 +1216,7 @@ export default function Formulario() {
                             )
                           </span>
                         </h3>
+                        <Divider />
                         {detalleVehiculo.pernotes?.map(
                           (pernote, pernoteIndex) => (
                             <div
@@ -1416,7 +1571,7 @@ export default function Formulario() {
                                       <Input
                                         isDisabled={
                                           state.allowEdit ||
-                                          state.allowEdit == null
+                                            state.allowEdit == null
                                             ? false
                                             : true
                                         }
@@ -1844,6 +1999,87 @@ const CardLiquidacion = ({
                           <p className="font-bold">Total</p>
                           <p className="text-green-700 font-bold">
                             {formatToCOP(total)}
+                          </p>
+                        </CardFooter>
+                      </Card>
+                    );
+                  })}
+                </div>
+              );
+            }
+          }}
+        />
+
+        <ListSection
+          title="Mantenimientos"
+          items={detalleVehiculo?.mantenimientos}
+          formatFn={() => {
+            const isMobile = useMediaQuery("(max-width: 650px)"); // Tailwind `sm` breakpoint
+
+            if (!isMobile) {
+              return (
+                <table className="table-auto w-full text-sm mb-5">
+                  <thead className="bg-default-500 text-white">
+                    <tr>
+                      {detalleVehiculo.mantenimientos[0]?.values.map((val, index) => (
+                        <th key={index} className="px-4 py-2 text-center">
+                          {val.mes}
+                        </th>
+                      ))}
+                      <th className="px-4 py-2 text-center">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detalleVehiculo.mantenimientos.map((mantenimiento, index) => {
+                      const total = mantenimiento.values.reduce(
+                        (sum, val) => sum + val.quantity,
+                        0
+                      );
+                      return (
+                        <tr key={index}>
+                          {mantenimiento.values.map((val, index) => (
+                            <td
+                              key={index}
+                              className="border px-4 py-2 text-center"
+                            >
+                              {val.quantity}
+                            </td>
+                          ))}
+                          <td className="border px-4 py-2 text-center text-green-500">
+                            {total}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              );
+            } else {
+              return (
+                <div className="space-y-5">
+                  {detalleVehiculo?.mantenimientos.map((mantenimiento, index) => {
+                    const total = mantenimiento.values.reduce(
+                      (sum, val) => sum + val.quantity,
+                      0
+                    );
+                    return (
+                      <Card key={index}>
+                        <CardBody className="">
+                          {mantenimiento.values.map((val, idx) => (
+                            <div
+                              key={idx}
+                              className="flex justify-between items-center"
+                            >
+                              <p>{val.mes}</p>
+                              <p>{val.quantity}</p>
+                            </div>
+                          ))}
+                        </CardBody>
+                        <Divider />
+                        <CardFooter className="flex justify-between">
+                          <p className="font-bold">Total</p>
+                          <p className="text-green-700 font-bold">
+                            {total}
                           </p>
                         </CardFooter>
                       </Card>

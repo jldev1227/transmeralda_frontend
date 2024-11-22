@@ -22,6 +22,14 @@ export type Bono = {
   __typename?: string;
 }
 
+export type Mantenimiento = {
+  id?: string;
+  values: { mes: string; quantity: number }[];
+  value: number;
+  vehiculoId?: string; // Hacer vehiculoId opcional
+  __typename?: string;
+}
+
 export type BonificacionesAcc = {
   [key: string]: {
     name: string;
@@ -124,6 +132,7 @@ export type DetalleVehiculo = {
   bonos: Bono[];
   pernotes: Pernote[];
   recargos: Recargo[];
+  mantenimientos: Mantenimiento[]
 };
 
 type Estado = "Pendiente" | "Liquidado"; // Los posibles valores de `estado`
@@ -146,6 +155,7 @@ type BaseLiquidacion = {
   salud: number;
   pension: number;
   bonificaciones?: Bono[];              // Bonificaciones opcionales
+  mantenimientos?: Mantenimiento[];              // Bonificaciones opcionales
   pernotes?: Pernote[];                 // Pernotes opcionales
   recargos?: Recargo[];                 // Recargos opcionales
   anticipos?: Anticipo[];                 // Recargos opcionales
