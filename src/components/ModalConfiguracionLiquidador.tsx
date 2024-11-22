@@ -10,6 +10,7 @@ import { Input } from "@nextui-org/input";
 import { Button } from "@nextui-org/button";
 import { ChangeEvent, useEffect, useState } from "react";
 import { ConfiguracionLiquidacion } from "@/types";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 export default function ModalConfiguracionLiquidador() {
   const { state, dispatch, handleActualizarConfiguracion } = useLiquidacion();
@@ -54,9 +55,15 @@ export default function ModalConfiguracionLiquidador() {
     }
   };
 
+  const isMobile = useMediaQuery("(max-width: 560px)"); // Tailwind `sm` breakpoint
+
   return (
     <>
-      <Modal placement="center" size="xs" isOpen={state.modalConfiguracion} onOpenChange={handleModal}>
+      <Modal 
+        size={isMobile ? "full" : "sm"}
+        isOpen={state.modalConfiguracion} 
+        onOpenChange={handleModal}
+      >
         <ModalContent>
           {() => (
             <>
