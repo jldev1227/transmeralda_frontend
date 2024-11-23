@@ -86,7 +86,7 @@ export default function Formulario() {
 
   const vehiculosOptions = useMemo(
     () =>
-      state.vehiculos.map((vehiculo) => ({
+      state.vehiculos.sort((a, b) => a.placa.localeCompare(b.placa)).map((vehiculo) => ({
         value: vehiculo.id,
         label: vehiculo.placa,
       })),
@@ -443,6 +443,54 @@ export default function Formulario() {
       }
     },
     [vehiculosSelected]
+  );
+
+  const handleOnchangeVehiculoSelect = useCallback(
+    (id: number | string, selected: SingleValue<VehiculoOption>) => {
+      if (!selected) return; // Asegurarse de que `selected` tenga un valor válido
+
+      const selectedVehiculo = {
+        value: selected.value,
+        label: selected.label,
+      };
+
+      // Validar si el vehículo ya existe en `vehiculosSelected`
+      const vehiculoDuplicado = vehiculosSelected.find(
+        (vehiculo) =>
+          vehiculo.value === selectedVehiculo.value &&
+          vehiculo.label === selectedVehiculo.label
+      );
+
+      if (vehiculoDuplicado) {
+        alert('El vehículo ya está seleccionado');
+        return vehiculoDuplicado;
+      }
+
+      // Actualizar el array `vehiculosSelected` si no es un duplicado
+      const vehiculosActualizado = vehiculosSelected.map((vehiculo, index) => {
+        if (index === id) {
+          return selectedVehiculo;
+        }
+        return vehiculo;
+      });
+
+      setVehiculosSelected(vehiculosActualizado);
+
+
+      // Actualizar `detallesVehiculos` solo para el vehículo filtrado
+      const detallesActualizados = detallesVehiculos.map((detalle, index) => {
+        if (index === id) {
+          return {
+            ...detalle,
+            vehiculo: selectedVehiculo, // Mantiene los detalles actuales y actualiza el vehículo
+          };
+        }
+        return detalle; // Mantiene los demás detalles sin cambios
+      });
+
+      setDetallesVehiculos(detallesActualizados); // Asume que tienes un setDetallesVehiculos
+    },
+    [vehiculosSelected, detallesVehiculos, setVehiculosSelected]
   );
 
   const handleBonoChange = useCallback(
@@ -1103,15 +1151,25 @@ export default function Formulario() {
                 {conductorSelected &&
                   vehiculosSelected &&
                   dateSelected &&
-                  detallesVehiculos?.map((detalleVehiculo) => (
+                  detallesVehiculos?.map((detalleVehiculo, index) => (
                     <Card key={detalleVehiculo.vehiculo.value}>
-                      <CardHeader>
+                      <CardHeader className="gap-3">
                         <p className="text-xl font-bold">
-                          Vehículo:{" "}
-                          <b className="text-green-700">
-                            {detalleVehiculo.vehiculo.label}
-                          </b>
+                          Vehículo:
                         </p>
+                        <SelectReact
+                          placeholder="Selecciona una placa"
+                          options={vehiculosOptions.filter(vehiculo => vehiculo.value !== detalleVehiculo.vehiculo.value)}
+                          value={{
+                            value: detalleVehiculo.vehiculo.value,
+                            label: detalleVehiculo.vehiculo.label,
+                          }}
+                          onChange={(selectedOptions) =>
+                            handleOnchangeVehiculoSelect(index, selectedOptions)
+                          }
+                          isSearchable
+                          className="col-span-4 sm:col-span-3"
+                        />
                       </CardHeader>
                       <Divider />
                       <CardBody className="space-y-5">
@@ -1133,7 +1191,7 @@ export default function Formulario() {
                                   )
                                 </span>
                               </p>
-                              <div className="flex gap-5 max-md:w-full">
+                              <div className="flex flex-col md:flex-row gap-5 max-md:w-full">
                                 {mesesRange?.map((mes) => {
                                   const bonoMes = bono.values.find(
                                     (val) => val.mes === mes
@@ -1170,9 +1228,9 @@ export default function Formulario() {
                         <Card>
                           <CardBody className="max-md:gap-3 md:flex-row gap-3 items-center justify-between">
                             <h3 className="font-bold text-xl mb-2">Mantenimientos</h3>
-                            <div className="flex gap-5">
+                            <div className="flex gap-5 max-md:w-full">
                               {detalleVehiculo.mantenimientos.map((mantenimiento, indexMantenimiento) => (
-                                <div className="flex gap-5" key={indexMantenimiento}>
+                                <div className="flex flex-col md:flex-row gap-5 max-md:w-full" key={indexMantenimiento}>
                                   {mesesRange?.map((mes, indexMes) => {
                                     const mantenimientoMes = mantenimiento.values.find(
                                       (val) => val.mes === mes
@@ -1241,14 +1299,14 @@ export default function Formulario() {
                                 placeholder="Selecciona una empresa"
                                 isSearchable
                                 styles={selectStyles}
-                                className="col-span-3"
+                                className="col-span-4 sm:col-span-3"
                               />
 
                               <Input
                                 type="number"
                                 label="Cantidad"
                                 placeholder="0"
-                                className="col-span-2"
+                                className="sm:col-span-2"
                                 value={pernote.cantidad.toString()}
                                 onChange={(e) => {
                                   const newCantidad = +e.target.value;
