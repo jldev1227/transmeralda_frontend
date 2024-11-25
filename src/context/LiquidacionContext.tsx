@@ -134,35 +134,56 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
     try {
       let result: any;
       if (liquidacion?.id) {
-        // Si hay un ID, entonces actualiza la liquidación
+        // Si hay un ID, actualiza la liquidación
         result = await actualizarLiquidacion(liquidacion);
       } else {
-        // Si no hay un ID, entonces agrega una nueva liquidación
+        // Si no hay un ID, agrega una nueva liquidación
         result = await agregarLiquidacion(liquidacion);
       }
-
+  
       // Revisa si hay errores en la respuesta de GraphQL
       if (result?.errors && result.errors.length > 0) {
-        result.errors.forEach((error: ApolloError) => {
+        result.errors.forEach((error: any) => {
           dispatch({
             type: "SET_ERROR",
             payload: {
-              error: true, // true si fue exitoso, false si fue un error
-              mensaje: error.message, // Mensaje a mostrar en la alerta
+              mensaje: error.message || "Error al enviar la liquidación. Por favor, intente de nuevo.",
             },
           });
         });
         throw new Error("Errores en la respuesta de GraphQL.");
       }
+  
+      dispatch({
+        type: "SET_SUCCESS",
+        payload: {
+          mensaje: liquidacion.id
+            ? "Liquidación actualizada con éxito."
+            : "Liquidación registrada con éxito.",
+        },
+      });
+  
     } catch (error) {
       console.error("Error en submitLiquidacion:", error);
-      throw new Error("Ocurrió un error al intentar registrar la liquidación.");
+      dispatch({
+        type: "SET_ERROR",
+        payload: {
+          mensaje: "Ocurrió un error al intentar enviar la liquidación.",
+        },
+      });
+      throw error;
     }
   };
-
-  // Función para agregar una liquidación, optimizado con useCallback.
+  
   const agregarLiquidacion = useCallback(
     async (liquidacion: LiquidacionInput) => {
+      dispatch({
+        type: "SET_LOADING",
+        payload: {
+          loading: true,
+          loadingText: "Registrando liquidación...",
+        },
+      });
       try {
         const { data, errors } = await crearLiquidacion({
           variables: {
@@ -173,28 +194,66 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
             periodoEndVacaciones: formatDateValue(liquidacion.periodoEndVacaciones),
           },
         });
-
+  
         if (data?.crearLiquidacion) {
           dispatch({
             type: "AGREGAR_LIQUIDACION",
             payload: data.crearLiquidacion,
           });
+          dispatch({
+            type: "SET_SUCCESS",
+            payload: {
+              mensaje: "Liquidación registrada con éxito.",
+            },
+          });
         }
-
-        return { data, errors }; // Asegúrate de retornar los datos y errores
+  
+        if (errors?.length) {
+          errors.forEach((error: any) => {
+            dispatch({
+              type: "SET_ERROR",
+              payload: {
+                mensaje: error.message || "Error al registrar la liquidación.",
+              },
+            });
+          });
+          throw new Error("Errores en la respuesta de GraphQL.");
+        }
+  
+        return { data, errors };
       } catch (err) {
-        if (err instanceof ApolloError) {
-          handleApolloError(err);
-        } else {
-          console.error("Error desconocido:", err);
-        }
+        const mensajeError =
+          err instanceof ApolloError
+            ? handleApolloError(err)
+            : "Error desconocido al registrar la liquidación.";
+        dispatch({
+          type: "SET_ERROR",
+          payload: { mensaje: mensajeError },
+        });
+        console.error("Error desconocido:", err);
+        throw err;
+      } finally {
+        dispatch({
+          type: "SET_LOADING",
+          payload: {
+            loading: false,
+            loadingText: "",
+          },
+        });
       }
     },
     [crearLiquidacion, dispatch]
   );
-
+  
   const actualizarLiquidacion = useCallback(
     async (liquidacion: LiquidacionInput) => {
+      dispatch({
+        type: "SET_LOADING",
+        payload: {
+          loading: true,
+          loadingText: "Actualizando liquidación...",
+        },
+      });
       try {
         const { data, errors } = await editarLiquidacion({
           variables: {
@@ -205,26 +264,57 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
             periodoEndVacaciones: formatDateValue(liquidacion.periodoEndVacaciones),
           },
         });
-
+  
         if (data?.editarLiquidacion) {
           dispatch({
             type: "EDITAR_LIQUIDACION",
             payload: data.editarLiquidacion,
           });
+          dispatch({
+            type: "SET_SUCCESS",
+            payload: {
+              mensaje: "Liquidación actualizada con éxito.",
+            },
+          });
         }
-
-        return { data, errors }; // Asegúrate de retornar los datos y errores
+  
+        if (errors?.length) {
+          errors.forEach((error: any) => {
+            dispatch({
+              type: "SET_ERROR",
+              payload: {
+                mensaje: error.message || "Error al actualizar la liquidación.",
+              },
+            });
+          });
+          throw new Error("Errores en la respuesta de GraphQL.");
+        }
+  
+        return { data, errors };
       } catch (err) {
-        if (err instanceof ApolloError) {
-          handleApolloError(err);
-        } else {
-          console.error("Error desconocido:", err);
-        }
+        const mensajeError =
+          err instanceof ApolloError
+            ? handleApolloError(err)
+            : "Error desconocido al actualizar la liquidación.";
+        dispatch({
+          type: "SET_ERROR",
+          payload: { mensaje: mensajeError },
+        });
+        console.error("Error desconocido:", err);
+        throw err;
+      } finally {
+        dispatch({
+          type: "SET_LOADING",
+          payload: {
+            loading: false,
+            loadingText: "",
+          },
+        });
       }
     },
     [editarLiquidacion, dispatch]
   );
-
+  
   const obtenerConfiguracion = useCallback(() => {
     if (!loadingConfiguracion && configuracionData.configuracionesLiquidador) {
       dispatch({
@@ -237,8 +327,21 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
   const handleActualizarConfiguracion = async (
     configuraciones: ConfiguracionLiquidacion[]
   ) => {
-    let errorCounter = 0; // Contador de errores
 
+    dispatch({
+      type: "SET_MODAL_CONFIGURACION"
+    });
+    dispatch({
+      type: "SET_LOADING",
+      payload: {
+        loading: true,
+        loadingText: "Actualizando configuraciones...",
+      },
+    });
+    
+  
+    let errorCounter = 0; // Contador de errores
+  
     for (const config of configuraciones) {
       try {
         await actualizarConfiguracion({
@@ -256,18 +359,57 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
           error
         );
         errorCounter++; // Incrementa el contador de errores si ocurre alguno
+  
+        // Dispatch individual de errores para cada configuración fallida
+        dispatch({
+          type: "SET_ERROR",
+          payload: {
+            mensaje: `Error al actualizar la configuración ${config.nombre}`,
+            tipo: "error",
+          },
+        });
       }
     }
-
-    // Si no hubo errores, ejecuta el dispatch
+  
+    // Despacho global después de intentar actualizar todas las configuraciones
     if (errorCounter === 0) {
+      // Si no hubo errores
       dispatch({
         type: "UPDATE_CONFIGURACION",
         payload: configuraciones, // Pasa las configuraciones actualizadas como payload
       });
+      
+      // Si no hubo errores
+      dispatch({
+        type: "UPDATE_CONFIGURACION",
+        payload: configuraciones, // Pasa las configuraciones actualizadas como payload
+      });
+  
+      dispatch({
+        type: "SET_SUCCESS",
+        payload: {
+          mensaje: "Configuraciones actualizadas con éxito.",
+        },
+      });
     } else {
-      console.error("Algunas configuraciones no se pudieron actualizar.");
+      // Si hubo errores
+      dispatch({
+        type: "SET_ERROR",
+        payload: {
+          mensaje: `Algunas configuraciones no se pudieron actualizar (${errorCounter}/${configuraciones.length}).`,
+          tipo: "error",
+        },
+      });
     }
+  
+    // Finalizar loading
+    dispatch({
+      type: "SET_LOADING",
+      payload: {
+        loading: false,
+        loadingText: "",
+      },
+    });
   };
 
   const agregarAnticipos = useCallback(
@@ -323,17 +465,23 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
     }
   };
 
-  const handleApolloError = (error: ApolloError) => {
-    if (error.networkError) {
-      console.error("Error de red:", error.networkError);
-    } else if (error.graphQLErrors) {
-      error.graphQLErrors.forEach((err) => {
-        console.error("Error de GraphQL:", err.message);
-      });
-    } else {
-      console.error("Error:", error.message || error);
-    }
-  };
+  
+const handleApolloError = (error: ApolloError): string => {
+  if (error.networkError) {
+    console.error("Error de red:", error.networkError);
+    return "Error de red al realizar la solicitud.";
+  }
+
+  if (error.graphQLErrors?.length) {
+    error.graphQLErrors.forEach((err) => {
+      console.error("Error de GraphQL:", err.message);
+    });
+    return "Error en la consulta de GraphQL.";
+  }
+
+  console.error("Error inesperado:", error.message || error);
+  return "Ocurrió un error inesperado.";
+};
 
   const setLiquidacion = async (liquidacion: Liquidacion): Promise<void> => {
     dispatch({
