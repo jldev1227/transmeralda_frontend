@@ -43,15 +43,23 @@ export default function VehiculosList() {
       }
 
       // Filtrar por estados seleccionados
-      if (selectedStates.includes("camioneta")) {
+      if (selectedStates.includes("camioneta") && selectedStates.includes("bus")) {
+        // Si ambas se cumplen, traemos todos los vehículos
+        return true;
+      } else if (selectedStates.includes("camioneta")) {
+        // Si contiene 'camioneta', traer los que sean distintos a 'CAMIONETA'
         if (vehiculo.claseVehiculo !== "CAMIONETA") {
           return false;
         }
-      } else {
+        return true;
+      } else if (selectedStates.includes("bus")) {
+        // Si contiene 'bus', traer los que sean iguales a 'CAMIONETA'
         if (vehiculo.claseVehiculo === "CAMIONETA") {
           return false;
         }
+        return true;
       }
+
 
       if (selectedStates.includes("documentación")) {
         // Si solo "documentación" está seleccionada
