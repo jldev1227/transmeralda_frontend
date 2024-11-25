@@ -11,6 +11,7 @@ import { Button } from "@nextui-org/button";
 import { ChangeEvent, useEffect, useState } from "react";
 import { ConfiguracionLiquidacion } from "@/types";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { formatCurrency } from "@/helpers";
 
 export default function ModalConfiguracionLiquidador() {
   const { state, dispatch, handleActualizarConfiguracion } = useLiquidacion();
@@ -34,13 +35,17 @@ export default function ModalConfiguracionLiquidador() {
     e: ChangeEvent<HTMLInputElement>,
     id: ConfiguracionLiquidacion["id"]
   ) => {
-    const { value } = e.target;
+    const inputVal = e.target.value.replace(
+      /[^\d]/g,
+      ""
+    ); // Quitamos caracteres no numéricos
+    const numericValue = inputVal; // Convertimos el string limpio a número
 
     // Actualizar la configuración en el estado basada en el ID
     setConfiguracion((prevState) =>
       prevState.map((field) =>
         field.id === id
-          ? { ...field, valor: parseFloat(value) || 0} // Actualizamos el valor del campo
+          ? { ...field, valor: parseFloat(numericValue) || 0} // Actualizamos el valor del campo
           : field
       )
     );
@@ -72,12 +77,19 @@ export default function ModalConfiguracionLiquidador() {
               </ModalHeader>
               <ModalBody>
                 {configuracion.map((field) => (
-                  <Input
-                    key={field.id}
-                    label={field.nombre}
-                    value={field.valor.toString()}
-                    onChange={(e) => handleOnChange(e, field.id)}
-                  />
+                 <Input
+                 key={field.id}
+                 label={field.nombre}
+                 startContent={field.nombre === 'Pensión' || field.nombre === 'Salud' ? '%' : '$'}
+                 onChange={(e) => handleOnChange(e, field.id)}
+                 value={
+                   field.valor !== 0 // Comprobar si el valor no es igual a 0
+                     ? (field.nombre === "Pensión" || field.nombre === "Salud") // Condición para 'Pensión' o 'Salud'
+                       ? field.valor.toString() // Formatear el valor si cumple la condición
+                       : formatCurrency(field.valor).split('$')[1] // Convertir a string si no es 'Pensión' ni 'Salud'
+                     : "" // Si el valor es 0, mostrar un string vacío
+                 }
+               />
                 ))}
               </ModalBody>
               <ModalFooter>
