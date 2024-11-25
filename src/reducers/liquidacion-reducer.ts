@@ -2,35 +2,54 @@
 import { Liquidacion, Conductor, Vehiculo, Empresa, ConfiguracionLiquidacion, Anticipo } from '@/types/index';
 
 export type LiquidacionActions =
-  | { type: 'SET_LIQUIDACIONES'; payload: Liquidacion[] }
-  | { type: 'SET_CONDUCTORES'; payload: Conductor[] }
-  | { type: 'SET_VEHICULOS'; payload: Vehiculo[] }
-  | { type: 'SET_EMPRESAS'; payload: Empresa[] }
-  | { type: 'AGREGAR_LIQUIDACION'; payload: Liquidacion }
-  | { type: 'EDITAR_LIQUIDACION'; payload: Liquidacion }
-  | { type: 'SET_LIQUIDACION'; payload: { liquidacion: Liquidacion | null, allowEdit: boolean | null } }
-  | { type: 'SET_CONFIGURACION'; payload: ConfiguracionLiquidacion[] }
-  | { type: 'UPDATE_CONFIGURACION'; payload: ConfiguracionLiquidacion[] }
-  | { type: 'AGREGAR_ANTICIPOS'; payload: Anticipo[] }
-  | { type: 'ELIMINAR_ANTICIPO'; payload: { liquidacionId: Liquidacion['id'], anticipoId: Anticipo['id'] } }
-  | { type: 'SET_MODAL_CONFIGURACION'; }
-  | { type: 'SET_ERROR'; payload: { error: boolean; mensaje: string } }
-  | { type: 'RESET_ALERTA' };
+  | { type: 'SET_LIQUIDACIONES'; payload: Liquidacion[] } // Establece las liquidaciones
+  | { type: 'SET_CONDUCTORES'; payload: Conductor[] } // Establece los conductores
+  | { type: 'SET_VEHICULOS'; payload: Vehiculo[] } // Establece los vehículos
+  | { type: 'SET_EMPRESAS'; payload: Empresa[] } // Establece las empresas
+  | { type: 'AGREGAR_LIQUIDACION'; payload: Liquidacion } // Agrega una nueva liquidación
+  | { type: 'EDITAR_LIQUIDACION'; payload: Liquidacion } // Edita una liquidación existente
+  | {
+    type: 'SET_LIQUIDACION';
+    payload: { liquidacion: Liquidacion | null; allowEdit: boolean | null };
+  } // Establece la liquidación seleccionada y si se permite editar
+  | { type: 'SET_CONFIGURACION'; payload: ConfiguracionLiquidacion[] } // Establece la configuración de liquidaciones
+  | {
+    type: 'UPDATE_CONFIGURACION';
+    payload: ConfiguracionLiquidacion[];
+  } // Actualiza la configuración de liquidaciones
+  | { type: 'AGREGAR_ANTICIPOS'; payload: Anticipo[] } // Agrega anticipos a una liquidación
+  | {
+    type: 'ELIMINAR_ANTICIPO';
+    payload: { liquidacionId: Liquidacion['id']; anticipoId: Anticipo['id'] };
+  } // Elimina un anticipo de una liquidación
+  | { type: 'SET_MODAL_CONFIGURACION'; payload?: boolean } // Alterna o establece el estado del modal de configuración
+  | { type: 'SET_ERROR'; payload: { mensaje: string; tipo?: 'error' | 'warning' | 'info' } } // Establece un mensaje de error
+  | { type: 'SET_SUCCESS'; payload: { mensaje: string; tipo?: 'success' | 'info' } }
+  | { type: 'RESET_ALERTA' } // Resetea la alerta
+  | {
+    type: 'SET_LOADING';
+    payload: {
+      loading: boolean;
+      loadingText: string;
+    };
+  }; // Establece el estado de carga
 
 export type LiquidacionState = {
-  liquidaciones: Liquidacion[]; // Cambiamos a un array de Liquidacion, no null
-  conductores: Conductor[]; // Cambiamos a un array de Liquidacion, no null
-  vehiculos: Vehiculo[]; // Cambiamos a un array de Liquidacion, no null
-  empresas: Empresa[]; // Cambiamos a un array de Liquidacion, no null
-  modalConfiguracion: boolean,
-  liquidacion: Liquidacion | null; // Cambiamos a un array de Liquidacion, no null
-  configuracion: ConfiguracionLiquidacion[] | null; // Cambiamos a un array de Liquidacion, no null
-  allowEdit: boolean | null; // Cambiamos a un array de Liquidacion, no null
+  liquidaciones: Liquidacion[]; // Lista de liquidaciones
+  conductores: Conductor[]; // Lista de conductores
+  vehiculos: Vehiculo[]; // Lista de vehículos
+  empresas: Empresa[]; // Lista de empresas
+  modalConfiguracion: boolean; // Controla si el modal de configuración está abierto
+  liquidacion: Liquidacion | null; // Detalle de la liquidación seleccionada
+  configuracion: ConfiguracionLiquidacion[] | null; // Configuración para liquidaciones
+  allowEdit: boolean | null; // Permitir edición de la liquidación
   alerta: {
-    visible: boolean, // Indica si la alerta está visible
-    success: boolean, // Indica si fue un éxito o un error
-    mensaje: string, // Mensaje que será mostrado
-  },
+    success: boolean; // Indica si la operación fue exitosa
+    mensaje: string; // Mensaje a mostrar en la alerta
+    tipo?: "error" | "warning" | "info" | "success"; // (Opcional) Tipo de alerta para más contexto
+  };
+  loading: boolean; // Estado de carga global
+  loadingText: string; // Texto asociado al estado de carga
 };
 
 // Estado inicial de liquidaciones
@@ -44,10 +63,12 @@ export const initialState: LiquidacionState = {
   modalConfiguracion: false,
   allowEdit: null,
   alerta: {
-    visible: false, // Indica si la alerta está visible
-    success: false, // Indica si fue un éxito o un error
-    mensaje: "", // Mensaje que será mostrado
+    success: false,
+    mensaje: "",
+    tipo: undefined, // Por defecto no tiene tipo
   },
+  loading: false,
+  loadingText: "",
 };
 
 // Reducer de liquidaciones
@@ -81,65 +102,50 @@ export function LiquidacionReducer(
         ...state,
         liquidaciones: [...state.liquidaciones, action.payload],
         alerta: {
-          visible: true,
           success: true,
-          mensaje: "Liquidación agregada con éxito", // Mensaje de éxito
+          mensaje: "Liquidación agregada con éxito",
+          tipo: "success",
         },
       };
     case 'EDITAR_LIQUIDACION':
       return {
         ...state,
-        liquidacion: null,
-        liquidaciones: state.liquidaciones.map((liquidacion) =>
-          liquidacion.id === action.payload.id ? action.payload : liquidacion
+        liquidaciones: state.liquidaciones.map((liq) =>
+          liq.id === action.payload.id ? action.payload : liq
         ),
         alerta: {
-          visible: true,
           success: true,
-          mensaje: "Liquidación actualizada con éxito", // Mensaje de éxito
+          mensaje: "Liquidación actualizada con éxito",
+          tipo: "success",
         },
+        liquidacion: null
       };
-    case "SET_ERROR":
+    case 'SET_LIQUIDACION':
       return {
         ...state,
-        alerta: {
-          visible: true,
-          success: false,
-          mensaje: action.payload.mensaje,
-        },
+        liquidacion: action.payload.liquidacion,
+        allowEdit: action.payload.allowEdit,
       };
-    case "RESET_ALERTA": // Acción para ocultar la alerta
-      return {
-        ...state,
-        alerta: {
-          visible: false,
-          success: false,
-          mensaje: "",
-        },
-      };
-      case 'SET_LIQUIDACION':
-        // Limpia el estado de liquidacion
-        state.liquidacion = null;
-        return {
-          ...state,
-          liquidacion: action.payload.liquidacion, // Asigna el nuevo valor del payload
-          allowEdit: action.payload.allowEdit,
-        };
     case 'SET_CONFIGURACION':
-      return {
-        ...state,
-        configuracion: action.payload,
-      };
     case 'UPDATE_CONFIGURACION':
       return {
         ...state,
         configuracion: action.payload,
-        modalConfiguracion: false,
-        alerta: {
-          visible: true,
-          success: true,
-          mensaje: "Configuración actualizada con éxito", // Mensaje de éxito
-        },
+        ...(action.type === 'UPDATE_CONFIGURACION' && {
+          alerta: {
+            success: true,
+            mensaje: "Configuración actualizada con éxito",
+            tipo: "success",
+          },
+        }),
+      };
+    case 'SET_MODAL_CONFIGURACION':
+      return {
+        ...state,
+        modalConfiguracion:
+          typeof action.payload === 'boolean'
+            ? action.payload
+            : !state.modalConfiguracion,
       };
     case "AGREGAR_ANTICIPOS":
       // Obtenemos los anticipos del payload
@@ -235,12 +241,34 @@ export function LiquidacionReducer(
           }
           : null, // Si no hay liquidación activa, mantenerla como null
       };
-    case 'SET_MODAL_CONFIGURACION':
+    case 'SET_ERROR':
       return {
         ...state,
-        modalConfiguracion: !state.modalConfiguracion,
+        alerta: {
+          success: false,
+          mensaje: action.payload.mensaje,
+          tipo: "error",
+        },
+        loading: false,
+        loadingText: "",
+      };
+    case 'SET_LOADING':
+      return {
+        ...state,
+        loading: action.payload.loading,
+        loadingText: action.payload.loadingText,
+      };
+    case 'RESET_ALERTA':
+      return {
+        ...state,
+        alerta: {
+          success: false,
+          mensaje: "",
+          tipo: undefined,
+        },
       };
     default:
+      console.warn(`Acción no manejada: ${action.type}`);
       return state;
   }
 }
