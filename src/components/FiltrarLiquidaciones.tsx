@@ -394,7 +394,7 @@ export default function FiltrarLiquidaciones() {
       acumulador["totalServicios"] += acumulador["bonos"]?.["Bono día trabajado"]?.quantity || 0;
 
       // Suma el "Bono día trabajado doble", multiplicado por 2 (si existe)
-      acumulador["totalServicios"] += (acumulador["bonos"]?.["Bono día trabajado doble"]?.quantity || 0) * 2;
+      acumulador["totalServicios"] += acumulador["bonos"]?.["Bono día trabajado doble"]?.quantity || 0;
 
       return acumulador;
     },
