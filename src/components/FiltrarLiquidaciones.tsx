@@ -378,11 +378,23 @@ export default function FiltrarLiquidaciones() {
       );
 
       acumulador["totalDescuento"] =
-      (acumulador["bonos"]?.["Bono de alimentación"]?.totalValue || 0) +
-      (acumulador["bonos"]?.["Bono día trabajado"]?.totalValue || 0) +
-      (acumulador["bonos"]?.["Bono día trabajado doble"]?.totalValue || 0) +
-      (acumulador["recargos"]?.totalValue || 0) +
-      (acumulador["mantenimientos"]?.totalValue || 0);
+        (acumulador["bonos"]?.["Bono de alimentación"]?.totalValue || 0) +
+        (acumulador["bonos"]?.["Bono día trabajado"]?.totalValue || 0) +
+        (acumulador["bonos"]?.["Bono día trabajado doble"]?.totalValue || 0) +
+        (acumulador["recargos"]?.totalValue || 0) +
+        (acumulador["mantenimientos"]?.totalValue || 0);
+
+      // Inicializa totalServicios en 0
+      acumulador["totalServicios"] = 0;
+
+      // Suma el "Bono de alimentación" (si existe)
+      acumulador["totalServicios"] += acumulador["bonos"]?.["Bono de alimentación"]?.quantity || 0;
+
+      // Suma el "Bono día trabajado" (si existe)
+      acumulador["totalServicios"] += acumulador["bonos"]?.["Bono día trabajado"]?.quantity || 0;
+
+      // Suma el "Bono día trabajado doble", multiplicado por 2 (si existe)
+      acumulador["totalServicios"] += (acumulador["bonos"]?.["Bono día trabajado doble"]?.quantity || 0) * 2;
 
       return acumulador;
     },
@@ -390,7 +402,8 @@ export default function FiltrarLiquidaciones() {
       bonos: {}, // Inicializamos 'bonos' para que no sea undefined
       recargos: { totalValue: 0, totalQuantity: 0 }, // Inicializamos recargos
       mantenimientos: { totalValue: 0, totalQuantity: 0 }, // Inicializamos mantenimientos
-      totalDescuento: 0
+      totalDescuento: 0,
+      totalServicios: 0
     }
   );
 
@@ -747,9 +760,15 @@ export default function FiltrarLiquidaciones() {
                         </TableRow>
                       </TableBody>
                     </Table>
-                    <CardFooter className="text-2xl justify-between font-semibold">
-                      <p>Total:</p>
-                      <p className="text-green-500">{formatToCOP(totales.totalDescuento)}</p>
+                    <CardFooter className="flex-col text-2xl font-semibold">
+                      <div className="flex justify-between w-full">
+                        <p>Servicios:</p>
+                        <p className="text-primary-500">{totales.totalServicios}</p>
+                      </div>
+                      <div className="flex justify-between w-full">
+                        <p>Total:</p>
+                        <p className="text-green-500">{formatToCOP(totales.totalDescuento)}</p>
+                      </div>
                     </CardFooter>
                   </CardBody>
                 </Card>
