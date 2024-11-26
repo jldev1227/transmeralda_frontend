@@ -23,13 +23,6 @@ interface Resultado {
   recargos?: Recargo[];
 }
 
-interface TotalesBonos {
-  bonoAlimentacion: number;
-  bonoTrabajado: number;
-  bonoTrabajadoDoble: number;
-  total: number;
-}
-
 export default function FiltrarLiquidaciones() {
   const { state } = useLiquidacion();
   const [vehiculoSelected, setVehiculoSelected] =
@@ -246,117 +239,6 @@ export default function FiltrarLiquidaciones() {
   // Utilizamos la función para unificar los conductores
   const resultadosUnificados = Object.values(unificarConductores(resultados));
 
-  const totalBonos = resultadosUnificados.reduce(
-    (totals: TotalesBonos, resultado: any) => {
-      const bonoAlimentacion = resultado.bonos["Bono de alimentación"] || {
-        quantity: 0,
-      };
-      const bonoTrabajado = resultado.bonos["Bono día trabajado"] || {
-        quantity: 0,
-      };
-      const bonoTrabajadoDoble = resultado.bonos[
-        "Bono día trabajado doble"
-      ] || { quantity: 0 };
-
-      // Acumular los totales
-      totals.bonoAlimentacion += bonoAlimentacion.quantity;
-      totals.bonoTrabajado += bonoTrabajado.quantity;
-      totals.bonoTrabajadoDoble += bonoTrabajadoDoble.quantity;
-      totals.total =
-        totals.bonoAlimentacion +
-        totals.bonoTrabajado +
-        totals.bonoTrabajadoDoble;
-
-      return totals;
-    },
-    {
-      bonoAlimentacion: 0,
-      bonoTrabajado: 0,
-      bonoTrabajadoDoble: 0,
-      total: 0,
-    } as TotalesBonos // Inicialización de los totales
-  );
-
-  const totalValorBono = resultadosUnificados.reduce(
-    (total : number, resultado: any) => {
-      const bonoAlimentacion = resultado.bonos["Bono de alimentación"] || {
-        totalValue: 0,
-      };
-
-      return total + bonoAlimentacion.totalValue
-    },
-    0
-  );
-
-  const totalMantenimientos = resultadosUnificados.reduce(
-    (total: number, resultado: any) => {
-      const sumaCantidadMantenimientos = resultado.mantenimientos.reduce(
-        (suma: number, mantenimiento: any) => {
-          return (
-            suma +
-            mantenimiento.values.reduce(
-              (totalValue: number, value: any) => totalValue + value.quantity,
-              0
-            )
-          );
-        },
-        0
-      );
-
-      // Acumular la suma de mantenimientos al total general
-      return total + sumaCantidadMantenimientos;
-    },
-    0 // Inicialización del total como número
-  );
-
-  const totalMantenimientosValor = resultadosUnificados.reduce(
-    (total: number, resultado: any) => {
-      const sumaCantidadMantenimientos = resultado.mantenimientos.reduce(
-        (suma: number, mantenimiento: any) => {
-          return (
-            suma +
-            (mantenimiento.values.reduce(
-              (totalValue: number, value: any) => totalValue + value.quantity,
-              0
-            ) * mantenimiento.value)
-          );
-        },
-        0
-      );
-
-      // Acumular la suma de mantenimientos al total general
-      return total + sumaCantidadMantenimientos;
-    },
-    0 // Inicialización del total como número
-  );
-
-  const totalRecargos = resultadosUnificados?.reduce(
-    (total: number, resultado: any) => {
-      // Sumar el valor de cada recargo del array de recargos
-      const sumaRecargos = resultado.recargos.reduce(
-        (suma: number, recargo: any) => {
-          return suma + recargo.valor;
-        },
-        0
-      );
-
-      // Acumular la suma de recargos al total general
-      return total + sumaRecargos;
-    },
-    0
-  );
-
-  const cantidadRecargos = resultadosUnificados?.reduce(
-    (total: number, resultado: any) => {
-      // Sumar el valor de cada recargo del array de recargos
-
-      // Acumular la suma de recargos al total general
-      return total + resultado.recargos.length;
-    },
-    0
-  )
-  
-
   const filtrarResultados = (resultadosUnificados: any) => {
     return resultadosUnificados
       ?.filter((resultado: any) => {
@@ -416,11 +298,107 @@ export default function FiltrarLiquidaciones() {
       });
   };
 
+  const totales: any = resultadosUnificados.reduce(
+    (
+      acumulador: Record<
+        string,
+        { totalValue: number; quantity: number } | any
+      >,
+      resultado: any
+    ) => {
+      acumulador["bonos"] = acumulador["bonos"] || {}; // Asegura que 'bonos' exista
+
+      // Acumular los bonos
+      Object.entries(resultado.bonos).forEach(([_, bono]: any) => {
+        if (!(acumulador["bonos"] as any)[bono.name]) {
+          (acumulador["bonos"] as any)[bono.name] = {
+            totalValue: 0,
+            quantity: 0,
+          };
+        }
+
+        // Sumar los valores y cantidades al acumulador
+        (acumulador["bonos"] as any)[bono.name].totalValue += bono.totalValue;
+        (acumulador["bonos"] as any)[bono.name].quantity += bono.quantity;
+      });
+
+      // Acumular los recargos de todos los resultados
+      acumulador["recargos"] = {
+        totalValue: acumulador["recargos"].totalValue + resultado.recargos.reduce(
+          (totales: number, recargo: any) => totales + recargo.valor,
+          0
+        ),
+        totalQuantity: acumulador["recargos"].totalQuantity + resultado.recargos.length,
+      };
+
+      acumulador["mantenimientos"] = resultadosUnificados.reduce(
+        (
+          acumuladorMantenimientos: { totalValue: number; totalQuantity: number },
+          resultado: any
+        ) => {
+          const subtotalMantenimientos = resultado.mantenimientos.reduce(
+            (
+              totales: { totalValue: number; totalQuantity: number },
+              mantenimiento: any
+            ) => {
+              const subtotales = mantenimiento.values.reduce(
+                (
+                  subTotales: { totalValue: number; totalQuantity: number },
+                  value: any
+                ) => {
+                  const quantity = value.quantity || 0; // Obtener quantity
+                  const unitValue = mantenimiento.value || 0; // Obtener el valor unitario del mantenimiento
+
+                  return {
+                    totalValue: subTotales.totalValue + quantity * unitValue,
+                    totalQuantity: subTotales.totalQuantity + quantity, // Sumar el quantity al total
+                  };
+                },
+                { totalValue: 0, totalQuantity: 0 } // Inicialización de subtotales
+              );
+
+              return {
+                totalValue: totales.totalValue + subtotales.totalValue,
+                totalQuantity: totales.totalQuantity + subtotales.totalQuantity,
+              };
+            },
+            { totalValue: 0, totalQuantity: 0 } // Inicialización del subtotal de mantenimientos para este resultado
+          );
+
+          // Sumar el subtotal al acumulador global de mantenimientos
+          return {
+            totalValue:
+              acumuladorMantenimientos.totalValue + subtotalMantenimientos.totalValue,
+            totalQuantity:
+              acumuladorMantenimientos.totalQuantity +
+              subtotalMantenimientos.totalQuantity,
+          };
+        },
+        { totalValue: 0, totalQuantity: 0 } // Inicialización del acumulador global de mantenimientos
+      );
+
+      acumulador["totalDescuento"] =
+      (acumulador["bonos"]?.["Bono de alimentación"]?.totalValue || 0) +
+      (acumulador["bonos"]?.["Bono día trabajado"]?.totalValue || 0) +
+      (acumulador["bonos"]?.["Bono día trabajado doble"]?.totalValue || 0) +
+      (acumulador["recargos"]?.totalValue || 0) +
+      (acumulador["mantenimientos"]?.totalValue || 0);
+
+      return acumulador;
+    },
+    {
+      bonos: {}, // Inicializamos 'bonos' para que no sea undefined
+      recargos: { totalValue: 0, totalQuantity: 0 }, // Inicializamos recargos
+      mantenimientos: { totalValue: 0, totalQuantity: 0 }, // Inicializamos mantenimientos
+      totalDescuento: 0
+    }
+  );
+
   const isMobile = useMediaQuery("(max-width: 960px)"); // Tailwind `sm` breakpoint
 
 
   return (
-    <div className="max-md:px-3 2xl:w-2/3 mx-auto flex flex-col gap-10 mt-10">
+    <div className="max-md:px-3 w-2/3 mx-auto flex flex-col gap-10 mt-10">
       <div className="space-y-10 flex flex-col items-center w-full">
         <h2 className="font-black text-2xl lg:text-4xl text-green-700">
           Filtrar Liquidaciones
@@ -555,7 +533,6 @@ export default function FiltrarLiquidaciones() {
                           <p>Bono de día trabajado doble</p>
                           <p className="text-center">
                             <strong>
-                              {formatToCOP(Number(totalRecargos))}
                             </strong>
                           </p>
                         </div>
@@ -734,7 +711,7 @@ export default function FiltrarLiquidaciones() {
                   </CardHeader>
                   <Divider />
                   <CardBody>
-                    <Table isCompact>
+                    <Table isStriped aria-label="Descuento al propietario">
                       <TableHeader>
                         <TableColumn className="bg-black text-white">CONCEPTO</TableColumn>
                         <TableColumn className="bg-black text-white">CANTIDAD</TableColumn>
@@ -742,32 +719,37 @@ export default function FiltrarLiquidaciones() {
                       </TableHeader>
                       <TableBody>
                         <TableRow key="1">
-                          <TableCell>Alimentación</TableCell>
-                          <TableCell>{totalBonos.bonoAlimentacion}</TableCell>
+                          <TableCell>Bono de Alimentación</TableCell>
+                          <TableCell>{totales.bonos["Bono de alimentación"].quantity}</TableCell>
                           <TableCell>
-                            {formatToCOP(totalValorBono)}
+                            {formatToCOP(totales.bonos["Bono de alimentación"].totalValue)}
                           </TableCell>
                         </TableRow>
                         <TableRow key="2">
-                          <TableCell>Recargos</TableCell>
-                          <TableCell>{cantidadRecargos}</TableCell>
-                          <TableCell>
-                            {formatToCOP(totalRecargos)}
-                          </TableCell>
+                          <TableCell>Bono día trabajado</TableCell>
+                          <TableCell>{totales.bonos["Bono día trabajado"].quantity}</TableCell>
+                          <TableCell>{formatToCOP(totales.bonos["Bono día trabajado"].totalValue)}</TableCell>
                         </TableRow>
                         <TableRow key="3">
+                          <TableCell>Bono día trabajado doble</TableCell>
+                          <TableCell>{totales.bonos["Bono día trabajado doble"].quantity}</TableCell>
+                          <TableCell>{formatToCOP(totales.bonos["Bono día trabajado doble"].totalValue)}</TableCell>
+                        </TableRow>
+                        <TableRow key="4">
+                          <TableCell>Recargos</TableCell>
+                          <TableCell>{totales.recargos.totalQuantity}</TableCell>
+                          <TableCell>{formatToCOP(totales.recargos.totalValue)}</TableCell>
+                        </TableRow>
+                        <TableRow key="5">
                           <TableCell>Mantenimientos</TableCell>
-                          <TableCell>{totalMantenimientos}</TableCell>
-                          <TableCell>
-                            {formatToCOP(totalMantenimientosValor)}
-                          </TableCell>
+                          <TableCell>{totales.mantenimientos.totalQuantity}</TableCell>
+                          <TableCell>{formatToCOP(totales.mantenimientos.totalValue)}</TableCell>
                         </TableRow>
                       </TableBody>
                     </Table>
-                    <CardFooter>
-                      <p className="font-semibold text-xl">Días trabajados del vehículo:{" "}
-                        <span className="font-normal">{totalBonos.total}</span>
-                      </p>
+                    <CardFooter className="text-2xl justify-between font-semibold">
+                      <p>Total:</p>
+                      <p className="text-green-500">{formatToCOP(totales.totalDescuento)}</p>
                     </CardFooter>
                   </CardBody>
                 </Card>
