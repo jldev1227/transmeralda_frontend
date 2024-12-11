@@ -27,6 +27,7 @@ export default function ModalVehiculo() {
   });
   const [file, setFile] = useState<FileDetailsVehiculos | null>(null);
 
+
   const handleModal = () => {
     dispatch({
       type: "SET_MODAL",
@@ -81,6 +82,10 @@ export default function ModalVehiculo() {
     kilometraje = 0,
     soatVencimiento = "",
     tecnomecanicaVencimiento = "",
+    tarjetaDeOperacionVencimiento = "",
+    polizaContractualVencimiento = "",
+    polizaExtraContractualVencimiento = "",
+    polizaTodoRiesgoVencimiento = "",
     fechaMatricula = "",
     conductor = null,
     estado = false,
@@ -99,7 +104,7 @@ export default function ModalVehiculo() {
 
   return (
     <Modal
-      size={isMobile ? "full" : "2xl"}
+      size={isMobile ? "full" : "3xl"}
       isOpen={state.modal}
       onOpenChange={handleModal}
     >
@@ -187,8 +192,8 @@ export default function ModalVehiculo() {
 
                               const fillColor =
                                 !soatVencimiento ||
-                                isNaN(daysDiff) ||
-                                daysDiff >= 0
+                                  isNaN(daysDiff) ||
+                                  daysDiff >= 0
                                   ? "danger"
                                   : "success"; // Asigna el color según la condición
 
@@ -220,8 +225,8 @@ export default function ModalVehiculo() {
                                         <PopoverContent>
                                           {
                                             !soatVencimiento ||
-                                            isNaN(daysDiff) ||
-                                            daysDiff >= 0
+                                              isNaN(daysDiff) ||
+                                              daysDiff >= 0
                                               ? "SOAT vencido" // Si es NaN o <= 0
                                               : "SOAT próximo a vencer" // Si es > 0
                                           }
@@ -241,7 +246,7 @@ export default function ModalVehiculo() {
 
                           <div className="flex flex-row p-3 max-sm:flex-col sm:justify-between sm:items-center gap-2">
                             <p className="text-lg font-semibold">
-                              Vencimiento tecnomecánica
+                              Vencimiento Tecnomecánica
                             </p>
 
                             {(() => {
@@ -249,11 +254,6 @@ export default function ModalVehiculo() {
                                 requiereTecnomecanica(fechaMatricula);
 
                               // Determina el color y contenido del chip según el valor de solicitarTecnomecanica
-                              const fillColor =
-                                solicitarTecnomecanica &&
-                                !tecnomecanicaVencimiento
-                                  ? "danger"
-                                  : "success";
                               const chipContent = solicitarTecnomecanica
                                 ? "No cuenta con tecnomecánica"
                                 : "No requiere tecnomecánica";
@@ -261,12 +261,15 @@ export default function ModalVehiculo() {
                               const daysDiff = daysDifference(
                                 tecnomecanicaVencimiento
                               );
+                              
                               const expirationFillColor =
-                                daysDiff > 0
-                                  ? "danger"
-                                  : daysDiff < -10
-                                    ? "success"
-                                    : "warning"; // Asigna el color según la condición
+                              !solicitarTecnomecanica
+                                ? "success"
+                                : daysDiff > 0 && solicitarTecnomecanica
+                                ? "danger"
+                                : solicitarTecnomecanica && daysDiff > -20
+                                ? "warning"
+                                : 'success';
 
                               return (
                                 <div className="flex items-center gap-2">
@@ -299,8 +302,256 @@ export default function ModalVehiculo() {
                                       </Popover>
                                     )}
 
-                                  <Chip radius="sm" color={fillColor}>
+                                  <Chip radius="sm" color={expirationFillColor}>
                                     {tecnomecanicaVencimiento ?? chipContent}
+                                  </Chip>
+                                </div>
+                              );
+                            })()}
+                          </div>
+
+                          <div className="flex flex-row p-3 max-sm:flex-col sm:justify-between sm:items-center gap-2">
+                            <p className="text-lg font-semibold">
+                              Vencimiento Tarjeta de operación
+                            </p>
+
+                            {(() => {
+                              const daysDiff = daysDifference(tarjetaDeOperacionVencimiento);
+
+                              const fillColor =
+                                !tarjetaDeOperacionVencimiento ||
+                                  isNaN(daysDiff) ||
+                                  daysDiff >= 0
+                                  ? "danger"
+                                  : "success"; // Asigna el color según la condición
+
+                              return (
+                                <div className="flex items-center gap-2">
+                                  {tarjetaDeOperacionVencimiento &&
+                                    fillColor !== "success" && (
+                                      <Popover color={fillColor}>
+                                        <PopoverTrigger>
+                                          <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            strokeWidth={1.5}
+                                            stroke={
+                                              isNaN(daysDiff) || daysDiff > 0
+                                                ? "red"
+                                                : "orange"
+                                            }
+                                            className="size-6 cursor-pointer"
+                                          >
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+                                            />
+                                          </svg>
+                                        </PopoverTrigger>
+                                        <PopoverContent>
+                                          {
+                                            !tarjetaDeOperacionVencimiento ||
+                                              isNaN(daysDiff) ||
+                                              daysDiff >= 0
+                                              ? "Tarjeta de operación vencida" // Si es NaN o <= 0
+                                              : "Tarjeta de operación proxima a vencer" // Si es > 0
+                                          }
+                                        </PopoverContent>
+                                      </Popover>
+                                    )}
+
+                                  <Chip radius="sm" color={fillColor}>
+                                    {!tarjetaDeOperacionVencimiento || isNaN(daysDiff)
+                                      ? "No cuenta con Tarjeta de operación"
+                                      : tarjetaDeOperacionVencimiento}
+                                  </Chip>
+                                </div>
+                              );
+                            })()}
+                          </div>
+
+                          <div className="flex flex-row p-3 max-sm:flex-col sm:justify-between sm:items-center gap-2">
+                            <p className="text-lg font-semibold">
+                              Vencimiento Póliza contractual
+                            </p>
+
+                            {(() => {
+                              const daysDiff = daysDifference(polizaContractualVencimiento);
+
+                              const fillColor =
+                                !polizaContractualVencimiento ||
+                                  isNaN(daysDiff) ||
+                                  daysDiff >= 0
+                                  ? "danger"
+                                  : "success"; // Asigna el color según la condición
+
+                              return (
+                                <div className="flex items-center gap-2">
+                                  {polizaContractualVencimiento &&
+                                    fillColor !== "success" && (
+                                      <Popover color={fillColor}>
+                                        <PopoverTrigger>
+                                          <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            strokeWidth={1.5}
+                                            stroke={
+                                              isNaN(daysDiff) || daysDiff > 0
+                                                ? "red"
+                                                : "orange"
+                                            }
+                                            className="size-6 cursor-pointer"
+                                          >
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+                                            />
+                                          </svg>
+                                        </PopoverTrigger>
+                                        <PopoverContent>
+                                          {
+                                            !polizaContractualVencimiento ||
+                                              isNaN(daysDiff) ||
+                                              daysDiff >= 0
+                                              ? "Póliza contractual vencida" // Si es NaN o <= 0
+                                              : "Póliza contractual próxima a vencer" // Si es > 0
+                                          }
+                                        </PopoverContent>
+                                      </Popover>
+                                    )}
+
+                                  <Chip radius="sm" color={fillColor}>
+                                    {!polizaContractualVencimiento || isNaN(daysDiff)
+                                      ? "No cuenta con Póliza contractual"
+                                      : polizaContractualVencimiento}
+                                  </Chip>
+                                </div>
+                              );
+                            })()}
+                          </div>
+
+                          <div className="flex flex-row p-3 max-sm:flex-col sm:justify-between sm:items-center gap-2">
+                            <p className="text-lg font-semibold">
+                              Vencimiento Póliza extracontractual
+                            </p>
+
+                            {(() => {
+                              const daysDiff = daysDifference(polizaExtraContractualVencimiento);
+
+                              const fillColor =
+                                !polizaExtraContractualVencimiento ||
+                                  isNaN(daysDiff) ||
+                                  daysDiff >= 0
+                                  ? "danger"
+                                  : "success"; // Asigna el color según la condición
+
+                              return (
+                                <div className="flex items-center gap-2">
+                                  {polizaExtraContractualVencimiento &&
+                                    fillColor !== "success" && (
+                                      <Popover color={fillColor}>
+                                        <PopoverTrigger>
+                                          <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            strokeWidth={1.5}
+                                            stroke={
+                                              isNaN(daysDiff) || daysDiff > 0
+                                                ? "red"
+                                                : "orange"
+                                            }
+                                            className="size-6 cursor-pointer"
+                                          >
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+                                            />
+                                          </svg>
+                                        </PopoverTrigger>
+                                        <PopoverContent>
+                                          {
+                                            !polizaExtraContractualVencimiento ||
+                                              isNaN(daysDiff) ||
+                                              daysDiff >= 0
+                                              ? "Póliza extracontractual vencida" // Si es NaN o <= 0
+                                              : "Póliza extracontractual próximo a vencer" // Si es > 0
+                                          }
+                                        </PopoverContent>
+                                      </Popover>
+                                    )}
+
+                                  <Chip radius="sm" color={fillColor}>
+                                    {!polizaExtraContractualVencimiento || isNaN(daysDiff)
+                                      ? "No cuenta con Póliza extracontractual"
+                                      : polizaExtraContractualVencimiento}
+                                  </Chip>
+                                </div>
+                              );
+                            })()}
+                          </div>
+
+                          <div className="flex flex-row p-3 max-sm:flex-col sm:justify-between sm:items-center gap-2">
+                            <p className="text-lg font-semibold">
+                              Vencimiento Póliza todo riesgo
+                            </p>
+
+                            {(() => {
+                              const daysDiff = daysDifference(polizaTodoRiesgoVencimiento);
+
+                              const fillColor =
+                                !polizaTodoRiesgoVencimiento ||
+                                  isNaN(daysDiff) ||
+                                  daysDiff >= 0
+                                  ? "danger"
+                                  : "success"; // Asigna el color según la condición
+
+                              return (
+                                <div className="flex items-center gap-2">
+                                  {polizaTodoRiesgoVencimiento &&
+                                    fillColor !== "success" && (
+                                      <Popover color={fillColor}>
+                                        <PopoverTrigger>
+                                          <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            strokeWidth={1.5}
+                                            stroke={
+                                              isNaN(daysDiff) || daysDiff > 0
+                                                ? "red"
+                                                : "orange"
+                                            }
+                                            className="size-6 cursor-pointer"
+                                          >
+                                            <path
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+                                            />
+                                          </svg>
+                                        </PopoverTrigger>
+                                        <PopoverContent>
+                                          {
+                                            !polizaTodoRiesgoVencimiento ||
+                                              isNaN(daysDiff) ||
+                                              daysDiff >= 0
+                                              ? "Póliza todo riesgo vencida" // Si es NaN o <= 0
+                                              : "Póliza todo riesgo próximo a vencer" // Si es > 0
+                                          }
+                                        </PopoverContent>
+                                      </Popover>
+                                    )}
+
+                                  <Chip radius="sm" color={fillColor}>
+                                    {!polizaTodoRiesgoVencimiento || isNaN(daysDiff)
+                                      ? "No cuenta con Póliza todo riesgo"
+                                      : polizaTodoRiesgoVencimiento}
                                   </Chip>
                                 </div>
                               );
@@ -332,13 +583,12 @@ export default function ModalVehiculo() {
                             <p className="text-lg font-semibold">Estado</p>
                             <Chip
                               radius="sm"
-                              color={`${
-                                estado === "DISPONIBLE"
+                              color={`${estado === "DISPONIBLE"
                                   ? "success"
                                   : estado === "MANTENIMIENTO"
                                     ? "primary"
                                     : "danger"
-                              }`}
+                                }`}
                             >
                               {estado}
                             </Chip>
@@ -374,34 +624,51 @@ export default function ModalVehiculo() {
                 <Tab key="documentos" title="Documentos">
                   {!editFile.visible ? (
                     <div
-                      className={`grid ${
-                        requiereTecnomecanica(fechaMatricula)
-                          ? "grid-cols-3"
-                          : "grid-cols-2"
-                      } max-md:grid-cols-1 mx-auto gap-5`}
+                      className={`grid grid-cols-2 max-md:grid-cols-1 mx-auto gap-5`}
                     >
                       {(() => {
-                        const titles = [
-                          "TARJETA DE PROPIEDAD",
-                          "SOAT",
-                          requiereTecnomecanica(fechaMatricula)
-                            ? "TECNOMECÁNICA"
-                            : null,
-                        ].filter(Boolean); // Filtra valores null o false para tener solo títulos válidos
-
-                        const titlesHref = [
-                          "TARJETA_DE_PROPIEDAD",
-                          "SOAT",
-                          "TECNOMECANICA",
+                        const documentos = [
+                          {
+                            name: "TARJETA DE PROPIEDAD",
+                            href: "TARJETA_DE_PROPIEDAD",
+                          },
+                          {
+                            name: "SOAT",
+                            href: "SOAT",
+                          },
+                          ...(requiereTecnomecanica(fechaMatricula) && tecnomecanicaVencimiento !== null
+                            ? [
+                              {
+                                name: "TECNOMECÁNICA",
+                                href: "TECNOMECANICA",
+                              },
+                            ]
+                            : []),
+                          {
+                            name: "TARJETA DE OPERACIÓN",
+                            href: "TARJETA_DE_OPERACION",
+                          },
+                          {
+                            name: "POLIZA CONTRACTUAL",
+                            href: "POLIZA_CONTRACTUAL",
+                          },
+                          {
+                            name: "POLIZA EXTRACONTRACTUAL",
+                            href: "POLIZA_EXTRACONTRACTUAL",
+                          },
+                          {
+                            name: "POLIZA TODO RIESGO",
+                            href: "POLIZA_TODO_RIESGO",
+                          }
                         ];
 
-                        return titles.map((title, index) => (
+                        return documentos.map(({ name, href }, index) => (
                           <div
                             className="max-lg:w-2/3 max-lg:mx-auto shadow-md border-small rounded-lg hover:cursor-pointer"
                             key={index}
-                            onClick={()=>{
+                            onClick={() => {
                               window.open(
-                                `${import.meta.env.VITE_AZURE_STORAGE_BLOB_URL}/${placa}/${placa}_${titlesHref[index]}.pdf?${import.meta.env.VITE_AZURE_STORAGE_SAS_TOKEN}`
+                                `${import.meta.env.VITE_AZURE_STORAGE_BLOB_URL}/${placa}/${placa}_${href}.pdf?${import.meta.env.VITE_AZURE_STORAGE_SAS_TOKEN}`
                               );
                             }}
                           >
@@ -413,14 +680,14 @@ export default function ModalVehiculo() {
                                 height={42}
                                 alt="Pdf icon"
                               />
-                              <p className="text-sm">{title}</p>
+                              <p className="text-sm">{name}</p>
                             </div>
                             <div className="flex justify-center">
                               <Button
                                 onPress={() => {
                                   setEditFile({
                                     visible: true,
-                                    label: title ?? "",
+                                    label: name,
                                   });
                                 }}
                                 className="w-5/6 mb-2"
@@ -432,6 +699,7 @@ export default function ModalVehiculo() {
                           </div>
                         ));
                       })()}
+
                     </div>
                   ) : (
                     <div className="space-y-8">
@@ -464,49 +732,49 @@ export default function ModalVehiculo() {
                       )}
 
                       {alerta && alerta.message ? (
-                            alerta.success ? (
-                              <div className="flex flex-1 flex-col items-center justify-center p-5">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  strokeWidth={1}
-                                  stroke="#22c55e" // Color green-500 de Tailwind
-                                  className="size-24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                                  />
-                                </svg>
+                        alerta.success ? (
+                          <div className="flex flex-1 flex-col items-center justify-center p-5">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1}
+                              stroke="#22c55e" // Color green-500 de Tailwind
+                              className="size-24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                              />
+                            </svg>
 
-                                <p className="text-lg text-green-500 text-center">
-                                  {alerta.message}
-                                </p>
-                              </div>
-                            ) : (
-                              <div className="flex flex-1 flex-col items-center justify-center p-5">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  strokeWidth={1}
-                                  stroke="red"
-                                  className="size-24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
-                                  />
-                                </svg>
-                                <p className="text-lg text-blue-500 text-center">
-                                  {alerta.message}
-                                </p>
-                              </div>
-                            )
-                          ) : null}
+                            <p className="text-lg text-green-500 text-center">
+                              {alerta.message}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-1 flex-col items-center justify-center p-5">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1}
+                              stroke="red"
+                              className="size-24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+                              />
+                            </svg>
+                            <p className="text-lg text-blue-500 text-center">
+                              {alerta.message}
+                            </p>
+                          </div>
+                        )
+                      ) : null}
                     </div>
                   )}
                 </Tab>

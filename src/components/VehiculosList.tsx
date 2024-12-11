@@ -32,48 +32,46 @@ export default function VehiculosList() {
   // Filtrar y ordenar vehículos con `useMemo` para evitar ciclos
   const sortedVehiculos = useMemo(() => {
     const filtered = state.vehiculos.filter((vehiculo) => {
-      // Verificar si "documentación" está en los estados seleccionados
       const requiereDocumentacion =
         !vehiculo.soatVencimiento ||
         (!vehiculo.tecnomecanicaVencimiento &&
-          requiereTecnomecanica(vehiculo.fechaMatricula));
+          requiereTecnomecanica(vehiculo.fechaMatricula)) ||
+          !vehiculo.tarjetaDeOperacionVencimiento ||
+          !vehiculo.polizaContractualVencimiento ||
+          !vehiculo.polizaExtraContractualVencimiento ||
+          !vehiculo.polizaTodoRiesgoVencimiento
 
+      // Filtrar por búsqueda
       if (search) {
         return vehiculo.placa.toLowerCase().includes(search.toLowerCase());
       }
 
-      // Filtrar por estados seleccionados
-      if (selectedStates.includes("camioneta") && selectedStates.includes("bus")) {
-        // Si ambas se cumplen, traemos todos los vehículos
-        return true;
-      } else if (selectedStates.includes("camioneta")) {
-        // Si contiene 'camioneta', traer los que sean distintos a 'CAMIONETA'
-        if (vehiculo.claseVehiculo !== "CAMIONETA") {
-          return false;
-        }
-        return true;
-      } else if (selectedStates.includes("bus")) {
-        // Si contiene 'bus', traer los que sean iguales a 'CAMIONETA'
-        if (vehiculo.claseVehiculo === "CAMIONETA") {
-          return false;
-        }
+      // Filtrar combinaciones de estados con clases de vehículo
+      const isClaseVehiculoSelected =
+        selectedStates.includes("camioneta") && vehiculo.claseVehiculo === "CAMIONETA" ||
+        selectedStates.includes("bus") && vehiculo.claseVehiculo === "BUS";
+
+      const isEstadoSelected = selectedStates.some(state => state.toLowerCase() === vehiculo.estado.toLowerCase());
+
+      // Estrictamente traer solo camionetas o buses si solo esos están seleccionados
+      if ((selectedStates.includes("camioneta") && !selectedStates.includes("bus")) ||
+        (selectedStates.includes("bus") && !selectedStates.includes("camioneta"))) {
+        return isClaseVehiculoSelected && isEstadoSelected;
+      }
+
+      if (isClaseVehiculoSelected && isEstadoSelected) {
         return true;
       }
 
-
       if (selectedStates.includes("documentación")) {
-        // Si solo "documentación" está seleccionada
         if (selectedStates.length === 1) {
           return requiereDocumentacion;
         }
-        // Si "documentación" está seleccionada junto con otros estados
         return (
           requiereDocumentacion ||
           selectedStates.includes(vehiculo.estado.toLowerCase())
         );
       }
-
-
 
       // Filtrar normalmente por los estados seleccionados
       return selectedStates.includes(vehiculo.estado.toLowerCase());
@@ -150,7 +148,11 @@ export default function VehiculosList() {
                     Requiere documentación ({state.vehiculos.filter(vehiculo =>
                       !vehiculo.soatVencimiento ||
                       (!vehiculo.tecnomecanicaVencimiento &&
-                        requiereTecnomecanica(vehiculo.fechaMatricula))
+                        requiereTecnomecanica(vehiculo.fechaMatricula)) ||
+                        !vehiculo.tarjetaDeOperacionVencimiento ||
+                        !vehiculo.polizaContractualVencimiento ||
+                        !vehiculo.polizaExtraContractualVencimiento ||
+                        !vehiculo.polizaTodoRiesgoVencimiento
                     ).length})
                   </Checkbox>
                 </CheckboxGroup>
@@ -229,41 +231,92 @@ export default function VehiculosList() {
                     <h4 className="font-bold text-large">{vehiculo.placa}</h4>
                   </div>
                   {(() => {
-                    const solicitarTecnomecanica = requiereTecnomecanica(
-                      vehiculo.fechaMatricula
-                    );
+                    const solicitarTecnomecanica = requiereTecnomecanica(vehiculo.fechaMatricula);
 
-                    if (vehiculo.soatVencimiento && !solicitarTecnomecanica) {
+                    // Verificar si todos los documentos están completos y no requieren tecnomecánica
+                    if (
+                      vehiculo.soatVencimiento &&
+                      vehiculo.tarjetaDeOperacionVencimiento &&
+                      vehiculo.polizaContractualVencimiento &&
+                      vehiculo.polizaExtraContractualVencimiento &&
+                      vehiculo.polizaTodoRiesgoVencimiento &&
+                      !solicitarTecnomecanica
+                    ) {
+                      return null;
+                    } else if (
+                      vehiculo.soatVencimiento &&
+                      vehiculo.tarjetaDeOperacionVencimiento &&
+                      vehiculo.polizaContractualVencimiento &&
+                      vehiculo.polizaExtraContractualVencimiento &&
+                      vehiculo.polizaTodoRiesgoVencimiento &&
+                      solicitarTecnomecanica
+                    ) {
                       return null;
                     }
 
+                    // Calcular la diferencia de días para cada documento
                     const daysDiffSoat = daysDifference(vehiculo.soatVencimiento);
-                    const daysDiffTecnomecanica = daysDifference(
-                      vehiculo.tecnomecanicaVencimiento
-                    );
+                    const daysDiffTecnomecanica = daysDifference(vehiculo.tecnomecanicaVencimiento);
+                    const daysDiffTarjetaOperacion = daysDifference(vehiculo.tarjetaDeOperacionVencimiento);
+                    const daysDiffPolizaContractual = daysDifference(vehiculo.polizaContractualVencimiento);
+                    const daysDiffPolizaExtracontractual = daysDifference(vehiculo.polizaExtraContractualVencimiento);
+                    const daysDiffPolizaTodoRiesgo = daysDifference(vehiculo.polizaTodoRiesgoVencimiento);
 
-                    if (daysDiffSoat < -10 && daysDiffTecnomecanica < -10)
-                      return null;
+                    // Determinar si falta documentación
+                    const isMissingDocumentation =
+                      !vehiculo.soatVencimiento ||
+                      !vehiculo.tecnomecanicaVencimiento ||
+                      !vehiculo.tarjetaDeOperacionVencimiento ||
+                      !vehiculo.polizaContractualVencimiento ||
+                      !vehiculo.polizaExtraContractualVencimiento ||
+                      !vehiculo.polizaTodoRiesgoVencimiento;
 
-                    const fillColor =
-                      daysDiffSoat > 0 || daysDiffTecnomecanica > 0
-                        ? "red"
-                        : "#ea8b2d";
+                    // Determinar si algún documento está vencido
+                    const isDocumentExpired =
+                      daysDiffSoat < 0 ||
+                      daysDiffTecnomecanica < 0 ||
+                      daysDiffTarjetaOperacion < 0 ||
+                      daysDiffPolizaContractual < 0 ||
+                      daysDiffPolizaExtracontractual < 0 ||
+                      daysDiffPolizaTodoRiesgo < 0;
 
-                    return (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill={fillColor}
-                        className="size-8"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    );
+                    // Determinar si algún documento está próximo a vencer
+                    const isDocumentNearExpiry =
+                      (daysDiffSoat >= 0 && daysDiffSoat <= 20) ||
+                      (daysDiffTecnomecanica >= 0 && daysDiffTecnomecanica <= 20) ||
+                      (daysDiffTarjetaOperacion >= 0 && daysDiffTarjetaOperacion <= 20) ||
+                      (daysDiffPolizaContractual >= 0 && daysDiffPolizaContractual <= 20) ||
+                      (daysDiffPolizaExtracontractual >= 0 && daysDiffPolizaExtracontractual <= 20) ||
+                      (daysDiffPolizaTodoRiesgo >= 0 && daysDiffPolizaTodoRiesgo <= 20);
+
+                    // Determinar el color del ícono
+                    const fillColor = isMissingDocumentation || isDocumentExpired
+                      ? "red"
+                      : isDocumentNearExpiry
+                        ? "#ea8b2d"
+                        : "";
+
+                    // Mostrar aviso para fechas próximas a vencer, vencidas o sin documentación
+                    if (isMissingDocumentation || isDocumentExpired || isDocumentNearExpiry) {
+                      // Retornar el ícono SVG solo si hay un problema
+                      return (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill={fillColor}
+                          className="size-8"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      );
+                    }
+
+                    // Si no hay problemas, no mostrar el ícono
+                    return null;
                   })()}
                 </CardHeader>
                 <CardBody className="overflow-visible py-2">

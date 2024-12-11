@@ -109,6 +109,10 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
               estado
               soatVencimiento
               tecnomecanicaVencimiento
+              tarjetaDeOperacionVencimiento
+              polizaContractualVencimiento
+              polizaExtraContractualVencimiento
+              polizaTodoRiesgoVencimiento
               fechaMatricula
               conductor {
                   id
@@ -259,6 +263,10 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
                 propietarioIdentificacion
                 soatVencimiento
                 tecnomecanicaVencimiento
+                tarjetaDeOperacionVencimiento
+                polizaContractualVencimiento
+                polizaExtraContractualVencimiento
+                polizaTodoRiesgoVencimiento
                 fechaMatricula
                 conductor {
                   id

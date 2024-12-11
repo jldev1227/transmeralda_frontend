@@ -40,11 +40,11 @@ export default function ModalAddVehiculo() {
     await agregarVehiculo(files);
   };
 
-  const isMobile = useMediaQuery("(max-width: 560px)"); // Tailwind `sm` breakpoint
+  const isMobile = useMediaQuery("(max-width: 648px)"); // Tailwind `sm` breakpoint
 
   return (
     <Modal
-      size={isMobile ? "full" : "xl"}
+      size={isMobile ? "full" : "5xl"}
       isOpen={state.modalAdd}
       onOpenChange={handleModal}
     >
@@ -66,7 +66,7 @@ export default function ModalAddVehiculo() {
                 </div>
               ) : (
                 !state.alerta && (
-                  <>
+                  <div className="grid sm:grid-cols-2 gap-5">
                     <Dropzone
                       label={"TARJETA DE PROPIEDAD"}
                       onFileUploaded={handleFilesUploaded}
@@ -82,7 +82,27 @@ export default function ModalAddVehiculo() {
                       onFileUploaded={handleFilesUploaded}
                       onFileRemoved={handleFileRemoved}
                     />
-                  </>
+                    <Dropzone
+                      label={"TARJETA DE OPERACION"}
+                      onFileUploaded={handleFilesUploaded}
+                      onFileRemoved={handleFileRemoved}
+                    />
+                    <Dropzone
+                      label={"POLIZA CONTRACTUAL"}
+                      onFileUploaded={handleFilesUploaded}
+                      onFileRemoved={handleFileRemoved}
+                    />
+                    <Dropzone
+                      label={"POLIZA EXTRACONTRACTUAL"}
+                      onFileUploaded={handleFilesUploaded}
+                      onFileRemoved={handleFileRemoved}
+                    />
+                    <Dropzone
+                      label={"POLIZA TODO RIESGO"}
+                      onFileUploaded={handleFilesUploaded}
+                      onFileRemoved={handleFileRemoved}
+                    />
+                  </div>
                 )
               )}
 

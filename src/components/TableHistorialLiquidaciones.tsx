@@ -91,16 +91,19 @@ export default function App() {
     let filteredLiquidaciones = [...state.liquidaciones];
 
     if (hasSearchFilter) {
-      filteredLiquidaciones = filteredLiquidaciones.filter(
-        (liquidacion) =>
-          liquidacion.conductor.nombre
-            .toLowerCase()
-            .includes(filterValue.toLowerCase()) ||
-          liquidacion.conductor.apellido
-            .toLowerCase()
-            .includes(filterValue.toLowerCase())
-      );
+      filteredLiquidaciones = filteredLiquidaciones.filter((liquidacion) => {
+        const nombreCompleto = `${liquidacion.conductor.nombre} ${liquidacion.conductor.apellido}`.toLowerCase();
+        const nombre = liquidacion.conductor.nombre.toLowerCase();
+        const apellido = liquidacion.conductor.apellido.toLowerCase();
+
+        return (
+          nombre.includes(filterValue.toLowerCase()) || // Coincide con el nombre
+          apellido.includes(filterValue.toLowerCase()) || // Coincide con el apellido
+          nombreCompleto.includes(filterValue.toLowerCase()) // Coincide con el nombre completo
+        );
+      });
     }
+
 
     if (statusFilter.size > 0 && statusFilter.size !== statusOptions.length) {
       // statusFilter ahora es un Set, por lo que usamos has

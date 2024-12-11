@@ -6,7 +6,7 @@ export default function Vehiculos() {
   return (
     <div className="px-10 space-y-16">
       <h1 className="text-green-700 font-black text-2xl lg:text-4xl text-center">
-        Gestión de la Flota de Vehículos
+        Gestión de la flota de Vehículos
       </h1>
       <VehiculosList/>
       <ModalAddVehiculo/>
