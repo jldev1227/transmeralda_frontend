@@ -46,7 +46,6 @@ export function formatDate(dateString: string | undefined): string {
   return date.toLocaleDateString('es-ES', options).toUpperCase();
 }
 
-
 export const formatDateValue = (dateValue: DateValue | null): string => {
   if (dateValue) {
     // Ajusta según la estructura de `DateValue`

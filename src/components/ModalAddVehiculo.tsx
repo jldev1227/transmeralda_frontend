@@ -37,7 +37,12 @@ export default function ModalAddVehiculo() {
   };
 
   const handleSubmit = async () => {
-    await agregarVehiculo(files);
+    try {
+      await agregarVehiculo(files); // Procesar los archivos
+      setFiles([]);
+    } catch (error) {
+      console.error("Error al agregar vehículo:", error);
+    }
   };
 
   const isMobile = useMediaQuery("(max-width: 648px)"); // Tailwind `sm` breakpoint
@@ -71,37 +76,45 @@ export default function ModalAddVehiculo() {
                       label={"TARJETA DE PROPIEDAD"}
                       onFileUploaded={handleFilesUploaded}
                       onFileRemoved={handleFileRemoved}
+                      defaultValue={files.find((file) => file.category === "TARJETA DE PROPIEDAD")}
                     />
                     <Dropzone
                       label={"SOAT"}
                       onFileUploaded={handleFilesUploaded}
                       onFileRemoved={handleFileRemoved}
+                      defaultValue={files.find((file) => file.category === "SOAT")}
                     />
                     <Dropzone
                       label={"TECNOMECÁNICA"}
                       onFileUploaded={handleFilesUploaded}
                       onFileRemoved={handleFileRemoved}
+                      defaultValue={files.find((file) => file.category === "TECNOMECÁNICA")}
                     />
                     <Dropzone
-                      label={"TARJETA DE OPERACION"}
+                      label={"TARJETA DE OPERACIÓN"}
                       onFileUploaded={handleFilesUploaded}
                       onFileRemoved={handleFileRemoved}
+                      defaultValue={files.find((file) => file.category === "TARJETA DE OPERACIÓN")}
                     />
                     <Dropzone
                       label={"POLIZA CONTRACTUAL"}
                       onFileUploaded={handleFilesUploaded}
                       onFileRemoved={handleFileRemoved}
+                      defaultValue={files.find((file) => file.category === "POLIZA CONTRACTUAL")}
                     />
                     <Dropzone
                       label={"POLIZA EXTRACONTRACTUAL"}
                       onFileUploaded={handleFilesUploaded}
                       onFileRemoved={handleFileRemoved}
+                      defaultValue={files.find((file) => file.category === "POLIZA EXTRACONTRACTUAL")}
                     />
                     <Dropzone
                       label={"POLIZA TODO RIESGO"}
                       onFileUploaded={handleFilesUploaded}
                       onFileRemoved={handleFileRemoved}
+                      defaultValue={files.find((file) => file.category === "POLIZA TODO RIESGO")}
                     />
+
                   </div>
                 )
               )}

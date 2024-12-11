@@ -173,33 +173,35 @@ export const VehiculoProvider = ({ children }: VehiculoProviderProps) => {
 
       if (responseData?.crearVehiculo) {
         const { success, message, vehiculo } = responseData.crearVehiculo;
-
-        // Si fue exitoso, actualiza el estado del vehículo
+      
         if (success && vehiculo) {
           dispatch({
             type: "ADD_VEHICULO",
-            payload: vehiculo, // Agrega el nuevo vehículo al array
+            payload: vehiculo,
           });
-
+      
           dispatch({
             type: "SET_ALERTA",
             payload: {
-              success: success,
-              message: message,
+              success: true,
+              message,
             },
           });
-
+      
           setTimeout(() => {
             dispatch({
               type: "SET_MODAL_ADD",
             });
+            dispatch({
+              type: "CLEAR_ALERTA",
+            });
           }, 2000);
+      
+          return; // Importante: Sal del flujo aquí si todo salió bien
         } else {
           throw new Error(message || "Error en la creación del vehículo");
         }
       }
-
-      throw new Error("Respuesta inesperada del servidor");
     } catch (error) {
       // Manejo de errores
       console.error("Error en la solicitud", error);

@@ -34,12 +34,21 @@ export default function VehiculosList() {
     const filtered = state.vehiculos.filter((vehiculo) => {
       const requiereDocumentacion =
         !vehiculo.soatVencimiento ||
+        daysDifference(vehiculo.soatVencimiento) > 0 || // SOAT vencido
         (!vehiculo.tecnomecanicaVencimiento &&
           requiereTecnomecanica(vehiculo.fechaMatricula)) ||
-          !vehiculo.tarjetaDeOperacionVencimiento ||
-          !vehiculo.polizaContractualVencimiento ||
-          !vehiculo.polizaExtraContractualVencimiento ||
-          !vehiculo.polizaTodoRiesgoVencimiento
+        (vehiculo.tecnomecanicaVencimiento &&
+          daysDifference(vehiculo.tecnomecanicaVencimiento) > 0) || // Técnico Mecánica vencida
+        !vehiculo.tarjetaDeOperacionVencimiento ||
+        daysDifference(vehiculo.tarjetaDeOperacionVencimiento) > 0 || // Tarjeta de Operación vencida
+        !vehiculo.polizaContractualVencimiento ||
+        daysDifference(vehiculo.polizaContractualVencimiento) > 0 || // Póliza Contractual vencida
+        !vehiculo.polizaExtraContractualVencimiento ||
+        daysDifference(vehiculo.polizaExtraContractualVencimiento) > 0 || // Póliza Extracontractual vencida
+        !vehiculo.polizaTodoRiesgoVencimiento ||
+        daysDifference(vehiculo.polizaTodoRiesgoVencimiento) > 0; // Póliza Todo Riesgo vencida
+
+
 
       // Filtrar por búsqueda
       if (search) {
@@ -149,10 +158,10 @@ export default function VehiculosList() {
                       !vehiculo.soatVencimiento ||
                       (!vehiculo.tecnomecanicaVencimiento &&
                         requiereTecnomecanica(vehiculo.fechaMatricula)) ||
-                        !vehiculo.tarjetaDeOperacionVencimiento ||
-                        !vehiculo.polizaContractualVencimiento ||
-                        !vehiculo.polizaExtraContractualVencimiento ||
-                        !vehiculo.polizaTodoRiesgoVencimiento
+                      !vehiculo.tarjetaDeOperacionVencimiento ||
+                      !vehiculo.polizaContractualVencimiento ||
+                      !vehiculo.polizaExtraContractualVencimiento ||
+                      !vehiculo.polizaTodoRiesgoVencimiento
                     ).length})
                   </Checkbox>
                 </CheckboxGroup>
