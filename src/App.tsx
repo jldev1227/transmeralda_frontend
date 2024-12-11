@@ -27,8 +27,14 @@ function App() {
             {/* Envuelve todas las rutas protegidas en DefaultLayout */}
             <Route element={<DefaultLayout />}>
               {/* Ruta para Dashboard */}
-              <Route path="empresas" element={<Empresas />} />
               <Route
+                path="/empresas"
+                element={
+                  <LiquidacionProvider>
+                    <Empresas />
+                  </LiquidacionProvider>
+                }
+              />              <Route
                 path="/vehiculos"
                 element={
                   <VehiculoProvider>

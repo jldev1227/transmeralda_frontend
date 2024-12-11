@@ -345,6 +345,10 @@ export const OBTERNER_EMPRESAS = gql`
             id
             NIT
             Nombre
+            Representante
+            Cedula
+            Telefono
+            Direccion
         }
     }
 `

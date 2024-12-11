@@ -14,6 +14,10 @@ export const OBTENER_VEHICULOS = gql`
             estado
             soatVencimiento
             tecnomecanicaVencimiento
+            tarjetaDeOperacionVencimiento
+            polizaContractualVencimiento
+            polizaExtraContractualVencimiento
+            polizaTodoRiesgoVencimiento
             fechaMatricula
             conductor {
                 id
@@ -46,6 +50,10 @@ export const OBTENER_VEHICULO = gql`
     galeria
     soatVencimiento
     tecnomecanicaVencimiento
+    tarjetaDeOperacionVencimiento
+    polizaContractualVencimiento
+    polizaExtraContractualVencimiento
+    polizaTodoRiesgoVencimiento
     fechaMatricula
     conductor {
       id
