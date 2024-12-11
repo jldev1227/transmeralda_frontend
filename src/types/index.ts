@@ -103,6 +103,10 @@ export type Vehiculo = {
   galeria: Array<TemplateStringsArray>;
   soatVencimiento: string;
   tecnomecanicaVencimiento: string;
+  tarjetaDeOperacionVencimiento: string;
+  polizaContractualVencimiento: string;
+  polizaExtraContractualVencimiento: string;
+  polizaTodoRiesgoVencimiento: string;
   fechaMatricula: string;
   propietarioId: number;
   conductorId: number;
@@ -117,6 +121,8 @@ export type Empresa = {
   NIT: string,
   Nombre: string,
   __typename?: string;
+  acciones?: any;  // Agrega 'acciones' como un campo válido
+  [key: string]: any; // Opción flexible para indexar propiedades adicionales si no tienes un conjunto fijo
 };
 
 export type Anticipo = {

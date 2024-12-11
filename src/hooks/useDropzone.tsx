@@ -5,12 +5,6 @@ import { Card, CardBody } from "@nextui-org/card";
 import { Image } from "@nextui-org/image";
 import { Button } from "@nextui-org/button";
 
-interface DropzoneProps {
-  onFileUploaded?: (file: FileDetailsVehiculos, acceptedFile: File) => void; // Para subir un archivo
-  onFileRemoved?: (fileId: string) => void; // Nuevo: Para eliminar un archivo
-  label?: string;
-}
-
 export type FileDetailsVehiculos = {
   id: string;
   name: string;
@@ -20,19 +14,25 @@ export type FileDetailsVehiculos = {
   realFile: File; // Añadimos el archivo real aquí
 };
 
+interface DropzoneProps {
+  onFileUploaded?: (file: FileDetailsVehiculos, acceptedFile: File) => void; // Para subir un archivo
+  onFileRemoved?: (fileId: string) => void; // Para eliminar un archivo
+  label?: string;
+  defaultValue?: FileDetailsVehiculos | null; // Valor por defecto
+}
+
 const Dropzone: React.FC<DropzoneProps> = ({
   onFileUploaded,
   onFileRemoved,
   label,
+  defaultValue = null, // Valor por defecto para el estado
 }) => {
   // Estado para almacenar el archivo seleccionado
-  const [file, setFile] = useState<FileDetailsVehiculos | null>(null);
+  const [file, setFile] = useState<FileDetailsVehiculos | null>(defaultValue);
 
   // Función para manejar el drop de archivos
   const onDrop = useCallback(
-    (
-      acceptedFiles: File[], // Cambié a plural porque React Dropzone maneja un array
-    ): void => {
+    (acceptedFiles: File[]): void => {
       const acceptedFile = acceptedFiles[0]; // Solo tomamos el primer archivo
       if (acceptedFile) {
         const newFile: FileDetailsVehiculos = {
@@ -173,3 +173,4 @@ const styles: { [key: string]: React.CSSProperties } = {
 };
 
 export default Dropzone;
+
