@@ -221,10 +221,10 @@ export default function FiltrarLiquidaciones() {
 
       // Filtrar conductores que no cumplan con la condición de mantenimientos
       const tieneMantenimientos = Object.values(acc[conductorKey].mantenimientos).some(
-        (mantenimiento: any) => mantenimiento.values.filter((value: any) => value.quantity > 0)
+        (mantenimiento: any) =>
+          mantenimiento.values.some((value: any) => value.quantity > 0)
       );
-
-      // Filtrar conductores que no cumplan con la condición de recargos
+      
       const tieneRecargosValidos = acc[conductorKey].recargos.length > 0;
 
       if (!tieneBonosValidos && !tieneMantenimientos && !tieneRecargosValidos) {
