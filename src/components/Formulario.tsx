@@ -1351,45 +1351,17 @@ export default function Formulario() {
                                         newDate.month - 1,
                                         newDate.day
                                       );
-                                      const startDate = new Date(
-                                        dateSelected.start.year,
-                                        dateSelected.start.month - 1,
-                                        dateSelected.start.day
+                                      const newFecha = dateToDateValue(jsDate);
+                                      const newFechas = [...pernote.fechas];
+                                      newFechas[dateIndex] = newFecha;
+                                      handlePernoteChange(
+                                        detalleVehiculo.vehiculo.value,
+                                        pernoteIndex,
+                                        "fechas",
+                                        newFechas
                                       );
-                                      const endDate = new Date(
-                                        dateSelected.end.year,
-                                        dateSelected.end.month - 1,
-                                        dateSelected.end.day
-                                      );
-                                      if (
-                                        jsDate >= startDate &&
-                                        jsDate <= endDate
-                                      ) {
-                                        const newFecha =
-                                          dateToDateValue(jsDate);
-                                        const newFechas = [...pernote.fechas];
-                                        newFechas[dateIndex] = newFecha;
-                                        handlePernoteChange(
-                                          detalleVehiculo.vehiculo.value,
-                                          pernoteIndex,
-                                          "fechas",
-                                          newFechas
-                                        );
-                                      } else {
-                                        alert(
-                                          "La fecha seleccionada no está dentro del rango permitido"
-                                        );
-                                        const newFechas = [...pernote.fechas];
-                                        newFechas[dateIndex] = "";
-                                        handlePernoteChange(
-                                          detalleVehiculo.vehiculo.value,
-                                          pernoteIndex,
-                                          "fechas",
-                                          newFechas
-                                        );
-                                      }
                                     }
-                                  }}
+                                  }}                                  
                                 />
                               ))}
 
