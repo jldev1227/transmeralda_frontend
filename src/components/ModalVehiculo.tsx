@@ -636,7 +636,7 @@ export default function ModalVehiculo() {
                             name: "SOAT",
                             href: "SOAT",
                           },
-                          ...(requiereTecnomecanica(fechaMatricula) && tecnomecanicaVencimiento !== null
+                          ...(requiereTecnomecanica(fechaMatricula)
                             ? [
                               {
                                 name: "TECNOMECÁNICA",
