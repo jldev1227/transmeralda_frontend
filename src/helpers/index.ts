@@ -124,3 +124,32 @@ export function obtenerDiferenciaDias(periodo: RangeValue<DateValue> | null) : n
   return Math.round(diferenciaDias); // Redondea a días enteros
 }
 
+export function MesyAño(dateString: string | undefined): string {
+
+  if (!dateString) {
+    throw new Error('La fecha debe ser una cadena válida.');
+  }
+
+  // Crear un objeto Date a partir de la cadena en formato 'YYYY-MM-DD'
+  const date = new Date(dateString);
+
+  // Verificar si la fecha es válida
+  if (isNaN(date.getTime())) {
+    throw new Error('Fecha no válida.');
+  }
+
+  // Establecer la hora a medianoche para evitar problemas de zona horaria
+  date.setHours(0, 0, 0, 0);
+
+  // Sumar 1 al día
+  date.setDate(date.getDate() + 1);
+
+  // Definir opciones para el formato de fecha con tipos correctos
+  const options: Intl.DateTimeFormatOptions = {
+    month: 'long',
+    year: 'numeric',
+  };
+
+  // Convertir la fecha al formato deseado utilizando la configuración regional 'es-ES'
+  return date.toLocaleDateString('es-ES', options).toUpperCase();
+}

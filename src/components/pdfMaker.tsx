@@ -9,7 +9,7 @@ import {
 } from "@react-pdf/renderer";
 import { Divider } from "@nextui-org/divider";
 import { BonificacionesAcc, Bono, Liquidacion } from "@/types/index";
-import { formatDate, formatToCOP, obtenerDiferenciaDias } from "@/helpers";
+import { formatDate, formatToCOP, MesyAño, obtenerDiferenciaDias } from "@/helpers";
 import { Font } from "@react-pdf/renderer";
 import { parseDate } from "@internationalized/date";
 
@@ -119,7 +119,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
             NIT: 901528440
           </Text>
           <Text style={[styles.label, { marginTop: 15, color: "#2E8B57" }]}>
-            Comprobante de nomina
+            Comprobante de nomina - {MesyAño(item?.periodoEnd)}
           </Text>
         </View>
         <Image
