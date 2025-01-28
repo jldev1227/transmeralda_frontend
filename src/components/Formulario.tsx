@@ -179,52 +179,36 @@ export default function Formulario() {
               value: vehiculo.id,
               label: vehiculo.placa,
             },
-            bonos:
-              bonosDelVehiculo.length > 0
-                ? bonosDelVehiculo.map((bono) => ({
-                  name: bono.name,
-                  values: bono.values?.map((val) => ({
-                    mes: val.mes,
-                    quantity: val.quantity,
-                  })) || [{ mes: "Mes no definido", quantity: 0 }],
-                  value: bono.value,
-                }))
-                : [
-                  {
-                    name: "Bono de alimentación",
-                    values: mesesRange.map((mes) => ({
-                      mes,
-                      quantity: 0,
-                    })),
-                    value:
-                      state?.configuracion?.find(
-                        (config) => config.nombre === "Bono de alimentación"
-                      )?.valor || 0,
-                  },
-                  {
-                    name: "Bono día trabajado",
-                    values: mesesRange.map((mes) => ({
-                      mes,
-                      quantity: 0,
-                    })),
-                    value:
-                      state?.configuracion?.find(
-                        (config) => config.nombre === "Bono día trabajado"
-                      )?.valor || 0,
-                  },
-                  {
-                    name: "Bono día trabajado doble",
-                    values: mesesRange.map((mes) => ({
-                      mes,
-                      quantity: 0,
-                    })),
-                    value:
-                      state?.configuracion?.find(
-                        (config) =>
-                          config.nombre === "Bono día trabajado doble"
-                      )?.valor || 0,
-                  },
-                ],
+            bonos: [
+              ...bonosDelVehiculo.map((bono) => ({
+                name: bono.name,
+                values: bono.values?.map((val) => ({
+                  mes: val.mes,
+                  quantity: val.quantity,
+                })) || [{ mes: "Mes no definido", quantity: 0 }],
+                value: bono.value,
+              })),
+              ...[
+                "Bono de alimentación",
+                "Bono día trabajado",
+                "Bono día trabajado doble",
+                "Bono festividades",
+              ]
+                .filter(
+                  (nombreBono) =>
+                    !bonosDelVehiculo.some((bono) => bono.name === nombreBono)
+                )
+                .map((nombreBono) => ({
+                  name: nombreBono,
+                  values: mesesRange.map((mes) => ({
+                    mes,
+                    quantity: 0,
+                  })),
+                  value:
+                    state?.configuracion?.find((config) => config.nombre === nombreBono)
+                      ?.valor || 0,
+                })),
+            ],            
             mantenimientos: mantenimientosDelVehiculo.length > 0
               ? mantenimientosDelVehiculo.map((mantenimiento: Mantenimiento) => ({
                 value: state?.configuracion?.find(
@@ -400,6 +384,18 @@ export default function Formulario() {
                     (config) => config.nombre === "Bono día trabajado doble"
                   )?.valor || 0,
               },
+              {
+                name: "Bono festividades",
+                values: mesesRange.map((mes) => ({
+                  mes: mes,
+                  quantity: 0,
+                })),
+                value:
+                  state?.configuracion?.find(
+                    (config) => config.nombre === "Bono festividades"
+                  )?.valor || 0,
+              },
+              
             ],
             mantenimientos: [
               {
