@@ -30,8 +30,8 @@ Font.register({
 // Estilos para el PDF
 const styles = StyleSheet.create({
   page: {
-    paddingHorizontal: 85,
-    paddingVertical: 50,
+    paddingHorizontal: 65,
+    paddingVertical: 35,
     backgroundColor: "#FFF", // Fondo gris claro para el PDF}
     fontFamily: "Roboto", // Usa una fuente predeterminada
     fontSize: 12,
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 4.5,
     borderBottomWidth: 1, // Grosor del borde inferior
     borderBottomColor: "#E0E0E0", // Color del borde inferior
   },
@@ -162,7 +162,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
                 styles.textValue,
                 {
                   color: "#007AFF",
-                  backgroundColor: "#007bff1e",
+                  backgroundColor: "#007AFF1e",
                   padding: 3,
                   borderRadius: 5,
                   fontSize: 14,
@@ -209,7 +209,12 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
           </View>
         </View>
 
-        <Text style={styles.title}>
+        <Text style={{
+          textAlign: 'center',
+          fontSize: 14,
+          color: '#2E8B57',
+          fontWeight: 'bold'
+        }}>
           {`${formatDate(item?.periodoStart)} - ${formatDate(item?.periodoEnd)}`}
         </Text>
 
@@ -228,7 +233,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
             <Text style={[styles.label, { flex: 3, textAlign: "left" }]}>
               Concepto
             </Text>
-            <Text style={[styles.label, { flex: 2, textAlign: "center" }]}>
+            <Text style={[styles.label, { flex: 3, textAlign: "center" }]}>
               Observación
             </Text>
             <Text style={[styles.label, { flex: 1, textAlign: "center" }]}>
@@ -272,7 +277,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
                   {bono.name || ""}
                 </Text>
                 <Text
-                  style={[styles.textValue, { flex: 2, textAlign: "center" }]}
+                  style={[styles.textValue, { flex: 3, textAlign: "center" }]}
                 ></Text>
                 <Text
                   style={[styles.textValue, { flex: 1, textAlign: "center" }]}
@@ -289,7 +294,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
 
           <View style={styles.cardRow}>
             <Text style={[styles.label, { flex: 3 }]}>Recargos</Text>
-            <Text style={[styles.textValue, { flex: 2, textAlign: "center" }]}>
+            <Text style={[styles.textValue, { flex: 3, textAlign: "center" }]}>
               <Text></Text>
             </Text>
             <Text style={[styles.textValue, { flex: 1, textAlign: "center" }]}>
@@ -306,7 +311,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
               <Text
                 style={[
                   styles.textValue,
-                  { flex: 2, textAlign: "center", fontSize: 9 },
+                  { flex: 3, textAlign: "center", fontSize: 9 },
                 ]}
               >
                 {item?.pernotes?.map((pernote) => {
@@ -343,14 +348,14 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
                 },
               ]}
             >
-              <Text style={[styles.label, { flex: 5 }]}>Pernotes</Text>
+              <Text style={[styles.label, { flex: 3.4 }]}>Pernotes</Text>
               <Text
                 style={[styles.textValue, { flex: 1, textAlign: "center" }]}
               >
                 0
               </Text>
               <Text
-                style={[styles.textValue, { flex: 2, textAlign: "center" }]}
+                style={[styles.textValue, { flex: 1, textAlign: "center" }]}
               >
                 {formatToCOP(0)}
               </Text>
@@ -373,8 +378,8 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
                 style={[
                   styles.textValue,
                   {
-                    color: "#690fe6",
-                    backgroundColor: "#690fe61e",
+                    color: "#e6900f",
+                    backgroundColor: "#e6900f1e",
                     padding: 3,
                     borderRadius: 5,
                     fontSize: 14,
@@ -382,6 +387,29 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
                 ]}
               >
                 {formatToCOP(item?.totalVacaciones)}
+              </Text>
+            </View>
+          )}
+
+          {item?.cesantias && (
+            <View style={styles.cardRow}>
+              <Text style={styles.label}>Cesantias</Text>
+              <Text>
+                {item?.diasLaboradosAnual} días
+              </Text>
+              <Text
+                style={[
+                  styles.textValue,
+                  {
+                    color: "#007AFF",
+                    backgroundColor: "#007AFF1e",
+                    padding: 3,
+                    borderRadius: 5,
+                    fontSize: 14,
+                  },
+                ]}
+              >
+                {formatToCOP(item?.cesantias)}
               </Text>
             </View>
           )}
@@ -436,6 +464,26 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
             }}
           />
 
+          {item?.interesCesantias && (
+            <View style={styles.cardRow}>
+              <Text style={styles.label}>Interes cesantias</Text>
+              <Text
+                style={[
+                  styles.textValue,
+                  {
+                    color: "#e60f0f",
+                    backgroundColor: "#e60f0f1e",
+                    padding: 3,
+                    borderRadius: 5,
+                    fontSize: 14,
+                  },
+                ]}
+              >
+                {formatToCOP(item?.interesCesantias)}
+              </Text>
+            </View>
+          )}
+
           <View style={[styles.cardRow, { borderBottom: 0 }]}>
             <Text style={styles.label}>Anticipos</Text>
             <Text
@@ -453,6 +501,7 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
               {formatToCOP(item?.totalAnticipos)}
             </Text>
           </View>
+
         </View>
 
         <View style={styles.card}>
