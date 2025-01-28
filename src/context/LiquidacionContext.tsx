@@ -247,6 +247,7 @@ export const LiquidacionProvider = ({ children }: LiquidacionProviderProps) => {
   
   const actualizarLiquidacion = useCallback(
     async (liquidacion: LiquidacionInput) => {
+
       dispatch({
         type: "SET_LOADING",
         payload: {
