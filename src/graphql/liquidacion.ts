@@ -25,9 +25,12 @@ query Liquidaciones {
         totalVacaciones
         diasLaborados
         diasLaboradosVillanueva
+        diasLaboradosAnual
         ajusteSalarial
         salud
         pension
+        cesantias
+        interesCesantias
         estado
         vehiculos {
             id
@@ -93,9 +96,12 @@ export const CREAR_LIQUIDACION = gql`
     $totalVacaciones: Float!
     $diasLaborados: Int!
     $diasLaboradosVillanueva: Int!
+    $diasLaboradosAnual: Int!
     $ajusteSalarial: Float!
     $salud: Float!
     $pension: Float!
+    $cesantias: Float
+    $interesCesantias: Float
     $estado: String!
     $vehiculos: [ID!]!
     $bonificaciones: [BonificacionInput!]! 
@@ -119,9 +125,12 @@ export const CREAR_LIQUIDACION = gql`
       totalVacaciones: $totalVacaciones
       diasLaborados: $diasLaborados
       diasLaboradosVillanueva: $diasLaboradosVillanueva
+      diasLaboradosAnual: $diasLaboradosAnual
       ajusteSalarial: $ajusteSalarial
       salud: $salud
       pension: $pension
+      cesantias: $cesantiad
+      interesCesantias: $interesCesantias
       estado: $estado
       vehiculos: $vehiculos
       bonificaciones: $bonificaciones
@@ -151,9 +160,12 @@ export const CREAR_LIQUIDACION = gql`
         totalVacaciones
         diasLaborados
         diasLaboradosVillanueva
+        diasLaboradosAnual
         ajusteSalarial
         salud
         pension
+        cesantias
+        interesCesantias
         estado
         vehiculos {
             id
@@ -220,10 +232,13 @@ export const EDITAR_LIQUIDACION = gql`
     $totalVacaciones: Float!
     $diasLaborados: Int!
     $diasLaboradosVillanueva: Int!
+    $diasLaboradosAnual: Int
     $ajusteSalarial: Float!
     $salud: Float!
     $pension: Float!
     $estado: String!
+    $cesantias: Float
+    $interesCesantias: Float
     $vehiculos: [ID!]!
     $bonificaciones: [BonificacionInput!]! 
     $mantenimientos: [MantenimientoInput!]! 
@@ -247,10 +262,13 @@ export const EDITAR_LIQUIDACION = gql`
         totalVacaciones: $totalVacaciones
         diasLaborados: $diasLaborados
         diasLaboradosVillanueva: $diasLaboradosVillanueva
+        diasLaboradosAnual: $diasLaboradosAnual
         ajusteSalarial: $ajusteSalarial
         salud: $salud
         pension: $pension
         estado: $estado
+        cesantias: $cesantias
+        interesCesantias: $interesCesantias
         vehiculos: $vehiculos
         bonificaciones: $bonificaciones
         mantenimientos: $mantenimientos
@@ -279,9 +297,12 @@ export const EDITAR_LIQUIDACION = gql`
         totalVacaciones
         diasLaborados
         diasLaboradosVillanueva
+        diasLaboradosAnual
         ajusteSalarial
         salud
         pension
+        cesantias
+        interesCesantias
         estado
         vehiculos {
             id

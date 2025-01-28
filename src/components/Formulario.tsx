@@ -22,6 +22,8 @@ import {
   formatCurrency,
   formatDateValue,
   obtenerDiferenciaDias,
+  calcularCesantias,
+  calcularInteresCesantias,
 } from "@/helpers";
 import {
   Pernote,
@@ -70,8 +72,10 @@ export default function Formulario() {
   const [liquidacion, setLiquidacion] = useState<LiquidacionInput | null>(null);
   const [isCheckedAjuste, setIsCheckedAjuste] = useState(false);
   const [isVacaciones, setIsVacaciones] = useState(false);
+  const [isCesantias, setIsCesantias] = useState(false);
   const [diasLaborados, setDiasLaborados] = useState(0);
   const [diasLaboradosVillanueva, setDiasLaboradosVillanueva] = useState(0);
+  const [diasLaboradosAnual, setDiasLaboradosAnuales] = useState(0);
   const [ajustePorDia, setAjustePorDia] = useState(0);
 
   // Opciones para selectores
@@ -265,8 +269,10 @@ export default function Formulario() {
       // Actualizar otros campos (ajuste salarial, días laborados)
       setIsCheckedAjuste(stateLiquidacion.ajusteSalarial > 0);
       setIsVacaciones(stateLiquidacion.totalVacaciones > 0);
+      setIsCesantias(stateLiquidacion.cesantias > 0);
       setDiasLaborados(stateLiquidacion.diasLaborados);
       setDiasLaboradosVillanueva(stateLiquidacion.diasLaboradosVillanueva);
+      setDiasLaboradosAnuales(stateLiquidacion.diasLaboradosAnual);
     }
   }, [stateLiquidacion]);
 
@@ -682,6 +688,7 @@ export default function Formulario() {
     setDateSelected(null);
     setIsCheckedAjuste(false);
     setIsVacaciones(false);
+    setIsCesantias(false);
     setPeriodoVacaciones(null);
     setDiasLaborados(0);
     setDiasLaboradosVillanueva(0);
@@ -746,6 +753,9 @@ export default function Formulario() {
     totalRecargos,
     totalVacaciones,
     totalAnticipos,
+    cesantias,
+    interesCesantias,
+    salarioBaseConductor
   } = useMemo(() => {
     const total = detallesVehiculos.reduce(
       (acc, item) => {
@@ -851,6 +861,16 @@ export default function Formulario() {
       setPeriodoVacaciones(null)
     }
 
+    let cesantias = 0
+    let interesCesantias = 0
+
+    if (isCesantias) {
+      cesantias = calcularCesantias(salarioBaseConductor, (state?.configuracion?.find(
+        (config) => config.nombre === "Auxilio de transporte"
+      )?.valor || 0), diasLaboradosAnual)
+      interesCesantias = calcularInteresCesantias(cesantias, diasLaboradosAnual)
+    }
+
     return {
       auxilioTransporte,
       salud,
@@ -862,13 +882,16 @@ export default function Formulario() {
       totalAnticipos,
       totalVacaciones,
       salarioDevengado,
+      cesantias,
+      interesCesantias,
       sueldoTotal:
         total.totalSubtotales +
         bonificacionVillanueva +
         salarioDevengado +
         totalVacaciones +
+        cesantias +
         auxilioTransporte -
-        (salud + pension) -
+        (salud + pension + interesCesantias) -
         totalAnticipos,
     };
   }, [
@@ -876,13 +899,15 @@ export default function Formulario() {
     diasLaborados,
     diasLaboradosVillanueva,
     bonificacionVillanueva,
+    diasLaboradosAnual,
     dateSelected,
     conductorSelected,
     vehiculosSelected,
     state.conductores,
     state.configuracion,
     periodoVacaciones,
-    isVacaciones
+    isVacaciones,
+    isCesantias
   ]);
 
   // Actualización de la liquidación en el useEffect
@@ -975,9 +1000,12 @@ export default function Formulario() {
       totalAnticipos: totalAnticipos || 0,
       diasLaborados: diasLaborados || 0,
       diasLaboradosVillanueva: diasLaboradosVillanueva || 0,
+      diasLaboradosAnual: diasLaboradosAnual || 0,
       ajusteSalarial: bonificacionVillanueva || 0, // Usa bonificacionVillanueva o 0
       salud: salud || 0, // Usa bonificacionVillanueva o 0
       pension: pension || 0, // Usa bonificacionVillanueva o 0
+      cesantias: cesantias || 0, // Usa bonificacionVillanueva o 0
+      interesCesantias: interesCesantias || 0, // Usa bonificacionVillanueva o 0
       estado:
         salud > 0 && pension > 0 && totalBonificaciones > 0
           ? "Liquidado"
@@ -1004,6 +1032,7 @@ export default function Formulario() {
     mesesRange,
     diasLaborados,
     diasLaboradosVillanueva,
+    diasLaboradosAnual,
     periodoVacaciones,
     bonificacionVillanueva, // Ajuste salarial
   ]);
@@ -1042,9 +1071,12 @@ export default function Formulario() {
           totalAnticipos: liquidacion.totalAnticipos || 0,
           diasLaborados: liquidacion.diasLaborados || 0,
           diasLaboradosVillanueva: liquidacion.diasLaboradosVillanueva || 0,
+          diasLaboradosAnual: liquidacion.diasLaboradosAnual || 0,
           ajusteSalarial: liquidacion.ajusteSalarial || 0,
           salud: liquidacion.salud || 0,
           pension: liquidacion.pension || 0,
+          cesantias: liquidacion.cesantias || 0,
+          interesCesantias: liquidacion.interesCesantias || 0,
           estado: liquidacion.estado,
           vehiculos: liquidacion.vehiculos, // Mapeamos los valores correctos de los vehículos
           bonificaciones: bonificacionesFiltradas, // Enviamos las bonificaciones filtradas
@@ -1361,7 +1393,7 @@ export default function Formulario() {
                                         newFechas
                                       );
                                     }
-                                  }}                                  
+                                  }}
                                 />
                               ))}
 
@@ -1669,6 +1701,73 @@ export default function Formulario() {
                                     </>
                                   )}
                                 </div>
+
+                                <div className="space-y-3">
+                                  <Checkbox
+                                    isDisabled={
+                                      state.allowEdit || state.allowEdit == null
+                                        ? false
+                                        : true
+                                    }
+                                    isSelected={isCesantias}
+                                    onChange={(e) =>
+                                      setIsCesantias(e.target.checked)
+                                    }
+                                  >
+                                    Cesantias
+                                  </Checkbox>
+
+                                  {isCesantias && (
+                                    <>
+                                      <Input
+                                        isDisabled={
+                                          state.allowEdit ||
+                                            state.allowEdit == null
+                                            ? false
+                                            : true
+                                        }
+                                        value={diasLaboradosAnual.toString()}
+                                        onChange={(e) =>
+                                          setDiasLaboradosAnuales(
+                                            +e.target.value
+                                          )
+                                        }
+                                        type="number"
+                                        label="Cantidad días laborados anual"
+                                        placeholder="Ingresa la cantidad de días laborados en el año"
+                                        className="max-w-xs"
+                                      />
+
+                                      <div>
+
+                                        <p className="font-semibold p-1">
+                                          Días laborados en el año:{" "}
+                                          <span className="font-normal">
+                                            {diasLaboradosAnual}
+                                          </span>
+                                        </p>
+
+                                        <p className="font-semibold p-1">
+                                          Valor cesantias:{" "}
+                                          <span className="font-normal">
+                                            {formatToCOP(calcularCesantias(salarioBaseConductor, (state?.configuracion?.find(
+                                              (config) => config.nombre === "Auxilio de transporte"
+                                            )?.valor || 0), diasLaboradosAnual))}
+                                          </span>
+                                        </p>
+
+                                        <p className="font-semibold p-1">
+                                          Intereses cesantias:{" "}
+                                          <span className="font-normal">
+                                            {formatToCOP(calcularInteresCesantias(calcularCesantias(salarioBaseConductor, (state?.configuracion?.find(
+                                              (config) => config.nombre === "Auxilio de transporte"
+                                            )?.valor || 0), diasLaboradosAnual), diasLaboradosAnual))}
+                                          </span>
+                                        </p>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
                               </div>
 
                               <Table shadow="none" aria-label="Resumen">
@@ -1739,10 +1838,22 @@ export default function Formulario() {
                                       {formatToCOP(pension)}
                                     </TableCell>
                                   </TableRow>
-                                  <TableRow className="border-1 bg-purple-600 text-white">
+                                  <TableRow className="border-1 bg-orange-400 text-white">
                                     <TableCell>Vacaciones</TableCell>
                                     <TableCell>
                                       {formatToCOP(totalVacaciones || 0)}
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1 bg-blue-600 text-white">
+                                    <TableCell>Cesantias</TableCell>
+                                    <TableCell>
+                                      {formatToCOP(cesantias)}
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1 bg-red-600 text-white">
+                                    <TableCell>Interes cesantias</TableCell>
+                                    <TableCell>
+                                      {formatToCOP(interesCesantias)}
                                     </TableCell>
                                   </TableRow>
                                   <TableRow className="border-1 bg-red-600 text-white">

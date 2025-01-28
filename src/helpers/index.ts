@@ -153,3 +153,11 @@ export function MesyAño(dateString: string | undefined): string {
   // Convertir la fecha al formato deseado utilizando la configuración regional 'es-ES'
   return date.toLocaleDateString('es-ES', options).toUpperCase();
 }
+
+export function calcularCesantias(salarioBase : number, auxilioTransporte : number, diasLaborados : number){
+  return Number((((salarioBase + auxilioTransporte) * diasLaborados) / 360).toFixed(0))
+}
+
+export function calcularInteresCesantias(cesantias : number, diasLaborados : number){
+  return Number(((cesantias * 0.12) * (diasLaborados / 360)).toFixed(0))
+}
