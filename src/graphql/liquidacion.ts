@@ -129,7 +129,7 @@ export const CREAR_LIQUIDACION = gql`
       ajusteSalarial: $ajusteSalarial
       salud: $salud
       pension: $pension
-      cesantias: $cesantiad
+      cesantias: $cesantias
       interesCesantias: $interesCesantias
       estado: $estado
       vehiculos: $vehiculos
