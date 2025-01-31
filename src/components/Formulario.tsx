@@ -22,8 +22,6 @@ import {
   formatCurrency,
   formatDateValue,
   obtenerDiferenciaDias,
-  calcularCesantias,
-  calcularInteresCesantias,
 } from "@/helpers";
 import {
   Pernote,
@@ -76,6 +74,8 @@ export default function Formulario() {
   const [diasLaborados, setDiasLaborados] = useState(0);
   const [diasLaboradosVillanueva, setDiasLaboradosVillanueva] = useState(0);
   const [diasLaboradosAnual, setDiasLaboradosAnuales] = useState(0);
+  const [cesantias, setCesantias] = useState(0);
+  const [interesCesantias, setInteresCesantias] = useState(0);
   const [ajustePorDia, setAjustePorDia] = useState(0);
 
   // Opciones para selectores
@@ -257,6 +257,8 @@ export default function Formulario() {
       setDiasLaborados(stateLiquidacion.diasLaborados);
       setDiasLaboradosVillanueva(stateLiquidacion.diasLaboradosVillanueva);
       setDiasLaboradosAnuales(stateLiquidacion.diasLaboradosAnual);
+      setCesantias(stateLiquidacion.cesantias);
+      setInteresCesantias(stateLiquidacion.interesCesantias);
     }
   }, [stateLiquidacion]);
 
@@ -749,9 +751,6 @@ export default function Formulario() {
     totalRecargos,
     totalVacaciones,
     totalAnticipos,
-    cesantias,
-    interesCesantias,
-    salarioBaseConductor
   } = useMemo(() => {
     const total = detallesVehiculos.reduce(
       (acc, item) => {
@@ -857,16 +856,6 @@ export default function Formulario() {
       setPeriodoVacaciones(null)
     }
 
-    let cesantias = 0
-    let interesCesantias = 0
-
-    if (isCesantias) {
-      cesantias = calcularCesantias(salarioBaseConductor, (state?.configuracion?.find(
-        (config) => config.nombre === "Auxilio de transporte"
-      )?.valor || 0), diasLaboradosAnual)
-      interesCesantias = calcularInteresCesantias(cesantias, diasLaboradosAnual)
-    }
-
     return {
       auxilioTransporte,
       salud,
@@ -878,8 +867,6 @@ export default function Formulario() {
       totalAnticipos,
       totalVacaciones,
       salarioDevengado,
-      cesantias,
-      interesCesantias,
       sueldoTotal:
         total.totalSubtotales +
         bonificacionVillanueva +
@@ -903,7 +890,9 @@ export default function Formulario() {
     state.configuracion,
     periodoVacaciones,
     isVacaciones,
-    isCesantias
+    isCesantias,
+    cesantias,
+    interesCesantias
   ]);
 
   // Actualización de la liquidación en el useEffect
@@ -1733,34 +1722,51 @@ export default function Formulario() {
                                         placeholder="Ingresa la cantidad de días laborados en el año"
                                         className="max-w-xs"
                                       />
-
-                                      <div>
-
-                                        <p className="font-semibold p-1">
-                                          Días laborados en el año:{" "}
-                                          <span className="font-normal">
-                                            {diasLaboradosAnual}
-                                          </span>
-                                        </p>
-
-                                        <p className="font-semibold p-1">
-                                          Valor cesantias:{" "}
-                                          <span className="font-normal">
-                                            {formatToCOP(calcularCesantias(salarioBaseConductor, (state?.configuracion?.find(
-                                              (config) => config.nombre === "Auxilio de transporte"
-                                            )?.valor || 0), diasLaboradosAnual))}
-                                          </span>
-                                        </p>
-
-                                        <p className="font-semibold p-1">
-                                          Intereses cesantias:{" "}
-                                          <span className="font-normal">
-                                            {formatToCOP(calcularInteresCesantias(calcularCesantias(salarioBaseConductor, (state?.configuracion?.find(
-                                              (config) => config.nombre === "Auxilio de transporte"
-                                            )?.valor || 0), diasLaboradosAnual), diasLaboradosAnual))}
-                                          </span>
-                                        </p>
-                                      </div>
+                                      <Input
+                                        isDisabled={
+                                          state.allowEdit ||
+                                            state.allowEdit == null
+                                            ? false
+                                            : true
+                                        }
+                                        value={formatCurrency(cesantias)} // Muestra el valor solo cuando pagCliente es false
+                                        onChange={(e) => {
+                                          const inputVal = e.target.value.replace(
+                                            /[^\d]/g,
+                                            ""
+                                          ); // Quitamos caracteres no numéricos
+                                          const numericValue = +inputVal; // Convertimos el string limpio a número
+                                          setCesantias(numericValue)
+                                        }}
+                                        
+                                        type="text"
+                                        label="Cesantias"
+                                        placeholder="Ingresa el valor de las cesantias"
+                                        className="max-w-xs"
+                                      />
+                                      <Input
+                                        isDisabled={
+                                          state.allowEdit ||
+                                            state.allowEdit == null
+                                            ? false
+                                            : true
+                                        }
+                                        value={formatCurrency(interesCesantias)} // Muestra el valor solo cuando pagCliente es false
+                                        onChange={(e) => {
+                                          const inputVal = e.target.value.replace(
+                                            /[^\d]/g,
+                                            ""
+                                          ); // Quitamos caracteres no numéricos
+                                          const numericValue = +inputVal; // Convertimos el string limpio a número
+        
+                                          // Llamamos a handleRecargoChange con pagaCliente como false
+                                         setInteresCesantias(numericValue)
+                                        }}
+                                        type="text"
+                                        label="Interes cesantias"
+                                        placeholder="Ingresa el valor de los intereses de las cesantias"
+                                        className="max-w-xs"
+                                      />
                                     </>
                                   )}
                                 </div>
