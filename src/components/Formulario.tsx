@@ -885,9 +885,9 @@ export default function Formulario() {
         bonificacionVillanueva +
         salarioDevengado +
         totalVacaciones +
-        cesantias +
+        interesCesantias +
         auxilioTransporte -
-        (salud + pension + interesCesantias) -
+        (salud + pension) -
         totalAnticipos,
     };
   }, [
@@ -1812,28 +1812,6 @@ export default function Formulario() {
                                       {formatToCOP(totalRecargos)}
                                     </TableCell>
                                   </TableRow>
-                                  <TableRow className="border-1">
-                                    <TableCell>
-                                      Salud (
-                                      {state.configuracion?.find(
-                                        (config) => config.nombre == "Salud"
-                                      )?.valor || 0}
-                                      %)
-                                    </TableCell>
-                                    <TableCell>{formatToCOP(salud)}</TableCell>
-                                  </TableRow>
-                                  <TableRow className="border-1">
-                                    <TableCell>
-                                      Pensión (
-                                      {state.configuracion?.find(
-                                        (config) => config.nombre == "Pensión"
-                                      )?.valor || 0}
-                                      %)
-                                    </TableCell>
-                                    <TableCell>
-                                      {formatToCOP(pension)}
-                                    </TableCell>
-                                  </TableRow>
                                   <TableRow className="border-1 bg-orange-400 text-white">
                                     <TableCell>Vacaciones</TableCell>
                                     <TableCell>
@@ -1846,10 +1824,32 @@ export default function Formulario() {
                                       {formatToCOP(cesantias)}
                                     </TableCell>
                                   </TableRow>
-                                  <TableRow className="border-1 bg-red-600 text-white">
+                                  <TableRow className="border-1 bg-green-600 text-white">
                                     <TableCell>Interes cesantias</TableCell>
                                     <TableCell>
                                       {formatToCOP(interesCesantias)}
+                                    </TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1 bg-red-600 text-white">
+                                    <TableCell>
+                                      Salud (
+                                      {state.configuracion?.find(
+                                        (config) => config.nombre == "Salud"
+                                      )?.valor || 0}
+                                      %)
+                                    </TableCell>
+                                    <TableCell>{formatToCOP(salud)}</TableCell>
+                                  </TableRow>
+                                  <TableRow className="border-1 bg-red-600 text-white">
+                                    <TableCell>
+                                      Pensión (
+                                      {state.configuracion?.find(
+                                        (config) => config.nombre == "Pensión"
+                                      )?.valor || 0}
+                                      %)
+                                    </TableCell>
+                                    <TableCell>
+                                      {formatToCOP(pension)}
                                     </TableCell>
                                   </TableRow>
                                   <TableRow className="border-1 bg-red-600 text-white">
@@ -1858,7 +1858,7 @@ export default function Formulario() {
                                       {formatToCOP(totalAnticipos)}
                                     </TableCell>
                                   </TableRow>
-                                  <TableRow className="border-1 bg-green-700 text-white">
+                                  <TableRow className="border-1 bg-black text-white">
                                     <TableCell className="text-xl">
                                       Sueldo total
                                     </TableCell>
