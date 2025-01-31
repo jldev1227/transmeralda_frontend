@@ -414,6 +414,27 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
             </View>
           )}
 
+
+          {item?.interesCesantias && (
+            <View style={styles.cardRow}>
+              <Text style={styles.label}>Interes cesantias</Text>
+              <Text
+                style={[
+                  styles.textValue,
+                  {
+                    color: "#2E8B57",
+                    backgroundColor: "#2E8B571e",
+                    padding: 3,
+                    borderRadius: 5,
+                    fontSize: 14,
+                  },
+                ]}
+              >
+                {formatToCOP(item?.interesCesantias)}
+              </Text>
+            </View>
+          )}
+
           <View style={[styles.cardRow, { borderBottom: 0 }]}>
             <Text style={styles.label}>Salud</Text>
             <Text
@@ -463,26 +484,6 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
               backgroundColor: "#e6e6e6",
             }}
           />
-
-          {item?.interesCesantias && (
-            <View style={styles.cardRow}>
-              <Text style={styles.label}>Interes cesantias</Text>
-              <Text
-                style={[
-                  styles.textValue,
-                  {
-                    color: "#e60f0f",
-                    backgroundColor: "#e60f0f1e",
-                    padding: 3,
-                    borderRadius: 5,
-                    fontSize: 14,
-                  },
-                ]}
-              >
-                {formatToCOP(item?.interesCesantias)}
-              </Text>
-            </View>
-          )}
 
           <View style={[styles.cardRow, { borderBottom: 0 }]}>
             <Text style={styles.label}>Anticipos</Text>
