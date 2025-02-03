@@ -391,30 +391,6 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
             </View>
           )}
 
-          {item?.cesantias && (
-            <View style={styles.cardRow}>
-              <Text style={styles.label}>Cesantias</Text>
-              <Text>
-                {item?.diasLaboradosAnual} días
-              </Text>
-              <Text
-                style={[
-                  styles.textValue,
-                  {
-                    color: "#007AFF",
-                    backgroundColor: "#007AFF1e",
-                    padding: 3,
-                    borderRadius: 5,
-                    fontSize: 14,
-                  },
-                ]}
-              >
-                {formatToCOP(item?.cesantias)}
-              </Text>
-            </View>
-          )}
-
-
           {item?.interesCesantias && (
             <View style={styles.cardRow}>
               <Text style={styles.label}>Interes cesantias</Text>
