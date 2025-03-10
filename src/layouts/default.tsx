@@ -34,6 +34,10 @@ export default function DefaultLayout() {
       href: "/vehiculos",
     },
     {
+      name: "Formularios",
+      href: "/formularios",
+    },
+    {
       name: "Empresas",
       href: "/empresas",
     },

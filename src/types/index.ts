@@ -218,3 +218,11 @@ export interface AlertState {
   success?: boolean | null;
   message?: string;
 }
+
+export type Formulario = {
+  FormularioId: string;
+  Nombre: string; // Nombre del formulario
+  Descripcion: string; // Descripción del formulario
+  Imagen: string,
+  typename?: string
+};
