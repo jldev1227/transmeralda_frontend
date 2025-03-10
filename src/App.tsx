@@ -12,6 +12,8 @@ import DefaultLayout from "./layouts/default";
 import Empresas from "./pages/empresas";
 import Vehiculos from "./pages/vehiculos";
 import { VehiculoProvider } from "./context/VehiculoContext";
+import Formularios from "./pages/formularios";
+import { FormularioProvider } from "./context/FormularioContext";
 
 function App() {
   return (
@@ -34,12 +36,21 @@ function App() {
                     <Empresas />
                   </LiquidacionProvider>
                 }
-              />              <Route
+              />              
+              <Route
                 path="/vehiculos"
                 element={
                   <VehiculoProvider>
                     <Vehiculos />
                   </VehiculoProvider>
+                }
+              />
+              <Route
+                path="/formularios"
+                element={
+                  <FormularioProvider>
+                    <Formularios />
+                  </FormularioProvider>
                 }
               />
               {/* Ruta para Liquidaciones con LiquidacionProvider */}

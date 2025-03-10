@@ -8,7 +8,7 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import { Divider } from "@nextui-org/divider";
-import { BonificacionesAcc, Bono, Liquidacion } from "@/types/index";
+import { BonificacionesAcc, Bono, Liquidacion, Recargo } from "@/types/index";
 import { formatDate, formatToCOP, MesyAño, obtenerDiferenciaDias } from "@/helpers";
 import { Font } from "@react-pdf/renderer";
 import { parseDate } from "@internationalized/date";
@@ -89,311 +89,445 @@ const styles = StyleSheet.create({
 
 type LiquidacionPDFProps = {
   item: Liquidacion | null; // Tipado del item basado en el tipo Liquidacion
+  totalRecargosParex: number
+  recargosParex: Recargo[]
+  recargosActualizados: Recargo[]
 };
 
+
 // Componente que genera el PDF con la información del item
-const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-        }}
-      >
+const LiquidacionPDF = ({ item, totalRecargosParex, recargosParex, recargosActualizados }: LiquidacionPDFProps) => {
+
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
         <View
           style={{
-            gap: 2,
+            flexDirection: "row",
+            alignItems: "center",
           }}
         >
-          <Text style={styles.header}>
-            TRANSPORTES Y SERVICIOS ESMERALDA S.A.S ZOMAC
-          </Text>
-          <Text
+          <View
             style={{
-              fontSize: 10,
-              fontFamily: "Roboto", // Usa la fuente registrada
-              fontWeight: "semibold", // Aplica el peso,
+              gap: 2,
             }}
           >
-            NIT: 901528440
-          </Text>
-          <Text style={[styles.label, { marginTop: 15, color: "#2E8B57" }]}>
-            Comprobante de nomina - {MesyAño(item?.periodoEnd)}
-          </Text>
+            <Text style={styles.header}>
+              TRANSPORTES Y SERVICIOS ESMERALDA S.A.S ZOMAC
+            </Text>
+            <Text
+              style={{
+                fontSize: 10,
+                fontFamily: "Roboto", // Usa la fuente registrada
+                fontWeight: "semibold", // Aplica el peso,
+              }}
+            >
+              NIT: 901528440
+            </Text>
+            <Text style={[styles.label, { marginTop: 15, color: "#2E8B57" }]}>
+              Comprobante de nomina - {MesyAño(item?.periodoEnd)}
+            </Text>
+          </View>
+          <Image
+            style={{
+              width: 150,
+              position: "absolute",
+              height: 90,
+              right: -45,
+              objectFit: "cover",
+            }}
+            source={"/assets/codi.png"}
+          />
         </View>
-        <Image
+
+        <View
           style={{
-            width: 150,
-            position: "absolute",
-            height: 90,
-            right: -45,
-            objectFit: "cover",
+            gap: 20,
+            marginTop: -20,
           }}
-          source={"/assets/codi.png"}
-        />
-      </View>
-
-      <View
-        style={{
-          gap: 20,
-          marginTop: -20,
-        }}
-      >
-        <View style={styles.card}>
-          <View style={styles.cardRow}>
-            <Text style={styles.label}>Nombre</Text>
-            <Text style={styles.textValue}>
-              {item?.conductor?.nombre} {item?.conductor?.apellido}
-            </Text>
-          </View>
-          <View style={styles.cardRow}>
-            <Text style={styles.label}>C.C.</Text>
-            <Text style={styles.textValue}>{item?.conductor?.cc}</Text>
-          </View>
-          <View style={styles.cardRow}>
-            <Text style={styles.label}>Días laborados</Text>
-            <Text style={styles.textValue}>{item?.diasLaborados}</Text>
-          </View>
-          <View style={styles.cardRow}>
-            <Text style={styles.label}>Salario devengado</Text>
-            <Text
-              style={[
-                styles.textValue,
-                {
-                  color: "#007AFF",
-                  backgroundColor: "#007AFF1e",
-                  padding: 3,
-                  borderRadius: 5,
-                  fontSize: 14,
-                },
-              ]}
-            >
-              {formatToCOP(item?.salarioDevengado)}
-            </Text>
-          </View>
-          <View style={styles.cardRow}>
-            <Text style={styles.label}>Auxilio de transporte</Text>
-            <Text
-              style={[
-                styles.textValue,
-                {
-                  color: "#00000074",
-                  backgroundColor: "#00000024",
-                  padding: 3,
-                  borderRadius: 5,
-                  fontSize: 14,
-                },
-              ]}
-            >
-              {formatToCOP(item?.auxilioTransporte)}
-            </Text>
-          </View>
-          <View style={[styles.cardRow, { borderBottom: 0 }]}>
-            <Text style={styles.label}>Ajuste villanueva</Text>
-            <Text>{item?.diasLaboradosVillanueva} días</Text>
-            <Text
-              style={[
-                styles.textValue,
-                {
-                  color: "#FF9500",
-                  backgroundColor: "#FF95001e",
-                  padding: 3,
-                  borderRadius: 5,
-                  fontSize: 14,
-                },
-              ]}
-            >
-              {formatToCOP(item?.ajusteSalarial)}
-            </Text>
-          </View>
-        </View>
-
-        <Text style={{
-          textAlign: 'center',
-          fontSize: 14,
-          color: '#2E8B57',
-          fontWeight: 'bold'
-        }}>
-          {`${formatDate(item?.periodoStart)} - ${formatDate(item?.periodoEnd)}`}
-        </Text>
-
-        <View style={styles.card}>
-          <View
-            style={[
-              styles.cardRow,
-              {
-                backgroundColor: "#2E8B571e",
-                borderTopLeftRadius: 10,
-                borderTopRightRadius: 10,
-                color: "#2E8B57",
-              },
-            ]}
-          >
-            <Text style={[styles.label, { flex: 3, textAlign: "left" }]}>
-              Concepto
-            </Text>
-            <Text style={[styles.label, { flex: 3, textAlign: "center" }]}>
-              Observación
-            </Text>
-            <Text style={[styles.label, { flex: 1, textAlign: "center" }]}>
-              Cantidad
-            </Text>
-            <Text style={[styles.label, { flex: 2, textAlign: "center" }]}>
-              Valor
-            </Text>
-          </View>
-
-          {item?.bonificaciones &&
-            Object.values(
-              item.bonificaciones.reduce(
-                (acc: BonificacionesAcc, bonificacion: Bono) => {
-                  // Sumamos la cantidad de bonificaciones y el valor total
-                  const totalQuantity = bonificacion.values.reduce(
-                    (sum, val) => sum + (val.quantity || 0),
-                    0
-                  );
-
-                  if (acc[bonificacion.name]) {
-                    // Si ya existe la bonificación, sumamos la cantidad y el valor total
-                    acc[bonificacion.name].quantity += totalQuantity;
-                    acc[bonificacion.name].totalValue +=
-                      totalQuantity * bonificacion.value;
-                  } else {
-                    // Si no existe, la añadimos al acumulador
-                    acc[bonificacion.name] = {
-                      name: bonificacion.name,
-                      quantity: totalQuantity,
-                      totalValue: totalQuantity * bonificacion.value,
-                    };
-                  }
-                  return acc;
-                },
-                {}
-              )
-            ).map((bono: any) => (
-              <View key={bono.name} style={[styles.cardRow]}>
-                <Text style={[styles.label, { flex: 3, textAlign: "left" }]}>
-                  {bono.name || ""}
-                </Text>
-                <Text
-                  style={[styles.textValue, { flex: 3, textAlign: "center" }]}
-                ></Text>
-                <Text
-                  style={[styles.textValue, { flex: 1, textAlign: "center" }]}
-                >
-                  {bono.quantity}
-                </Text>
-                <Text
-                  style={[styles.textValue, { flex: 2, textAlign: "center" }]}
-                >
-                  {formatToCOP(bono.totalValue)}
-                </Text>
-              </View>
-            ))}
-
-          <View style={styles.cardRow}>
-            <Text style={[styles.label, { flex: 3 }]}>Recargos</Text>
-            <Text style={[styles.textValue, { flex: 3, textAlign: "center" }]}>
-              <Text></Text>
-            </Text>
-            <Text style={[styles.textValue, { flex: 1, textAlign: "center" }]}>
-              {item?.recargos?.length}
-            </Text>
-            <Text style={[styles.textValue, { flex: 2, textAlign: "center" }]}>
-              {formatToCOP(item?.totalRecargos)}
-            </Text>
-          </View>
-
-          {item?.pernotes && item.pernotes?.length > 0 ? (
-            <View style={[styles.cardRow, { borderBottom: 0 }]}>
-              <Text style={[styles.label, { flex: 3 }]}>Pernotes</Text>
-              <Text
-                style={[
-                  styles.textValue,
-                  { flex: 3, textAlign: "center", fontSize: 9 },
-                ]}
-              >
-                {item?.pernotes?.map((pernote) => {
-                  // Mapea las fechas y formatea cada una
-                  const fechasFormateadas = pernote.fechas?.map((fecha) => {
-                    const fechaSeparada = formatDate(fecha).split(" ");
-                    return `${fechaSeparada[0]}-${fechaSeparada[1]} `; // Formateamos sin agregar la coma aquí
-                  });
-
-                  // Verificamos que haya fechas y unimos con ", "
-                  return fechasFormateadas;
-                })}
-              </Text>
-              <Text
-                style={[styles.textValue, { flex: 1, textAlign: "center" }]}
-              >
-                {item?.pernotes?.reduce((total, pernote) => {
-                  return total + (pernote.fechas ? pernote.fechas.length : 0);
-                }, 0) || 0}
-              </Text>
-
-              <Text
-                style={[styles.textValue, { flex: 2, textAlign: "center" }]}
-              >
-                {formatToCOP(item.totalPernotes)}
-              </Text>
-            </View>
-          ) : (
-            <View
-              style={[
-                styles.cardRow,
-                {
-                  borderBottom: 0,
-                },
-              ]}
-            >
-              <Text style={[styles.label, { flex: 3.4 }]}>Pernotes</Text>
-              <Text
-                style={[styles.textValue, { flex: 1, textAlign: "center" }]}
-              >
-                0
-              </Text>
-              <Text
-                style={[styles.textValue, { flex: 1, textAlign: "center" }]}
-              >
-                {formatToCOP(0)}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.card}>
-          {(item?.totalVacaciones ? item.totalVacaciones : 0) > 0 && (
+        >
+          <View style={styles.card}>
             <View style={styles.cardRow}>
-              <Text style={styles.label}>Vacaciones</Text>
-              <Text>
-                {obtenerDiferenciaDias({
-                  start: parseDate(item?.periodoStartVacaciones),
-                  end: parseDate(item?.periodoEndVacaciones),
-                })}{" "}
-                días
+              <Text style={styles.label}>Nombre</Text>
+              <Text style={styles.textValue}>
+                {item?.conductor?.nombre} {item?.conductor?.apellido}
               </Text>
+            </View>
+            <View style={styles.cardRow}>
+              <Text style={styles.label}>C.C.</Text>
+              <Text style={styles.textValue}>{item?.conductor?.cc}</Text>
+            </View>
+            <View style={styles.cardRow}>
+              <Text style={styles.label}>Días laborados</Text>
+              <Text style={styles.textValue}>{item?.diasLaborados}</Text>
+            </View>
+            <View style={styles.cardRow}>
+              <Text style={styles.label}>Salario devengado</Text>
               <Text
                 style={[
                   styles.textValue,
                   {
-                    color: "#e6900f",
-                    backgroundColor: "#e6900f1e",
+                    color: "#007AFF",
+                    backgroundColor: "#007AFF1e",
                     padding: 3,
                     borderRadius: 5,
                     fontSize: 14,
                   },
                 ]}
               >
-                {formatToCOP(item?.totalVacaciones)}
+                {formatToCOP(item?.salarioDevengado)}
               </Text>
             </View>
-          )}
-
-          {item?.interesCesantias && (
             <View style={styles.cardRow}>
-              <Text style={styles.label}>Interes cesantias</Text>
+              <Text style={styles.label}>Auxilio de transporte</Text>
+              <Text
+                style={[
+                  styles.textValue,
+                  {
+                    color: "#00000074",
+                    backgroundColor: "#00000024",
+                    padding: 3,
+                    borderRadius: 5,
+                    fontSize: 14,
+                  },
+                ]}
+              >
+                {formatToCOP(item?.auxilioTransporte)}
+              </Text>
+            </View>
+            <View style={[styles.cardRow, { borderBottom: 0 }]}>
+              <Text style={styles.label}>Ajuste villanueva</Text>
+              <Text>{item?.diasLaboradosVillanueva} días</Text>
+              <Text
+                style={[
+                  styles.textValue,
+                  {
+                    color: "#FF9500",
+                    backgroundColor: "#FF95001e",
+                    padding: 3,
+                    borderRadius: 5,
+                    fontSize: 14,
+                  },
+                ]}
+              >
+                {formatToCOP(item?.ajusteSalarial)}
+              </Text>
+            </View>
+          </View>
+
+          <Text style={{
+            textAlign: 'center',
+            fontSize: 14,
+            color: '#2E8B57',
+            fontWeight: 'bold'
+          }}>
+            {`${formatDate(item?.periodoStart)} - ${formatDate(item?.periodoEnd)}`}
+          </Text>
+
+          <View style={styles.card}>
+            <View
+              style={[
+                styles.cardRow,
+                {
+                  backgroundColor: "#2E8B571e",
+                  borderTopLeftRadius: 10,
+                  borderTopRightRadius: 10,
+                  color: "#2E8B57",
+                },
+              ]}
+            >
+              <Text style={[styles.label, { flex: 3, textAlign: "left" }]}>
+                Concepto
+              </Text>
+              <Text style={[styles.label, { flex: 3, textAlign: "center" }]}>
+                Observación
+              </Text>
+              <Text style={[styles.label, { flex: 1, textAlign: "center" }]}>
+                Cantidad
+              </Text>
+              <Text style={[styles.label, { flex: 2, textAlign: "center" }]}>
+                Valor
+              </Text>
+            </View>
+
+            {item?.bonificaciones &&
+              Object.values(
+                item.bonificaciones.reduce(
+                  (acc: BonificacionesAcc, bonificacion: Bono) => {
+                    // Sumamos la cantidad de bonificaciones y el valor total
+                    const totalQuantity = bonificacion.values.reduce(
+                      (sum, val) => sum + (val.quantity || 0),
+                      0
+                    );
+
+                    if (acc[bonificacion.name]) {
+                      // Si ya existe la bonificación, sumamos la cantidad y el valor total
+                      acc[bonificacion.name].quantity += totalQuantity;
+                      acc[bonificacion.name].totalValue +=
+                        totalQuantity * bonificacion.value;
+                    } else {
+                      // Si no existe, la añadimos al acumulador
+                      acc[bonificacion.name] = {
+                        name: bonificacion.name,
+                        quantity: totalQuantity,
+                        totalValue: totalQuantity * bonificacion.value,
+                      };
+                    }
+                    return acc;
+                  },
+                  {}
+                )
+              ).map((bono: any) => (
+                <View key={bono.name} style={[styles.cardRow]}>
+                  <Text style={[styles.label, { flex: 3, textAlign: "left" }]}>
+                    {bono.name || ""}
+                  </Text>
+                  <Text
+                    style={[styles.textValue, { flex: 3, textAlign: "center" }]}
+                  ></Text>
+                  <Text
+                    style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+                  >
+                    {bono.quantity}
+                  </Text>
+                  <Text
+                    style={[styles.textValue, { flex: 2, textAlign: "center" }]}
+                  >
+                    {formatToCOP(bono.totalValue)}
+                  </Text>
+                </View>
+              ))}
+
+            <View style={styles.cardRow}>
+              <Text style={[styles.label, { flex: 3 }]}>Recargos</Text>
+              <Text style={[styles.textValue, { flex: 3, textAlign: "center" }]}>
+                <Text></Text>
+              </Text>
+              <Text style={[styles.textValue, { flex: 1, textAlign: "center" }]}>
+                {recargosActualizados?.length}
+              </Text>
+              <Text style={[styles.textValue, { flex: 2, textAlign: "center" }]}>
+                {formatToCOP(totalRecargosParex !== undefined && item?.totalRecargos !== undefined
+                  ? item.totalRecargos - totalRecargosParex
+                  : item?.totalRecargos || 0)}
+              </Text>
+            </View>
+
+            <View style={styles.cardRow}>
+              <Text style={[styles.label, { flex: 3 }]}>Recargos PAREX</Text>
+              <Text style={[styles.textValue, { flex: 3, textAlign: "center" }]}>
+                <Text></Text>
+              </Text>
+              <Text style={[styles.textValue, { flex: 1, textAlign: "center" }]}>
+                {recargosParex.length}
+              </Text>
+              <Text style={[styles.textValue, { flex: 2, textAlign: "center" }]}>
+                {formatToCOP(totalRecargosParex)}
+              </Text>
+            </View>
+
+            {item?.pernotes && item.pernotes?.length > 0 ? (
+              <View style={[styles.cardRow, { borderBottom: 0 }]}>
+                <Text style={[styles.label, { flex: 3 }]}>Pernotes</Text>
+                <Text
+                  style={[
+                    styles.textValue,
+                    { flex: 3, textAlign: "center", fontSize: 9 },
+                  ]}
+                >
+                  {item?.pernotes?.map((pernote) => {
+                    // Mapea las fechas y formatea cada una
+                    const fechasFormateadas = pernote.fechas?.map((fecha) => {
+                      const fechaSeparada = formatDate(fecha).split(" ");
+                      return `${fechaSeparada[0]}-${fechaSeparada[1]} `; // Formateamos sin agregar la coma aquí
+                    });
+
+                    // Verificamos que haya fechas y unimos con ", "
+                    return fechasFormateadas;
+                  })}
+                </Text>
+                <Text
+                  style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+                >
+                  {item?.pernotes?.reduce((total, pernote) => {
+                    return total + (pernote.fechas ? pernote.fechas.length : 0);
+                  }, 0) || 0}
+                </Text>
+
+                <Text
+                  style={[styles.textValue, { flex: 2, textAlign: "center" }]}
+                >
+                  {formatToCOP(item.totalPernotes)}
+                </Text>
+              </View>
+            ) : (
+              <View
+                style={[
+                  styles.cardRow,
+                  {
+                    borderBottom: 0,
+                  },
+                ]}
+              >
+                <Text style={[styles.label, { flex: 3.4 }]}>Pernotes</Text>
+                <Text
+                  style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+                >
+                  0
+                </Text>
+                <Text
+                  style={[styles.textValue, { flex: 1, textAlign: "center" }]}
+                >
+                  {formatToCOP(0)}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.card}>
+            {(item?.totalVacaciones ? item.totalVacaciones : 0) > 0 && (
+              <View style={styles.cardRow}>
+                <Text style={styles.label}>Vacaciones</Text>
+                <Text>
+                  {obtenerDiferenciaDias({
+                    start: parseDate(item?.periodoStartVacaciones),
+                    end: parseDate(item?.periodoEndVacaciones),
+                  })}{" "}
+                  días
+                </Text>
+                <Text
+                  style={[
+                    styles.textValue,
+                    {
+                      color: "#e6900f",
+                      backgroundColor: "#e6900f1e",
+                      padding: 3,
+                      borderRadius: 5,
+                      fontSize: 14,
+                    },
+                  ]}
+                >
+                  {formatToCOP(item?.totalVacaciones)}
+                </Text>
+              </View>
+            )}
+
+            {item?.cesantias && (
+              <View style={styles.cardRow}>
+                <Text style={styles.label}>Cesantias</Text>
+                <Text>
+                  {item?.diasLaboradosAnual} días
+                </Text>
+                <Text
+                  style={[
+                    styles.textValue,
+                    {
+                      color: "#007AFF",
+                      backgroundColor: "#007AFF1e",
+                      padding: 3,
+                      borderRadius: 5,
+                      fontSize: 14,
+                    },
+                  ]}
+                >
+                  {formatToCOP(item?.cesantias)}
+                </Text>
+              </View>
+            )}
+
+            <View style={[styles.cardRow, { borderBottom: 0 }]}>
+              <Text style={styles.label}>Salud</Text>
+              <Text
+                style={[
+                  styles.textValue,
+                  {
+                    color: "#e60f0f",
+                    backgroundColor: "#e60f0f1e",
+                    padding: 3,
+                    borderRadius: 5,
+                    fontSize: 14,
+                  },
+                ]}
+              >
+                {formatToCOP(item?.salud)}
+              </Text>
+            </View>
+
+            <Divider
+              style={{
+                height: 1,
+                backgroundColor: "#e6e6e6",
+              }}
+            />
+
+            <View style={[styles.cardRow, { borderBottom: 0 }]}>
+              <Text style={styles.label}>Pensión</Text>
+              <Text
+                style={[
+                  styles.textValue,
+                  {
+                    color: "#e60f0f",
+                    backgroundColor: "#e60f0f1e",
+                    padding: 3,
+                    borderRadius: 5,
+                    fontSize: 14,
+                  },
+                ]}
+              >
+                {formatToCOP(item?.pension)}
+              </Text>
+            </View>
+
+            <Divider
+              style={{
+                height: 1,
+                backgroundColor: "#e6e6e6",
+              }}
+            />
+
+            {item?.interesCesantias && (
+              <View style={styles.cardRow}>
+                <Text style={styles.label}>Interes cesantias</Text>
+                <Text
+                  style={[
+                    styles.textValue,
+                    {
+                      color: "#e60f0f",
+                      backgroundColor: "#e60f0f1e",
+                      padding: 3,
+                      borderRadius: 5,
+                      fontSize: 14,
+                    },
+                  ]}
+                >
+                  {formatToCOP(item?.interesCesantias)}
+                </Text>
+              </View>
+            )}
+
+            <View style={[styles.cardRow, { borderBottom: 0 }]}>
+              <Text style={styles.label}>Anticipos</Text>
+              <Text
+                style={[
+                  styles.textValue,
+                  {
+                    color: "#e60f0f",
+                    backgroundColor: "#e60f0f1e",
+                    padding: 3,
+                    borderRadius: 5,
+                    fontSize: 14,
+                  },
+                ]}
+              >
+                {formatToCOP(item?.totalAnticipos)}
+              </Text>
+            </View>
+
+          </View>
+
+          <View style={styles.card}>
+            <View style={[styles.cardRow, { borderBottom: 0 }]}>
+              <Text style={styles.label}>Salario total</Text>
               <Text
                 style={[
                   styles.textValue,
@@ -402,112 +536,55 @@ const LiquidacionPDF = ({ item }: LiquidacionPDFProps) => (
                     backgroundColor: "#2E8B571e",
                     padding: 3,
                     borderRadius: 5,
-                    fontSize: 14,
+                    fontSize: 16,
                   },
                 ]}
               >
-                {formatToCOP(item?.interesCesantias)}
+                {formatToCOP(item?.sueldoTotal)}
               </Text>
             </View>
-          )}
-
-          <View style={[styles.cardRow, { borderBottom: 0 }]}>
-            <Text style={styles.label}>Salud</Text>
-            <Text
-              style={[
-                styles.textValue,
-                {
-                  color: "#e60f0f",
-                  backgroundColor: "#e60f0f1e",
-                  padding: 3,
-                  borderRadius: 5,
-                  fontSize: 14,
-                },
-              ]}
-            >
-              {formatToCOP(item?.salud)}
-            </Text>
-          </View>
-
-          <Divider
-            style={{
-              height: 1,
-              backgroundColor: "#e6e6e6",
-            }}
-          />
-
-          <View style={[styles.cardRow, { borderBottom: 0 }]}>
-            <Text style={styles.label}>Pensión</Text>
-            <Text
-              style={[
-                styles.textValue,
-                {
-                  color: "#e60f0f",
-                  backgroundColor: "#e60f0f1e",
-                  padding: 3,
-                  borderRadius: 5,
-                  fontSize: 14,
-                },
-              ]}
-            >
-              {formatToCOP(item?.pension)}
-            </Text>
-          </View>
-
-          <Divider
-            style={{
-              height: 1,
-              backgroundColor: "#e6e6e6",
-            }}
-          />
-
-          <View style={[styles.cardRow, { borderBottom: 0 }]}>
-            <Text style={styles.label}>Anticipos</Text>
-            <Text
-              style={[
-                styles.textValue,
-                {
-                  color: "#e60f0f",
-                  backgroundColor: "#e60f0f1e",
-                  padding: 3,
-                  borderRadius: 5,
-                  fontSize: 14,
-                },
-              ]}
-            >
-              {formatToCOP(item?.totalAnticipos)}
-            </Text>
-          </View>
-
-        </View>
-
-        <View style={styles.card}>
-          <View style={[styles.cardRow, { borderBottom: 0 }]}>
-            <Text style={styles.label}>Salario total</Text>
-            <Text
-              style={[
-                styles.textValue,
-                {
-                  color: "#2E8B57",
-                  backgroundColor: "#2E8B571e",
-                  padding: 3,
-                  borderRadius: 5,
-                  fontSize: 16,
-                },
-              ]}
-            >
-              {formatToCOP(item?.sueldoTotal)}
-            </Text>
           </View>
         </View>
-      </View>
-    </Page>
-  </Document>
-);
+      </Page>
+    </Document>
+  )
+}
+
 
 // Función para generar el PDF y descargarlo
 const handleGeneratePDF = async (item: Liquidacion | null): Promise<void> => {
-  const blob = await pdf(<LiquidacionPDF item={item} />).toBlob();
+  // Filtrar recargos de PAREX
+  const recargosParex = item?.recargos?.filter(recargo =>
+    recargo.empresa === "900.268.747" || recargo.id === "1768"
+  ) || [];
+
+  // Calcular el total de recargos PAREX
+  const totalRecargosParex = recargosParex.reduce((sum, recargo) =>
+    sum + (recargo.valor || 0), 0
+  );
+
+  // Obtener recargos que no son de PAREX
+  const recargosActualizados = item?.recargos?.filter(recargo =>
+    recargo.empresa !== "900.268.747" && recargo.id !== "1768"
+  ) || [];
+
+  // Crear una copia del objeto item para no modificar el original
+  const itemActualizado = item ? {
+    ...item,
+    // Si necesitas actualizar el item con los recargos filtrados, puedes hacerlo aquí
+    // Por ejemplo: recargos: recargosActualizados
+  } : null;
+
+  // Generar el PDF con los datos filtrados
+  const blob = await pdf(
+    <LiquidacionPDF
+      item={itemActualizado}
+      totalRecargosParex={totalRecargosParex}
+      recargosParex={recargosParex}
+      recargosActualizados={recargosActualizados}
+    />
+  ).toBlob();
+
   const url = URL.createObjectURL(blob);
   window.open(url); // Abre el PDF en una nueva pestaña
 };
